@@ -12,7 +12,9 @@ import Ballsani from './components/Ballsani.vue'
       <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
     </a>
   </div> -->
-  <!-- <HelloWorld/> -->
+  <div>
+    <HelloWorld />
+  </div><br>
   <div>
     <Ballsani />
   </div>
