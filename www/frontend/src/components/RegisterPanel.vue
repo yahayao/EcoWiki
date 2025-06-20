@@ -295,94 +295,28 @@ const onEmailChange = () => {
 
 // 注册处理函数
 const handleRegister = async () => {
-<<<<<<< HEAD
-  console.log('注册表单数据:', formData)
-  
   if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
     alert('请填写完整的注册信息')
     return
   }
-=======
-  // 显示错误提示
-  showErrors.value = true
->>>>>>> f5b0f50 (添加了注册和登录向服务器发送请求)
   
-  // 验证表单
-  errors.value = validateRegisterForm(formData)
-  
-  if (!canSubmit.value) {
-    toast.warning('请检查并修正表单中的错误')
+  if (formData.password !== formData.confirmPassword) {
+    alert('两次输入的密码不一致')
     return
   }
   
   isLoading.value = true
   
   try {
-<<<<<<< HEAD
-    const requestData = {
-      username: formData.username,
-      email: formData.email,
-      password: formData.password
-    }
+    // 模拟注册请求
+    await new Promise(resolve => setTimeout(resolve, 1500))
     
-    console.log('发送注册请求:', requestData)
+    console.log('注册信息:', formData)
+    alert('注册成功！')
     
-    const response = await fetch('http://localhost:3001/api/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestData)
-    })
-    
-    const data = await response.json()
-    console.log('注册响应:', data)
-    
-    if (data.success) {
-      alert('注册成功！请登录')
-      formData.username = ''
-      formData.email = ''
-      formData.password = ''
-      formData.confirmPassword = ''
-    } else {
-      alert(data.message || '注册失败')
-    }
-=======
-    // 调用注册API
-    const response = await userApi.register({
-      username: formData.username,
-      email: formData.email,
-      password: formData.password
-    })
-    
-    // 注册成功，保存用户信息和token
-    setUser(response.user, response.token, response.refreshToken)
->>>>>>> f5b0f50 (添加了注册和登录向服务器发送请求)
-    
-    toast.success('注册成功！欢迎加入 EcoWiki', '注册成功')
-    
-    // 延迟跳转，让用户看到成功消息
-    setTimeout(() => {
-      emit('switchToLogin')
-    }, 2000)
-    
-  } catch (error: any) {
+  } catch (error) {
     console.error('注册失败:', error)
-<<<<<<< HEAD
-    alert('网络错误，请检查后端服务是否启动')
-=======
-    
-    // 处理特定的注册错误
-    if (error.message.includes('用户名')) {
-      usernameAvailable.value = false
-      toast.error('该用户名已被使用，请选择其他用户名')
-    } else if (error.message.includes('邮箱')) {
-      emailAvailable.value = false
-      toast.error('该邮箱已被注册，请使用其他邮箱')
-    } else {
-      toast.error(error.message || '注册失败，请重试', '注册失败')
-    }
->>>>>>> f5b0f50 (添加了注册和登录向服务器发送请求)
+    alert('注册失败，请重试')
   } finally {
     isLoading.value = false
   }
@@ -625,8 +559,6 @@ const handleRegister = async () => {
   font-size: 16px;
   transition: all 0.3s ease;
   background: #f8f9fa;
-  flex: 1;
->>>>>>> f5b0f50 (添加了注册和登录向服务器发送请求)
 }
 
 .form-input:focus {
@@ -637,6 +569,56 @@ const handleRegister = async () => {
 
 .form-input:focus::placeholder {
   color: transparent;
+}
+
+.form-input.error {
+  border-color: #e74c3c;
+  background: #ffeaea;
+}
+
+.form-input.success {
+  border-color: #27ae60;
+  background: #eafaf1;
+}
+
+.form-input.checking {
+  border-color: #f39c12;
+}
+
+.input-status {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.success-icon {
+  color: #27ae60;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.error-icon {
+  color: #e74c3c;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.checking-icon {
+  font-size: 14px;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 12px;
+  margin-top: 4px;
+  min-height: 16px;
 }
 
 .form-input.error {
