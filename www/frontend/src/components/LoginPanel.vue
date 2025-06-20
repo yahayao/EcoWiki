@@ -50,7 +50,7 @@
           <span v-if="isLoading" class="loading-spinner"></span>
           {{ isLoading ? '登录中...' : '登录' }}
         </button>        <div class="login-footer">
-          <p>还没有账户？<a href="#" class="register-link">立即注册</a></p>
+          <p>还没有账户？<a href="#" @click="$emit('switchToRegister')" class="register-link">立即注册</a></p>
         </div>
       </form>
     </div>
@@ -58,6 +58,9 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+
+// 定义 emits
+defineEmits(['switchToRegister'])
 
 // 响应式数据
 const isLoading = ref(false)
