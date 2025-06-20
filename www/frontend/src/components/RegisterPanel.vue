@@ -93,17 +93,139 @@
         </div>
       </div>
     </div>
+<<<<<<< HEAD
+=======
+      
+    <form @submit.prevent="handleRegister" class="register-form">
+      <div class="form-group">
+        <label for="username" class="form-label">用户名</label>
+        <div class="input-wrapper">
+          <input
+            id="username"
+            v-model="formData.username"
+            @input="onUsernameChange"
+            type="text"
+            class="form-input"
+            :class="{ 
+              'error': showErrors && errors.username,
+              'success': usernameAvailable === true,
+              'checking': usernameChecking
+            }"
+            placeholder="请输入用户名"
+            required
+          />
+          <div class="input-status">
+            <span v-if="usernameChecking" class="checking-icon">⏳</span>
+            <span v-else-if="usernameAvailable === true" class="success-icon">✓</span>
+            <span v-else-if="usernameAvailable === false" class="error-icon">✗</span>
+          </div>
+        </div>
+        <div class="error-message" v-if="showErrors && errors.username">
+          {{ errors.username }}
+        </div>
+        <div class="error-message" v-else-if="usernameAvailable === false">
+          该用户名已被使用
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="email" class="form-label">邮箱</label>
+        <div class="input-wrapper">
+          <input
+            id="email"
+            v-model="formData.email"
+            @input="onEmailChange"
+            type="email"
+            class="form-input"
+            :class="{ 
+              'error': showErrors && errors.email,
+              'success': emailAvailable === true,
+              'checking': emailChecking
+            }"
+            placeholder="请输入邮箱地址"
+            required
+          />
+          <div class="input-status">
+            <span v-if="emailChecking" class="checking-icon">⏳</span>
+            <span v-else-if="emailAvailable === true" class="success-icon">✓</span>
+            <span v-else-if="emailAvailable === false" class="error-icon">✗</span>
+          </div>
+        </div>
+        <div class="error-message" v-if="showErrors && errors.email">
+          {{ errors.email }}
+        </div>
+        <div class="error-message" v-else-if="emailAvailable === false">
+          该邮箱已被注册
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="password" class="form-label">密码</label>
+        <input
+          id="password"
+          v-model="formData.password"
+          type="password"
+          class="form-input"
+          :class="{ 'error': showErrors && errors.password }"
+          placeholder="请输入密码"
+          required
+        />
+        <div class="error-message" v-if="showErrors && errors.password">
+          {{ errors.password }}
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="confirmPassword" class="form-label">确认密码</label>
+        <input
+          id="confirmPassword"
+          v-model="formData.confirmPassword"
+          type="password"
+          class="form-input"
+          :class="{ 'error': showErrors && errors.confirmPassword }"
+          placeholder="请再次输入密码"
+          required
+        />
+        <div class="error-message" v-if="showErrors && errors.confirmPassword">
+          {{ errors.confirmPassword }}
+        </div>
+      </div>
+      
+      <button
+        type="submit"
+        class="register-button"
+        :disabled="isLoading || !canSubmit"
+      >
+        <span v-if="isLoading" class="loading-spinner"></span>
+        {{ isLoading ? '注册中...' : '注册' }}
+      </button>
+      
+      <div class="register-footer">
+        <p>已有账户？<a href="#" @click="$emit('switchToLogin')" class="login-link">立即登录</a></p>
+      </div>
+    </form>
+>>>>>>> f5b0f50 (添加了注册和登录向服务器发送请求)
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
+import { userApi } from '../api/user'
+import { validateRegisterForm, debounce, type FormErrors } from '../utils/validation'
+import { useAuth } from '../composables/useAuth'
+import toast from '../utils/toast'
 
 // 定义 emits
-defineEmits(['switchToLogin'])
+const emit = defineEmits(['switchToLogin'])
+
+// 使用认证状态
+const { setUser } = useAuth()
 
 // 响应式数据
 const isLoading = ref(false)
+const errors = ref<FormErrors>({})
+const showErrors = ref(false)
+
 const formData = reactive({
   username: '',
   email: '',
@@ -111,23 +233,92 @@ const formData = reactive({
   confirmPassword: ''
 })
 
+// 实时验证状态
+const usernameChecking = ref(false)
+const emailChecking = ref(false)
+const usernameAvailable = ref<boolean | null>(null)
+const emailAvailable = ref<boolean | null>(null)
+
+// 计算是否可以提交表单
+const canSubmit = computed(() => {
+  const formErrors = validateRegisterForm(formData)
+  return Object.keys(formErrors).length === 0 && 
+         usernameAvailable.value === true && 
+         emailAvailable.value === true
+})
+
+// 防抖检查用户名可用性
+const checkUsernameAvailability = debounce(async (username: string) => {
+  if (!username || username.length < 3) return
+  
+  usernameChecking.value = true
+  try {
+    usernameAvailable.value = await userApi.checkUsername(username)
+  } catch (error) {
+    console.error('检查用户名失败:', error)
+    usernameAvailable.value = null
+  } finally {
+    usernameChecking.value = false
+  }
+}, 500)
+
+// 防抖检查邮箱可用性
+const checkEmailAvailability = debounce(async (email: string) => {
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return
+  
+  emailChecking.value = true
+  try {
+    emailAvailable.value = await userApi.checkEmail(email)
+  } catch (error) {
+    console.error('检查邮箱失败:', error)
+    emailAvailable.value = null
+  } finally {
+    emailChecking.value = false
+  }
+}, 500)
+
+// 监听用户名变化
+const onUsernameChange = () => {
+  usernameAvailable.value = null
+  if (formData.username) {
+    checkUsernameAvailability(formData.username)
+  }
+}
+
+// 监听邮箱变化
+const onEmailChange = () => {
+  emailAvailable.value = null
+  if (formData.email) {
+    checkEmailAvailability(formData.email)
+  }
+}
+
 // 注册处理函数
 const handleRegister = async () => {
+<<<<<<< HEAD
   console.log('注册表单数据:', formData)
   
   if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
     alert('请填写完整的注册信息')
     return
   }
+=======
+  // 显示错误提示
+  showErrors.value = true
+>>>>>>> f5b0f50 (添加了注册和登录向服务器发送请求)
   
-  if (formData.password !== formData.confirmPassword) {
-    alert('两次输入的密码不一致')
+  // 验证表单
+  errors.value = validateRegisterForm(formData)
+  
+  if (!canSubmit.value) {
+    toast.warning('请检查并修正表单中的错误')
     return
   }
   
   isLoading.value = true
   
   try {
+<<<<<<< HEAD
     const requestData = {
       username: formData.username,
       email: formData.email,
@@ -156,10 +347,42 @@ const handleRegister = async () => {
     } else {
       alert(data.message || '注册失败')
     }
+=======
+    // 调用注册API
+    const response = await userApi.register({
+      username: formData.username,
+      email: formData.email,
+      password: formData.password
+    })
     
-  } catch (error) {
+    // 注册成功，保存用户信息和token
+    setUser(response.user, response.token, response.refreshToken)
+>>>>>>> f5b0f50 (添加了注册和登录向服务器发送请求)
+    
+    toast.success('注册成功！欢迎加入 EcoWiki', '注册成功')
+    
+    // 延迟跳转，让用户看到成功消息
+    setTimeout(() => {
+      emit('switchToLogin')
+    }, 2000)
+    
+  } catch (error: any) {
     console.error('注册失败:', error)
+<<<<<<< HEAD
     alert('网络错误，请检查后端服务是否启动')
+=======
+    
+    // 处理特定的注册错误
+    if (error.message.includes('用户名')) {
+      usernameAvailable.value = false
+      toast.error('该用户名已被使用，请选择其他用户名')
+    } else if (error.message.includes('邮箱')) {
+      emailAvailable.value = false
+      toast.error('该邮箱已被注册，请使用其他邮箱')
+    } else {
+      toast.error(error.message || '注册失败，请重试', '注册失败')
+    }
+>>>>>>> f5b0f50 (添加了注册和登录向服务器发送请求)
   } finally {
     isLoading.value = false
   }
@@ -358,6 +581,7 @@ const handleRegister = async () => {
 }
 
 .form-group {
+<<<<<<< HEAD
   margin-bottom: 18px;
 }
 
@@ -376,6 +600,33 @@ const handleRegister = async () => {
 .form-input::placeholder {
   color: #a0aec0;
   font-weight: 400;
+=======
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.form-input {
+  padding: 12px 40px 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+  flex: 1;
+>>>>>>> f5b0f50 (添加了注册和登录向服务器发送请求)
 }
 
 .form-input:focus {
@@ -386,6 +637,56 @@ const handleRegister = async () => {
 
 .form-input:focus::placeholder {
   color: transparent;
+}
+
+.form-input.error {
+  border-color: #e74c3c;
+  background: #ffeaea;
+}
+
+.form-input.success {
+  border-color: #27ae60;
+  background: #eafaf1;
+}
+
+.form-input.checking {
+  border-color: #f39c12;
+}
+
+.input-status {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.success-icon {
+  color: #27ae60;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.error-icon {
+  color: #e74c3c;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.checking-icon {
+  font-size: 14px;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 12px;
+  margin-top: 4px;
+  min-height: 16px;
 }
 
 .register-button {
