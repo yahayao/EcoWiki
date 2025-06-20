@@ -95,47 +95,17 @@ const formData = reactive({
 
 // 登录处理函数
 const handleLogin = async () => {
-<<<<<<< HEAD
   if (!formData.email || !formData.password) {
-    alert('请填写完整的登录信息')
-=======
-  if (!formData.username || !formData.password) {
     toast.warning('请填写完整的登录信息')
->>>>>>> f5b0f50 (添加了注册和登录向服务器发送请求)
     return
   }
   
   isLoading.value = true
   
   try {
-<<<<<<< HEAD
-    const response = await fetch('http://localhost:3001/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: formData.email,
-        password: formData.password
-      })
-    })
-    
-    const data = await response.json()
-    
-    if (data.success) {
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
-      
-      alert('登录成功！')
-      console.log('用户信息:', data.user)
-      
-    } else {
-      alert(data.message || '登录失败')
-    }
-=======
     // 调用登录API
     const response = await userApi.login({
-      username: formData.username,
+      username: formData.email, // 使用email作为username
       password: formData.password,
       rememberMe: formData.rememberMe
     })
@@ -144,18 +114,13 @@ const handleLogin = async () => {
     setUser(response.user, response.token, response.refreshToken)
     
     toast.success(`欢迎回来，${response.user.username}！`, '登录成功')
->>>>>>> f5b0f50 (添加了注册和登录向服务器发送请求)
     
     // 这里可以跳转到主页面或其他页面
     console.log('登录成功，用户信息:', response.user)
     
   } catch (error: any) {
     console.error('登录失败:', error)
-<<<<<<< HEAD
-    alert('网络错误，请检查后端服务是否启动')
-=======
-    toast.error(error.message || '登录失败，请检查用户名和密码', '登录失败')
->>>>>>> f5b0f50 (添加了注册和登录向服务器发送请求)
+    toast.error(error.message || '登录失败，请检查邮箱和密码', '登录失败')
   } finally {
     isLoading.value = false
   }
