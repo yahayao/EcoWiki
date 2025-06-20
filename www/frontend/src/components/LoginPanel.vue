@@ -58,9 +58,15 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import { userApi } from '../api/user'
+import { useAuth } from '../composables/useAuth'
+import toast from '../utils/toast'
 
 // 定义 emits
 defineEmits(['switchToRegister'])
+
+// 使用认证状态
+const { setUser } = useAuth()
 
 // 响应式数据
 const isLoading = ref(false)
@@ -73,25 +79,31 @@ const formData = reactive({
 // 登录处理函数
 const handleLogin = async () => {
   if (!formData.username || !formData.password) {
-    alert('请填写完整的登录信息')
+    toast.warning('请填写完整的登录信息')
     return
   }
   
   isLoading.value = true
   
   try {
-    // 模拟登录请求
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    // 调用登录API
+    const response = await userApi.login({
+      username: formData.username,
+      password: formData.password,
+      rememberMe: formData.rememberMe
+    })
     
-    // 这里应该调用实际的登录API
-    console.log('登录信息:', formData)
+    // 登录成功，保存用户信息和token
+    setUser(response.user, response.token, response.refreshToken)
     
-    // 登录成功后的处理
-    alert('登录成功！')
+    toast.success(`欢迎回来，${response.user.username}！`, '登录成功')
     
-  } catch (error) {
+    // 这里可以跳转到主页面或其他页面
+    console.log('登录成功，用户信息:', response.user)
+    
+  } catch (error: any) {
     console.error('登录失败:', error)
-    alert('登录失败，请检查用户名和密码')
+    toast.error(error.message || '登录失败，请检查用户名和密码', '登录失败')
   } finally {
     isLoading.value = false
   }
