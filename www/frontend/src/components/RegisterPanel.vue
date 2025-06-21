@@ -109,11 +109,15 @@
                 type="password"
                 class="form-input"
                 :class="{ 'error': showErrors && errors.password }"
-                placeholder="密码"
+                placeholder="请输入密码"
                 required
               />
               <div class="error-message" v-if="showErrors && errors.password">
                 {{ errors.password }}
+              </div>
+              <!-- 添加密码强度显示 -->
+              <div v-if="formData.password" class="password-strength">
+                密码强度: <span :class="`strength-${passwordStrength}`">{{ passwordStrength }}</span>
               </div>
             </div>
             
@@ -159,6 +163,7 @@ import { userApi } from '../api/user'
 import { validateRegisterForm, debounce, type FormErrors } from '../utils/validation'
 import { useAuth } from '../composables/useAuth'
 import toast from '../utils/toast'
+import { getPasswordStrength } from '../utils/validation'
 
 // 定义 emits
 const emit = defineEmits(['switchToLogin'])
@@ -287,6 +292,11 @@ const handleRegister = async () => {
     isLoading.value = false
   }
 }
+
+// 添加密码强度计算
+const passwordStrength = computed(() => {
+  return formData.password ? getPasswordStrength(formData.password) : ''
+})
 </script>
 
 <style scoped>
@@ -298,8 +308,13 @@ const handleRegister = async () => {
   transition: all 0.4s ease;
   animation: cardFadeIn 0.6s ease-out;
   max-width: 500px;
+  width: 100%;
   margin: 0 auto;
   border: 1px solid rgba(0, 0, 0, 0.05);
+  /* 固定高度，避免动画过程中高度变化导致滚动条 */
+  height: 520px;
+  display: flex;
+  flex-direction: column;
 }
 
 .register-card:hover {
@@ -320,7 +335,8 @@ const handleRegister = async () => {
 
 .card-content {
   display: flex;
-  min-height: 450px;
+  flex: 1;
+  min-height: 100%;
 }
 
 .content-left {

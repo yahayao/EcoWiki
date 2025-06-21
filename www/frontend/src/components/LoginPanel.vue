@@ -163,7 +163,12 @@ const handleLogin = async () => {
   transition: all 0.4s ease;
   animation: cardSlideIn 0.6s ease-out;
   max-width: 480px;
+  width: 100%;
   margin: 0 auto;
+  /* 固定高度，避免动画过程中高度变化导致滚动条 */
+  height: 480px;
+  display: flex;
+  flex-direction: column;
 }
 
 .login-card:hover {
@@ -184,7 +189,8 @@ const handleLogin = async () => {
 
 .card-content {
   display: flex;
-  min-height: 420px;
+  flex: 1;
+  min-height: 100%;
 }
 
 .content-left {
