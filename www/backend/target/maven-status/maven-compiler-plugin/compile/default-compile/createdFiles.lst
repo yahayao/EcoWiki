@@ -1,0 +1,7 @@
+com\ecowiki\controller\UserController.class
+com\ecowiki\EcoWikiApplication.class
+com\ecowiki\entity\User.class
+com\ecowiki\service\UserService.class
+com\ecowiki\config\CorsConfig.class
+com\ecowiki\dto\UserRegistrationDto.class
+com\ecowiki\repository\UserRepository.class
