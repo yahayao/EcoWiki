@@ -24,13 +24,10 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .anyRequest().permitAll()
             )
-            .headers(headers -> headers
-                .frameOptions().disable()
-            );
+            .headers(headers -> headers.disable());
         
         return http.build();
     }

@@ -1,32 +1,46 @@
 package com.ecowiki.entity;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+
 @Entity
-@Table(name = "users")
+@Table(name = "user") // 改为user而不是users
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", columnDefinition = "INT AUTO_INCREMENT COMMENT 'Primary Key'")
     private Long id;
     
-    @Column(unique = true, nullable = false)
+    @Column(name = "username", unique = true, nullable = false, length = 50)
     private String username;
     
-    @Column(nullable = false)
+    @Column(name = "password", nullable = false, length = 255)
     private String password;
     
-    @Column(unique = true, nullable = false)
+    @Column(name = "email", unique = true, nullable = false, length = 100)
     private String email;
     
+    @Column(name = "full_name", length = 100)
     private String fullName;
+    
+    @Column(name = "bio", columnDefinition = "TEXT")
     private String bio;
+    
+    @Column(name = "avatar_url", length = 500)
     private String avatarUrl;
     
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
     
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime updatedAt;
     
     @PrePersist
