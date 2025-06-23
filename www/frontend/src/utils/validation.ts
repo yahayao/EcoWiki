@@ -1,79 +1,56 @@
 // 表单验证工具函数
 
+// 表单错误类型
+export interface FormErrors {
+  [key: string]: string
+}
+
 // 验证邮箱格式
-export const validateEmail = (email: string): boolean => {
+export const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email)
 }
 
-// 验证用户名格式（3-20位，只能包含字母、数字、下划线）
-export const validateUsername = (username: string): boolean => {
+// 验证用户名格式
+export const isValidUsername = (username: string): boolean => {
   const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/
   return usernameRegex.test(username)
 }
 
-// 验证密码强度（至少8位，包含字母和数字）
-export const validatePassword = (password: string): boolean => {
-  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/
-  return passwordRegex.test(password)
+// 验证密码强度
+export const isStrongPassword = (password: string): boolean => {
+  if (password.length < 8) return false
+  const hasLetter = /[a-zA-Z]/.test(password)
+  const hasNumber = /\d/.test(password)
+  return hasLetter && hasNumber
 }
 
-// 获取密码强度描述
-export const getPasswordStrength = (password: string): string => {
-  if (password.length < 6) {
-    return '弱'
-  } else if (password.length < 8 || !/(?=.*[A-Za-z])(?=.*\d)/.test(password)) {
-    return '中'
-  } else if (/(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])/.test(password)) {
-    return '强'
-  } else {
-    return '中'
-  }
-}
-
-// 表单错误类型
-export interface FormErrors {
-  username?: string
-  email?: string
-  password?: string
-  confirmPassword?: string
-}
-
-// 验证注册表单
-export const validateRegisterForm = (data: {
-  username: string
-  email: string
-  password: string
-  confirmPassword: string
-}): FormErrors => {
+// 注册表单验证
+export const validateRegisterForm = (formData: any): FormErrors => {
   const errors: FormErrors = {}
 
-  // 验证用户名
-  if (!data.username) {
+  if (!formData.username) {
     errors.username = '用户名不能为空'
-  } else if (!validateUsername(data.username)) {
-    errors.username = '用户名只能包含字母、数字、下划线，长度3-20位'
+  } else if (!isValidUsername(formData.username)) {
+    errors.username = '用户名应为3-20位字母、数字或下划线'
   }
 
-  // 验证邮箱
-  if (!data.email) {
+  if (!formData.email) {
     errors.email = '邮箱不能为空'
-  } else if (!validateEmail(data.email)) {
-    errors.email = '邮箱格式不正确'
+  } else if (!isValidEmail(formData.email)) {
+    errors.email = '请输入有效的邮箱地址'
   }
 
-  // 验证密码
-  if (!data.password) {
+  if (!formData.password) {
     errors.password = '密码不能为空'
-  } else if (!validatePassword(data.password)) {
-    errors.password = '密码至少8位，且包含字母和数字'
+  } else if (!isStrongPassword(formData.password)) {
+    errors.password = '密码至少8位，包含字母和数字'
   }
 
-  // 验证确认密码
-  if (!data.confirmPassword) {
+  if (!formData.confirmPassword) {
     errors.confirmPassword = '请确认密码'
-  } else if (data.password !== data.confirmPassword) {
-    errors.confirmPassword = '两次输入的密码不一致'
+  } else if (formData.password !== formData.confirmPassword) {
+    errors.confirmPassword = '密码不一致'
   }
 
   return errors
@@ -84,12 +61,9 @@ export const debounce = <T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): ((...args: Parameters<T>) => void) => {
-  let timeout: number | null = null
-  
+  let timeout: ReturnType<typeof setTimeout>
   return (...args: Parameters<T>) => {
-    if (timeout) {
-      clearTimeout(timeout)
-    }
+    clearTimeout(timeout)
     timeout = setTimeout(() => func(...args), wait)
   }
 }
