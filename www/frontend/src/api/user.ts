@@ -5,6 +5,8 @@ export interface RegisterRequest {
   username: string
   email: string
   password: string
+  fullName?: string  // 可选字段
+  userGroup?: string // 可选字段，默认为 "user"
 }
 
 export interface LoginRequest {
@@ -78,7 +80,13 @@ export const userApi = {
   // 用户注册
   register: async (data: RegisterRequest): Promise<AuthResponse> => {
     try {
-      const response = await api.post('/auth/register', data) as ApiResponse<{userId: number, username: string, email: string}>
+      const response = await api.post('/auth/register', {
+        username: data.username,
+        email: data.email,
+        password: data.password,
+        fullName: data.fullName || '', // 如果没有提供则为空字符串
+        userGroup: data.userGroup || 'user' // 默认用户组
+      }) as ApiResponse<{userId: number, username: string, email: string, fullName: string, userGroup: string, createdAt: string}>
       
       if (response.code === 200 && response.data) {
         // 构造前端期望的响应格式
@@ -87,9 +95,9 @@ export const userApi = {
             id: response.data.userId,
             username: response.data.username,
             email: response.data.email,
-            avatar: '',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            avatar: '', // 暂时为空
+            createdAt: response.data.createdAt,
+            updatedAt: response.data.createdAt // 创建时两个时间相同
           },
           token: `mock-token-${response.data.userId}`,
           refreshToken: `mock-refresh-token-${response.data.userId}`

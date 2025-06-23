@@ -26,19 +26,23 @@ public class UserService {
     }
     
     public User registerUser(UserRegistrationDto dto) {
+        // 验证用户名和邮箱是否可用
         if (!isUsernameAvailable(dto.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            throw new RuntimeException("用户名已被使用");
         }
         if (!isEmailAvailable(dto.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new RuntimeException("邮箱已被注册");
         }
         
+        // 创建新用户
         User user = new User();
         user.setUsername(dto.getUsername());
         user.setPassword(passwordEncoder.encode(dto.getPassword())); // 加密密码
         user.setEmail(dto.getEmail());
         user.setFullName(dto.getFullName());
+        user.setUserGroup(dto.getUserGroup() != null ? dto.getUserGroup() : "user"); // 默认用户组
         
+        // 保存到数据库
         return userRepository.save(user);
     }
 }

@@ -52,6 +52,9 @@ public class UserController {
         result.put("userId", user.getId());
         result.put("username", user.getUsername());
         result.put("email", user.getEmail());
+        result.put("fullName", user.getFullName());
+        result.put("userGroup", user.getUserGroup());
+        result.put("createdAt", user.getCreatedAt().toString());
         
         return ResponseEntity.ok(ApiResponse.success("注册成功", result));
     }

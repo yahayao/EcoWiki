@@ -91,6 +91,17 @@
               </div>
             </div>
             
+            <!-- 添加全名输入字段 -->
+            <div class="form-group">
+              <input
+                id="fullName"
+                v-model="formData.fullName"
+                type="text"
+                class="form-input"
+                placeholder="姓名（可选）"
+              />
+            </div>
+            
             <div class="form-group">
               <input
                 id="password"
@@ -164,7 +175,8 @@ const formData = reactive({
   username: '',
   email: '',
   password: '',
-  confirmPassword: ''
+  confirmPassword: '',
+  fullName: '' // 添加全名字段
 })
 
 // 实时验证状态
@@ -246,7 +258,8 @@ const handleRegister = async () => {
     const response = await userApi.register({
       username: formData.username,
       email: formData.email,
-      password: formData.password
+      password: formData.password,
+      fullName: formData.fullName // 传递全名
     })
     
     // 注册成功，保存用户信息和token

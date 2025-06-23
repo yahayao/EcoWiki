@@ -12,11 +12,11 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "user") // 改为user而不是users
+@Table(name = "user") // 注意表名是 user
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", columnDefinition = "INT AUTO_INCREMENT COMMENT 'Primary Key'")
+    @Column(name = "id")
     private Long id;
     
     @Column(name = "username", unique = true, nullable = false, length = 50)
@@ -31,22 +31,24 @@ public class User {
     @Column(name = "full_name", length = 100)
     private String fullName;
     
-    @Column(name = "bio", columnDefinition = "TEXT")
-    private String bio;
+    @Column(name = "user_group", length = 255)
+    private String userGroup;
     
-    @Column(name = "avatar_url", length = 500)
-    private String avatarUrl;
-    
-    @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
-    @Column(name = "updated_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
     
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        createdAt = now;
+        updatedAt = now;
+        // 设置默认用户组
+        if (userGroup == null) {
+            userGroup = "user";
+        }
     }
     
     @PreUpdate
@@ -61,6 +63,7 @@ public class User {
         this.username = username;
         this.password = password;
         this.email = email;
+        this.userGroup = "user"; // 默认用户组
     }
 
     // Getters and Setters
@@ -79,15 +82,16 @@ public class User {
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
     
-    public String getBio() { return bio; }
-    public void setBio(String bio) { this.bio = bio; }
-    
-    public String getAvatarUrl() { return avatarUrl; }
-    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+    public String getUserGroup() { return userGroup; }
+    public void setUserGroup(String userGroup) { this.userGroup = userGroup; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    
+    // 为前端兼容性添加的方法
+    public String getAvatarUrl() { return null; } // 暂时返回 null，因为表中没有这个字段
+    public void setAvatarUrl(String avatarUrl) { /* 忽略，因为表中没有这个字段 */ }
 }
