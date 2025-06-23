@@ -124,7 +124,7 @@
             <button
               type="submit"
               class="register-button"
-              :disabled="isLoading || !canSubmit"
+              :disabled="isLoading"
             >
               <span v-if="isLoading" class="loading-spinner"></span>
               {{ isLoading ? '创建中...' : '注册' }}
