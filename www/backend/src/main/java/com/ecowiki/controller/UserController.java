@@ -1,51 +1,66 @@
 package com.ecowiki.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.ecowiki.dto.ApiResponse;
 import com.ecowiki.dto.UserRegistrationDto;
 import com.ecowiki.entity.User;
 import com.ecowiki.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin(origins = "http://localhost:5173")
+@Validated
 public class UserController {
     
     @Autowired
     private UserService userService;
     
     @GetMapping("/check-username")
-    public ResponseEntity<Map<String, Boolean>> checkUsername(@RequestParam String username) {
-        Map<String, Boolean> response = new HashMap<>();
-        response.put("available", userService.isUsernameAvailable(username));
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkUsername(@RequestParam String username) {
+        Map<String, Boolean> result = new HashMap<>();
+        result.put("available", userService.isUsernameAvailable(username));
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+    
+    @GetMapping("/check-email")
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkEmail(@RequestParam String email) {
+        Map<String, Boolean> result = new HashMap<>();
+        result.put("available", userService.isEmailAvailable(email));
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
     
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> registerUser(@RequestBody UserRegistrationDto dto) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            User user = userService.registerUser(dto);
-            response.put("success", true);
-            response.put("message", "User registered successfully");
-            response.put("userId", user.getId());
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
+    public ResponseEntity<ApiResponse<Map<String, Object>>> registerUser(@Valid @RequestBody UserRegistrationDto dto) {
+        User user = userService.registerUser(dto);
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("userId", user.getId());
+        result.put("username", user.getUsername());
+        result.put("email", user.getEmail());
+        
+        return ResponseEntity.ok(ApiResponse.success("注册成功", result));
     }
     
     @GetMapping("/health")
-    public ResponseEntity<Map<String, String>> health() {
-        Map<String, String> response = new HashMap<>();
-        response.put("status", "OK");
-        response.put("message", "EcoWiki API is running");
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<Map<String, String>>> health() {
+        Map<String, String> result = new HashMap<>();
+        result.put("status", "OK");
+        result.put("message", "EcoWiki API is running");
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
 }

@@ -1,6 +1,7 @@
 package com.ecowiki.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.ecowiki.dto.UserRegistrationDto;
@@ -12,6 +13,9 @@ public class UserService {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     
     public boolean isUsernameAvailable(String username) {
         return !userRepository.existsByUsername(username);
@@ -31,7 +35,7 @@ public class UserService {
         
         User user = new User();
         user.setUsername(dto.getUsername());
-        user.setPassword(dto.getPassword());
+        user.setPassword(passwordEncoder.encode(dto.getPassword())); // 加密密码
         user.setEmail(dto.getEmail());
         user.setFullName(dto.getFullName());
         

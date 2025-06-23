@@ -1,7 +1,10 @@
+C:\Users\Z9495\Desktop\EcoWiki_project\EcoWiki-3\www\backend\src\main\java\com\ecowiki\config\SecurityConfig.java
 C:\Users\Z9495\Desktop\EcoWiki_project\EcoWiki-3\www\backend\src\main\java\com\ecowiki\dto\UserRegistrationDto.java
 C:\Users\Z9495\Desktop\EcoWiki_project\EcoWiki-3\www\backend\src\main\java\com\ecowiki\entity\User.java
+C:\Users\Z9495\Desktop\EcoWiki_project\EcoWiki-3\www\backend\src\main\java\com\ecowiki\config\GlobalExceptionHandler.java
 C:\Users\Z9495\Desktop\EcoWiki_project\EcoWiki-3\www\backend\src\main\java\com\ecowiki\repository\UserRepository.java
 C:\Users\Z9495\Desktop\EcoWiki_project\EcoWiki-3\www\backend\src\main\java\com\ecowiki\config\CorsConfig.java
+C:\Users\Z9495\Desktop\EcoWiki_project\EcoWiki-3\www\backend\src\main\java\com\ecowiki\dto\ApiResponse.java
 C:\Users\Z9495\Desktop\EcoWiki_project\EcoWiki-3\www\backend\src\main\java\com\ecowiki\EcoWikiApplication.java
 C:\Users\Z9495\Desktop\EcoWiki_project\EcoWiki-3\www\backend\src\main\java\com\ecowiki\controller\UserController.java
 C:\Users\Z9495\Desktop\EcoWiki_project\EcoWiki-3\www\backend\src\main\java\com\ecowiki\service\UserService.java
