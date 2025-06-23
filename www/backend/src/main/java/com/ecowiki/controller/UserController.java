@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecowiki.dto.ApiResponse;
+import com.ecowiki.dto.LoginRequest;
 import com.ecowiki.dto.UserRegistrationDto;
 import com.ecowiki.entity.User;
 import com.ecowiki.service.UserService;
@@ -57,6 +58,25 @@ public class UserController {
         result.put("createdAt", user.getCreatedAt().toString());
         
         return ResponseEntity.ok(ApiResponse.success("注册成功", result));
+    }
+    
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> loginUser(@Valid @RequestBody LoginRequest request) {
+        try {
+            User user = userService.authenticateUser(request);
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("userId", user.getId());
+            result.put("username", user.getUsername());
+            result.put("email", user.getEmail());
+            result.put("fullName", user.getFullName());
+            result.put("token", "mock-token-" + user.getId()); // 临时token
+            
+            return ResponseEntity.ok(ApiResponse.success("登录成功", result));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error(400, e.getMessage()));
+        }
     }
     
     @GetMapping("/health")

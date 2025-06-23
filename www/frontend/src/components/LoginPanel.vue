@@ -32,11 +32,11 @@
           <form @submit.prevent="handleLogin" class="login-form">
             <div class="form-group">
               <input
-                id="email"
-                v-model="formData.email"
-                type="email"
+                id="loginField"
+                v-model="formData.loginField"
+                type="text"
                 class="form-input"
-                placeholder="邮箱"
+                placeholder="邮箱或用户名"
                 required
               />
             </div>
@@ -50,6 +50,18 @@
                 placeholder="密码"
                 required
               />
+            </div>
+            
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  v-model="formData.rememberMe"
+                  class="checkbox-input"
+                />
+                <span class="checkbox-custom"></span>
+                记住我
+              </label>
             </div>
             
             <button
@@ -88,14 +100,20 @@ const { setUser } = useAuth()
 // 响应式数据
 const isLoading = ref(false)
 const formData = reactive({
-  email: '',
+  loginField: '', // 改为通用的登录字段
   password: '',
   rememberMe: false
 })
 
+// 判断输入的是邮箱还是用户名
+const isEmail = (input: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(input)
+}
+
 // 登录处理函数
 const handleLogin = async () => {
-  if (!formData.email || !formData.password) {
+  if (!formData.loginField || !formData.password) {
     toast.warning('请填写完整的登录信息')
     return
   }
@@ -103,12 +121,21 @@ const handleLogin = async () => {
   isLoading.value = true
   
   try {
+    // 根据输入内容判断登录方式
+    const loginData = isEmail(formData.loginField) 
+      ? {
+          email: formData.loginField,
+          password: formData.password,
+          rememberMe: formData.rememberMe
+        }
+      : {
+          username: formData.loginField,
+          password: formData.password,
+          rememberMe: formData.rememberMe
+        }
+    
     // 调用登录API
-    const response = await userApi.login({
-      username: formData.email, // 使用email作为username
-      password: formData.password,
-      rememberMe: formData.rememberMe
-    })
+    const response = await userApi.login(loginData)
     
     // 登录成功，保存用户信息和token
     setUser(response.user, response.token, response.refreshToken)
@@ -120,7 +147,7 @@ const handleLogin = async () => {
     
   } catch (error: any) {
     console.error('登录失败:', error)
-    toast.error(error.message || '登录失败，请检查邮箱和密码', '登录失败')
+    toast.error(error.message || '登录失败，请检查登录信息和密码', '登录失败')
   } finally {
     isLoading.value = false
   }
@@ -285,6 +312,49 @@ const handleLogin = async () => {
 
 .form-group {
   margin-bottom: 20px;
+}
+
+.checkbox-group {
+  margin-bottom: 15px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #4a5568;
+  user-select: none;
+}
+
+.checkbox-input {
+  display: none;
+}
+
+.checkbox-custom {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e2e8f0;
+  border-radius: 3px;
+  margin-right: 10px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.checkbox-input:checked + .checkbox-custom {
+  background: #667eea;
+  border-color: #667eea;
+}
+
+.checkbox-input:checked + .checkbox-custom::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
 }
 
 .form-input {

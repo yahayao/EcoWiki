@@ -10,7 +10,8 @@ export interface RegisterRequest {
 }
 
 export interface LoginRequest {
-  username: string
+  username?: string  // 用户名登录（可选）
+  email?: string     // 邮箱登录（可选）
   password: string
   rememberMe?: boolean
 }
@@ -39,12 +40,37 @@ export interface ApiResponse<T = any> {
 
 // 用户API服务
 export const userApi = {
-  // 用户登录 - 暂未实现
+  // 用户登录
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     try {
-      // 暂时返回模拟数据，等后端实现
-      throw new Error('登录功能暂未实现，请联系管理员')
+      // 暂时返回模拟数据，等后端实现登录功能
+      console.log('登录请求数据:', data)
+      
+      // 模拟API调用延迟
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // 模拟登录验证
+      if (data.password.length < 6) {
+        throw new Error('密码长度至少为6位')
+      }
+      
+      // 返回模拟的成功响应
+      const mockUser = {
+        id: 1,
+        username: data.username || data.email?.split('@')[0] || 'user',
+        email: data.email || `${data.username}@example.com`,
+        avatar: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      
+      return {
+        user: mockUser,
+        token: `mock-token-${Date.now()}`,
+        refreshToken: `mock-refresh-token-${Date.now()}`
+      }
     } catch (error) {
+      console.error('登录失败:', error)
       throw error
     }
   },
