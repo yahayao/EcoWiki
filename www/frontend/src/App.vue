@@ -291,7 +291,7 @@ import LoginPanel from './components/LoginPanel.vue'
 import RegisterPanel from './components/RegisterPanel.vue'
 import AdminSettings from './components/AdminSettings.vue'
 import { useAuth } from './composables/useAuth'
-import { userApi, UserRole } from './api/user'
+import { userApi } from './api/user'
 
 // 获取认证状态
 const { user, isAuthenticated, userAvatar, clearUser } = useAuth()
