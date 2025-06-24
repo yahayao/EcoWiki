@@ -5,7 +5,8 @@
     "src/**/__tests__/*",
     "src/components/HelloWorld.vue",
     "src/components/TheWelcome.vue",
-    "src/components/WelcomeItem.vue"
+    "src/components/WelcomeItem.vue",
+    "src/components/BaseButton.vue"
   ],
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",

@@ -1,4 +1,30 @@
+import axios from 'axios'
 import { api } from './index'
+
+// 修改基础URL，加上 /api 前缀
+const API_BASE_URL = 'http://localhost:8080/api'
+
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+
+// 请求拦截器
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
 
 // 修改用户组类型定义 - 改为字符串常量
 export const USER_GROUPS = {
