@@ -1,13 +1,15 @@
 import { api } from '../api'
 
 export const userService = {
-  // 更新系统设置
-  async updateSystemSettings(settings: Record<string, any>) {
-    // 假设后端有 /admin/settings 接口
-    const response = await api.post('/admin/settings', settings)
+  // 获取系统统计
+  async getStats() {
+    const response = await api.get('/admin/stats')
     if (response.data.code !== 200) {
-      throw new Error(response.data.message || '更新系统设置失败')
+      throw new Error(response.data.message || '获取系统统计失败')
     }
     return response.data
-  }
+  },
 }
+
+
+ 

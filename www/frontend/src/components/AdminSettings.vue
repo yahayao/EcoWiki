@@ -262,10 +262,10 @@ const deleteUser = async (userId: number) => {
 const applySettings = async () => {
   applying.value = true
   try {
-    // 先应用系统设置
-    await userService.updateSystemSettings({ ...pendingSettings })
+    // 1. 注释掉或删除这行
+    // await userService.updateSystemSettings({ ...pendingSettings })
 
-    // 批量应用用户更改
+    // 2. 只应用用户更改
     const changes = Object.entries(pendingUserChanges.value)
     for (const [userIdStr, change] of changes) {
       const userId = Number(userIdStr)
