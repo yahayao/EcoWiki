@@ -112,12 +112,33 @@
         </div>
       </div>
     </div>
+
+    <!-- 系统设置 -->
+    <div class="system-settings-section">
+      <div class="system-options">
+        <label>
+          站点名称：
+          <input v-model="pendingSettings.siteName" />
+        </label>
+        <label>
+          站点描述：
+          <input v-model="pendingSettings.siteDescription" />
+        </label>
+        <!-- 其他设置项... -->
+      </div>
+      <div style="text-align:right;margin-top:1rem;">
+        <BaseButton :loading="applying" @click="applySettings" variant="primary">
+          应用
+        </BaseButton>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, reactive } from 'vue'
 import { adminApi, USER_GROUPS, type UserResponse, type UserGroup } from '../api/user'
+import { userService } from '@/services/userService'
 import toast from '../utils/toast'
 
 // 响应式数据
@@ -125,6 +146,24 @@ const users = ref<UserResponse[]>([])
 const stats = ref<any>({})
 const loading = ref(false)
 const error = ref('')
+
+// 系统设置
+const systemSettings = ref({
+  siteName: 'EcoWiki',
+  siteDescription: '知识共享平台',
+  allowRegistration: true,
+  emailVerification: false,
+  emailNotifications: true,
+  maintenanceMode: false,
+  autoBackup: true,
+  maxFileSize: 10,
+  cacheEnabled: true
+})
+
+// 用于暂存用户修改但未应用的设置
+const pendingSettings = reactive({ ...systemSettings.value })
+
+const applying = ref(false)
 
 // 加载用户列表
 const loadUsers = async () => {
@@ -213,6 +252,22 @@ const deleteUser = async (userId: number) => {
   } catch (err: any) {
     console.error('删除用户失败:', err)
     toast.error(err.message || '删除用户失败')
+  }
+}
+
+// 应用按钮事件
+const applySettings = async () => {
+  applying.value = true
+  try {
+    // 假设有 userService.updateSystemSettings 方法
+    await userService.updateSystemSettings({ ...pendingSettings })
+    // 应用成功后同步到全局 systemSettings
+    Object.assign(systemSettings.value, pendingSettings)
+    toast.success('设置已应用')
+  } catch (e: any) {
+    toast.error(e.message || '应用设置失败')
+  } finally {
+    applying.value = false
   }
 }
 
@@ -415,6 +470,34 @@ onMounted(() => {
 .delete-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.system-settings-section {
+  margin-top: 32px;
+  padding: 24px;
+  background: #f8fafc;
+  border-radius: 12px;
+}
+
+.system-options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.system-options label {
+  display: flex;
+  flex-direction: column;
+  color: #2d3748;
+  font-size: 0.9rem;
+}
+
+.system-options input {
+  padding: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: white;
+  font-size: 0.9rem;
 }
 
 @media (max-width: 768px) {
