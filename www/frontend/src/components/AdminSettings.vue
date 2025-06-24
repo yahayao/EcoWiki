@@ -75,9 +75,9 @@
                 <td>{{ user.email }}</td>
                 <td>{{ user.fullName || '-' }}</td>
                 <td>
-                  <select 
-                    v-model="user.userGroup" 
-                    @change="updateUserGroup(user.id, user.userGroup)"
+                  <select
+                    :value="pendingUserChanges[user.id]?.userGroup ?? user.userGroup"
+                    @change="e => onUserGroupChange(user, (e.target as HTMLSelectElement).value)"
                     :disabled="user.userGroup === 'superadmin'"
                     class="role-select"
                   >
@@ -88,12 +88,12 @@
                   </select>
                 </td>
                 <td>
-                  <button 
-                    @click="toggleUserStatus(user.id, !user.active)"
+                  <button
+                    @click="onUserStatusChange(user, !user.active)"
                     :disabled="user.userGroup === 'superadmin'"
-                    :class="['status-btn', user.active ? 'active' : 'inactive']"
+                    :class="['status-btn', (pendingUserChanges[user.id]?.active ?? user.active) ? 'active' : 'inactive']"
                   >
-                    {{ user.active ? '启用' : '禁用' }}
+                    {{ (pendingUserChanges[user.id]?.active ?? user.active) ? '启用' : '禁用' }}
                   </button>
                 </td>
                 <td>{{ formatDate(user.createdAt) }}</td>
@@ -162,6 +162,9 @@ const systemSettings = ref({
 
 // 用于暂存用户修改但未应用的设置
 const pendingSettings = reactive({ ...systemSettings.value })
+
+// 新增：用于暂存用户更改
+const pendingUserChanges = ref<Record<number, Partial<UserResponse>>>({})
 
 const applying = ref(false)
 
@@ -259,11 +262,28 @@ const deleteUser = async (userId: number) => {
 const applySettings = async () => {
   applying.value = true
   try {
-    // 假设有 userService.updateSystemSettings 方法
+    // 先应用系统设置
     await userService.updateSystemSettings({ ...pendingSettings })
+
+    // 批量应用用户更改
+    const changes = Object.entries(pendingUserChanges.value)
+    for (const [userIdStr, change] of changes) {
+      const userId = Number(userIdStr)
+      if (change.userGroup !== undefined) {
+        await adminApi.updateUserGroup(userId, change.userGroup as UserGroup)
+      }
+      if (change.active !== undefined) {
+        await adminApi.updateUserStatus(userId, change.active)
+      }
+    }
+    // 清空更改
+    pendingUserChanges.value = {}
+
     // 应用成功后同步到全局 systemSettings
     Object.assign(systemSettings.value, pendingSettings)
     toast.success('设置已应用')
+    await loadUsers()
+    await loadStats()
   } catch (e: any) {
     toast.error(e.message || '应用设置失败')
   } finally {
@@ -282,6 +302,20 @@ onMounted(() => {
   loadUsers()
   loadStats()
 })
+
+const onUserGroupChange = (user: UserResponse, newGroup: string) => {
+  if (!pendingUserChanges.value[user.id]) {
+    pendingUserChanges.value[user.id] = {}
+  }
+  pendingUserChanges.value[user.id].userGroup = newGroup as UserGroup
+}
+
+const onUserStatusChange = (user: UserResponse, newStatus: boolean) => {
+  if (!pendingUserChanges.value[user.id]) {
+    pendingUserChanges.value[user.id] = {}
+  }
+  pendingUserChanges.value[user.id].active = newStatus
+}
 </script>
 
 <style scoped>
