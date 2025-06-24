@@ -115,10 +115,6 @@
               <div class="error-message" v-if="showErrors && errors.password">
                 {{ errors.password }}
               </div>
-              <!-- 添加密码强度显示 -->
-              <div v-if="formData.password" class="password-strength">
-                密码强度: <span :class="`strength-${passwordStrength}`">{{ passwordStrength }}</span>
-              </div>
             </div>
             
             <div class="form-group">
@@ -163,10 +159,9 @@ import { userApi } from '../api/user'
 import { validateRegisterForm, debounce, type FormErrors } from '../utils/validation'
 import { useAuth } from '../composables/useAuth'
 import toast from '../utils/toast'
-import { getPasswordStrength } from '../utils/validation'
 
 // 定义 emits
-const emit = defineEmits(['switchToLogin'])
+const emit = defineEmits(['switchToLogin', 'registerSuccess'])
 
 // 使用认证状态
 const { setUser } = useAuth()
@@ -270,12 +265,10 @@ const handleRegister = async () => {
     // 注册成功，保存用户信息和token
     setUser(response.user, response.token, response.refreshToken)
     
-    toast.success('注册成功！即将跳转到登录页面', '注册成功')
+    toast.success('注册成功！欢迎加入EcoWiki', '注册成功')
     
-    // 延迟跳转到登录页面
-    setTimeout(() => {
-      emit('switchToLogin')
-    }, 1500)
+    // 通知父组件注册成功，关闭模态框
+    emit('registerSuccess')
     
   } catch (error: any) {
     console.error('注册失败:', error)
@@ -292,11 +285,6 @@ const handleRegister = async () => {
     isLoading.value = false
   }
 }
-
-// 添加密码强度计算
-const passwordStrength = computed(() => {
-  return formData.password ? getPasswordStrength(formData.password) : ''
-})
 </script>
 
 <style scoped>
@@ -308,47 +296,35 @@ const passwordStrength = computed(() => {
   transition: all 0.4s ease;
   animation: cardFadeIn 0.6s ease-out;
   max-width: 500px;
-  width: 100%;
   margin: 0 auto;
   border: 1px solid rgba(0, 0, 0, 0.05);
-  /* 固定高度，避免动画过程中高度变化导致滚动条 */
-  height: 520px;
-  display: flex;
-  flex-direction: column;
-}
-
-.register-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.12);
 }
 
 @keyframes cardFadeIn {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 .card-content {
   display: flex;
-  flex: 1;
-  min-height: 100%;
+  min-height: 600px;
 }
 
 .content-left {
-  flex: 0.8;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  flex: 1;
+  background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
   padding: 40px 30px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   position: relative;
   overflow: hidden;
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .decorative-bg {
@@ -382,29 +358,29 @@ const passwordStrength = computed(() => {
   height: 60px;
   top: 50%;
   right: -15px;
-  border-radius: 50%;
-  animation-delay: 5s;
-  background: rgba(168, 139, 248, 0.1);
+  clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%);
+  animation-delay: 3s;
+  background: rgba(168, 139, 248, 0.12);
 }
 
 .shape-3 {
-  width: 50px;
-  height: 50px;
-  bottom: 15%;
-  left: 35%;
-  clip-path: polygon(20% 0%, 80% 0%, 100% 60%, 60% 100%, 0% 60%);
-  animation-delay: 10s;
-  background: rgba(196, 181, 253, 0.1);
+  width: 40px;
+  height: 40px;
+  bottom: 20%;
+  left: 15%;
+  border-radius: 50%;
+  animation-delay: 6s;
+  background: rgba(192, 132, 252, 0.08);
 }
 
 .shape-4 {
-  width: 40px;
-  height: 40px;
-  top: 25%;
-  left: 60%;
-  border-radius: 8px;
-  animation-delay: 7s;
-  background: rgba(147, 107, 236, 0.08);
+  width: 50px;
+  height: 50px;
+  bottom: 40%;
+  right: 20%;
+  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+  animation-delay: 9s;
+  background: rgba(139, 92, 246, 0.1);
 }
 
 @keyframes float {

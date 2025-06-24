@@ -92,13 +92,14 @@ import { useAuth } from '../composables/useAuth'
 import toast from '../utils/toast'
 
 // 定义 emits
-defineEmits(['switchToRegister'])
+const emit = defineEmits(['switchToRegister', 'loginSuccess'])
 
 // 使用认证状态
 const { setUser } = useAuth()
 
 // 响应式数据
 const isLoading = ref(false)
+
 const formData = reactive({
   loginField: '', // 改为通用的登录字段
   password: '',
@@ -142,7 +143,9 @@ const handleLogin = async () => {
     
     toast.success(`欢迎回来，${response.user.username}！`, '登录成功')
     
-    // 这里可以跳转到主页面或其他页面
+    // 通知父组件登录成功，关闭模态框
+    emit('loginSuccess')
+    
     console.log('登录成功，用户信息:', response.user)
     
   } catch (error: any) {
@@ -158,43 +161,32 @@ const handleLogin = async () => {
 .login-card {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.25);
+  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
   overflow: hidden;
   transition: all 0.4s ease;
-  animation: cardSlideIn 0.6s ease-out;
+  animation: cardFadeIn 0.6s ease-out;
   max-width: 480px;
-  width: 100%;
   margin: 0 auto;
-  /* 固定高度，避免动画过程中高度变化导致滚动条 */
-  height: 480px;
-  display: flex;
-  flex-direction: column;
 }
 
-.login-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 25px 50px rgba(102, 126, 234, 0.35);
-}
-
-@keyframes cardSlideIn {
+@keyframes cardFadeIn {
   from {
     opacity: 0;
-    transform: translateX(-30px);
+    transform: translateY(20px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 .card-content {
   display: flex;
-  flex: 1;
-  min-height: 100%;
+  min-height: 500px;
 }
 
 .content-left {
-  flex: 0.8;
+  flex: 1;
   background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 100%);
   padding: 40px 30px;
   display: flex;
