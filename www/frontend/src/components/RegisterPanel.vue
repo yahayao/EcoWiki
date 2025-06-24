@@ -5,10 +5,9 @@
       <div class="content-left">
         <!-- 装饰性背景 -->
         <div class="decorative-bg">
-          <div class="geometric-shape shape-1"></div>
-          <div class="geometric-shape shape-2"></div>
-          <div class="geometric-shape shape-3"></div>
-          <div class="geometric-shape shape-4"></div>
+          <div class="floating-circle circle-1"></div>
+          <div class="floating-circle circle-2"></div>
+          <div class="floating-circle circle-3"></div>
         </div>
         
         <!-- Logo 区域 -->
@@ -289,15 +288,14 @@ const handleRegister = async () => {
 
 <style scoped>
 .register-card {
-  background: linear-gradient(135deg, #f1f3f4 0%, #ffffff 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
   overflow: hidden;
   transition: all 0.4s ease;
   animation: cardFadeIn 0.6s ease-out;
   max-width: 500px;
   margin: 0 auto;
-  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 @keyframes cardFadeIn {
@@ -318,13 +316,15 @@ const handleRegister = async () => {
 
 .content-left {
   flex: 1;
-  background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.98) 100%);
   padding: 40px 30px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .decorative-bg {
@@ -336,69 +336,45 @@ const handleRegister = async () => {
   pointer-events: none;
 }
 
-.geometric-shape {
+.floating-circle {
   position: absolute;
-  background: linear-gradient(135deg, rgba(147, 107, 236, 0.12) 0%, rgba(168, 139, 248, 0.12) 100%);
-  animation: float 15s ease-in-out infinite;
-  border-radius: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.12) 100%);
+  animation: float 8s ease-in-out infinite;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(102, 126, 234, 0.1);
 }
 
-.shape-1 {
-  width: 80px;
-  height: 80px;
-  top: 10%;
-  left: -20px;
-  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-  animation-delay: 0s;
-  background: rgba(147, 107, 236, 0.1);
-}
-
-.shape-2 {
+.circle-1 {
   width: 60px;
   height: 60px;
-  top: 50%;
-  right: -15px;
-  clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%);
-  animation-delay: 3s;
-  background: rgba(168, 139, 248, 0.12);
+  top: 10%;
+  left: -10px;
+  animation-delay: 0s;
 }
 
-.shape-3 {
+.circle-2 {
   width: 40px;
   height: 40px;
-  bottom: 20%;
-  left: 15%;
-  border-radius: 50%;
-  animation-delay: 6s;
-  background: rgba(192, 132, 252, 0.08);
+  top: 60%;
+  right: -5px;
+  animation-delay: 2.5s;
 }
 
-.shape-4 {
-  width: 50px;
-  height: 50px;
-  bottom: 40%;
-  right: 20%;
-  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
-  animation-delay: 9s;
-  background: rgba(139, 92, 246, 0.1);
+.circle-3 {
+  width: 30px;
+  height: 30px;
+  bottom: 15%;
+  left: 40%;
+  animation-delay: 5s;
 }
 
 @keyframes float {
   0%, 100% {
     transform: translateY(0px) rotate(0deg);
-    opacity: 0.5;
-  }
-  25% {
-    transform: translateY(-15px) rotate(90deg);
-    opacity: 0.7;
   }
   50% {
-    transform: translateY(-25px) rotate(180deg);
-    opacity: 0.9;
-  }
-  75% {
-    transform: translateY(-10px) rotate(270deg);
-    opacity: 0.7;
+    transform: translateY(-20px) rotate(180deg);
   }
 }
 
@@ -410,15 +386,30 @@ const handleRegister = async () => {
 .logo-circle {
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 15px;
-  box-shadow: 0 8px 20px rgba(167, 139, 250, 0.3);
-  border: 3px solid white;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.25);
+  border: 3px solid rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(10px);
+  position: relative;
+}
+
+.logo-circle::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 50%;
+  z-index: -1;
+  opacity: 0.6;
+  filter: blur(8px);
 }
 
 .logo-text {
@@ -426,7 +417,9 @@ const handleRegister = async () => {
   font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: -0.5px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+  position: relative;
 }
 
 .register-header {
@@ -434,20 +427,20 @@ const handleRegister = async () => {
 }
 
 .register-title {
-  color: #1f2937;
+  color: #1a202c;
   font-size: 1.8rem;
   font-weight: 700;
   margin-bottom: 8px;
   letter-spacing: -0.5px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .register-subtitle {
-  color: #4b5563;
+  color: #4a5568;
   font-size: 0.9rem;
   margin: 0;
   line-height: 1.4;
@@ -501,8 +494,8 @@ const handleRegister = async () => {
 
 .form-input:focus {
   outline: none;
-  border-bottom-color: #a78bfa;
-  background: rgba(167, 139, 250, 0.02);
+  border-bottom-color: #667eea;
+  background: rgba(102, 126, 234, 0.02);
 }
 
 .form-input:focus::placeholder {
@@ -562,7 +555,7 @@ const handleRegister = async () => {
 .register-button {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   border-radius: 25px;
@@ -573,7 +566,7 @@ const handleRegister = async () => {
   margin: 25px 0 20px 0;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(167, 139, 250, 0.35);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35);
 }
 
 .register-button::before {
@@ -593,7 +586,7 @@ const handleRegister = async () => {
 
 .register-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(167, 139, 250, 0.45);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.45);
 }
 
 .register-button:disabled {
@@ -616,14 +609,14 @@ const handleRegister = async () => {
 }
 
 .login-link {
-  color: #a78bfa;
+  color: #667eea;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.3s ease;
 }
 
 .login-link:hover {
-  color: #c084fc;
+  color: #764ba2;
 }
 
 .loading-spinner {
@@ -657,7 +650,7 @@ const handleRegister = async () => {
     padding: 30px 25px;
     flex: none;
     border-right: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   }
   
   .content-right {
