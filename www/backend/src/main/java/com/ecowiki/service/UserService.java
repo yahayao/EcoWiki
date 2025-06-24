@@ -1,5 +1,7 @@
 package com.ecowiki.service;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,11 +29,13 @@ public class UserService {
     }
     
     public User registerUser(UserRegistrationDto dto) {
-        // 验证用户名和邮箱是否可用
-        if (!isUsernameAvailable(dto.getUsername())) {
-            throw new RuntimeException("用户名已被使用");
+        // 检查用户名是否已存在
+        if (userRepository.existsByUsername(dto.getUsername())) {
+            throw new RuntimeException("用户名已存在");
         }
-        if (!isEmailAvailable(dto.getEmail())) {
+        
+        // 检查邮箱是否已存在
+        if (userRepository.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("邮箱已被注册");
         }
         
@@ -41,7 +45,8 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(dto.getPassword())); // 加密密码
         user.setEmail(dto.getEmail());
         user.setFullName(dto.getFullName());
-        user.setUserGroup(dto.getUserGroup() != null ? dto.getUserGroup() : "user"); // 默认用户组
+        user.setUserGroup("user"); // 设置默认权限组
+        user.setActive(true);
         
         // 保存到数据库
         return userRepository.save(user);
@@ -69,5 +74,13 @@ public class UserService {
         }
         
         return user;
+    }
+
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 }

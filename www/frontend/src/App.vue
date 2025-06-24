@@ -22,6 +22,14 @@
       </div>
     </div>
 
+    <!-- 管理员设置模态框 -->
+    <div v-if="showAdminSettings" class="auth-modal-overlay" @click.self="closeModals">
+      <div class="admin-modal">
+        <AdminSettings />
+        <button class="close-button" @click="closeModals">×</button>
+      </div>
+    </div>
+
     <!-- 主页面内容 -->
     <div class="wiki-home">
       <!-- 顶部导航栏 -->
@@ -61,6 +69,17 @@
                 </div>
                 <span class="username">{{ user?.username }}</span>
               </div>
+              
+              <!-- 管理员设置按钮 -->
+              <button 
+                v-if="hasAdminPermission" 
+                class="action-button settings-button" 
+                @click="showAdminModal"
+                title="系统设置"
+              >
+                ⚙️ 设置
+              </button>
+              
               <button class="action-button logout-button" @click="handleLogout">登出</button>
             </template>
             <template v-else>
@@ -267,10 +286,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import LoginPanel from './components/LoginPanel.vue'
 import RegisterPanel from './components/RegisterPanel.vue'
+import AdminSettings from './components/AdminSettings.vue'
 import { useAuth } from './composables/useAuth'
+import { userApi, UserRole } from './api/user'
 
 // 获取认证状态
 const { user, isAuthenticated, userAvatar, clearUser } = useAuth()
@@ -278,10 +299,11 @@ const { user, isAuthenticated, userAvatar, clearUser } = useAuth()
 // 控制登录和注册表单的显示
 const showLoginForm = ref(false)
 const showRegisterForm = ref(false)
+const showAdminSettings = ref(false)
 
 // 监听模态框状态，控制页面滚动
-watch([showLoginForm, showRegisterForm], ([login, register]) => {
-  const isModalOpen = login || register
+watch([showLoginForm, showRegisterForm, showAdminSettings], ([login, register, admin]) => {
+  const isModalOpen = login || register || admin
   if (isModalOpen) {
     document.body.classList.add('modal-open')
   } else {
@@ -289,16 +311,30 @@ watch([showLoginForm, showRegisterForm], ([login, register]) => {
   }
 })
 
+// 检查是否有管理员权限
+const hasAdminPermission = computed(() => {
+  return userApi.isAdmin(user.value)
+})
+
 // 显示登录模态框
 const showLoginModal = () => {
   showLoginForm.value = true
   showRegisterForm.value = false
+  showAdminSettings.value = false
 }
 
 // 显示注册模态框
 const showRegisterModal = () => {
   showRegisterForm.value = true
   showLoginForm.value = false
+  showAdminSettings.value = false
+}
+
+// 显示管理员设置
+const showAdminModal = () => {
+  showAdminSettings.value = true
+  showLoginForm.value = false
+  showRegisterForm.value = false
 }
 
 // 切换到注册
@@ -317,6 +353,7 @@ const switchToLogin = () => {
 const closeModals = () => {
   showLoginForm.value = false
   showRegisterForm.value = false
+  showAdminSettings.value = false
 }
 
 // 登出处理
@@ -948,6 +985,30 @@ const handleLogout = () => {
   transform: scale(1.1);
 }
 
+/* 新增管理员模态框样式 */
+.admin-modal {
+  position: relative;
+  max-width: 95%;
+  max-height: 90vh;
+  overflow: auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* 设置按钮样式 */
+.settings-button {
+  background: linear-gradient(135deg, #38b2ac, #319795);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.settings-button:hover {
+  background: linear-gradient(135deg, #319795, #2c7a7b);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(56, 178, 172, 0.3);
+}
+
 /* 响应式设计 */
 @media (max-width: 1024px) {
   .main-content .container {
@@ -1007,6 +1068,12 @@ const handleLogout = () => {
   
   .update-content {
     width: 100%;
+  }
+  
+  .admin-modal {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
   }
 }
 

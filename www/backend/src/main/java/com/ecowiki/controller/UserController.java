@@ -18,6 +18,7 @@ import com.ecowiki.dto.ApiResponse;
 import com.ecowiki.dto.LoginRequest;
 import com.ecowiki.dto.UserRegistrationDto;
 import com.ecowiki.entity.User;
+import com.ecowiki.security.JwtUtil;
 import com.ecowiki.service.UserService;
 
 import jakarta.validation.Valid;
@@ -30,6 +31,9 @@ public class UserController {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
     
     @GetMapping("/check-username")
     public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkUsername(@RequestParam String username) {
@@ -47,17 +51,23 @@ public class UserController {
     
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Map<String, Object>>> registerUser(@Valid @RequestBody UserRegistrationDto dto) {
-        User user = userService.registerUser(dto);
-        
-        Map<String, Object> result = new HashMap<>();
-        result.put("userId", user.getId());
-        result.put("username", user.getUsername());
-        result.put("email", user.getEmail());
-        result.put("fullName", user.getFullName());
-        result.put("userGroup", user.getUserGroup());
-        result.put("createdAt", user.getCreatedAt().toString());
-        
-        return ResponseEntity.ok(ApiResponse.success("注册成功", result));
+        try {
+            User user = userService.registerUser(dto);
+            
+            // 生成JWT token
+            String token = jwtUtil.generateToken(user.getUsername());
+            String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("user", createUserResponse(user));
+            result.put("token", token);
+            result.put("refreshToken", refreshToken);
+            
+            return ResponseEntity.ok(ApiResponse.success(result, "注册成功"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error(e.getMessage()));
+        }
     }
     
     @PostMapping("/login")
@@ -65,17 +75,19 @@ public class UserController {
         try {
             User user = userService.authenticateUser(request);
             
-            Map<String, Object> result = new HashMap<>();
-            result.put("userId", user.getId());
-            result.put("username", user.getUsername());
-            result.put("email", user.getEmail());
-            result.put("fullName", user.getFullName());
-            result.put("token", "mock-token-" + user.getId()); // 临时token
+            // 生成JWT token
+            String token = jwtUtil.generateToken(user.getUsername());
+            String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
             
-            return ResponseEntity.ok(ApiResponse.success("登录成功", result));
+            Map<String, Object> result = new HashMap<>();
+            result.put("user", createUserResponse(user));
+            result.put("token", token);
+            result.put("refreshToken", refreshToken);
+            
+            return ResponseEntity.ok(ApiResponse.success(result, "登录成功"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
-                .body(ApiResponse.error(400, e.getMessage()));
+                .body(ApiResponse.error(e.getMessage()));
         }
     }
     
@@ -85,5 +97,19 @@ public class UserController {
         result.put("status", "OK");
         result.put("message", "EcoWiki API is running");
         return ResponseEntity.ok(ApiResponse.success(result));
+    }
+    
+    // 创建用户响应对象（不包含密码等敏感信息）
+    private Map<String, Object> createUserResponse(User user) {
+        Map<String, Object> userResponse = new HashMap<>();
+        userResponse.put("id", user.getId());
+        userResponse.put("username", user.getUsername());
+        userResponse.put("email", user.getEmail());
+        userResponse.put("fullName", user.getFullName());
+        userResponse.put("userGroup", user.getUserGroup()); // 确保字段名为 userGroup
+        userResponse.put("active", user.getActive());
+        userResponse.put("createdAt", user.getCreatedAt());
+        userResponse.put("updatedAt", user.getUpdatedAt());
+        return userResponse;
     }
 }
