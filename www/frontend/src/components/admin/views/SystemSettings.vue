@@ -80,12 +80,18 @@
             <input v-model="systemSettings.allowRegistration" type="checkbox" />
             允许用户注册
           </label>
+          <div class="setting-desc">
+            <small>关闭后，用户将无法自行注册账号。</small>
+          </div>
         </div>
         <div class="setting-item">
           <label>
-            <input v-model="systemSettings.emailVerification" type="checkbox" />
+            <input v-model="systemSettings.emailVerification" type="checkbox" :disabled="!systemSettings.allowRegistration" />
             邮箱验证
           </label>
+          <div class="setting-desc">
+            <small>开启后，新用户注册需通过邮箱验证。</small>
+          </div>
         </div>
       </div>
     </div>
