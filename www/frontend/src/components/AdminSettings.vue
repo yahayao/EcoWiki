@@ -302,6 +302,7 @@ const applySettings = async () => {
 
     // 保存首页风格设置
     localStorage.setItem('homeStyle', homeStyle.value)
+    window.dispatchEvent(new Event('ecowiki-home-style-change'))
     toast.success('首页风格已切换')
   } catch (e: any) {
     toast.error(e.message || '应用设置失败')
