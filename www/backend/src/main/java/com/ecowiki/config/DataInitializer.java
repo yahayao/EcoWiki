@@ -10,13 +10,14 @@ import com.ecowiki.repository.UserRepository;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
-    
+
     @Autowired
     private UserRepository userRepository;
-    
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    
+
+    // 生产环境启用
+    // @Autowired
+    // private PasswordEncoder passwordEncoder;
+
     @Override
     public void run(String... args) throws Exception {
         // 检查是否已存在超级管理员
@@ -24,14 +25,15 @@ public class DataInitializer implements CommandLineRunner {
             // 创建超级管理员账户
             User superAdmin = new User();
             superAdmin.setUsername("superadmin");
-            superAdmin.setPassword(passwordEncoder.encode("EcoWiki@2025"));
+            // superAdmin.setPassword(passwordEncoder.encode("EcoWiki@2025")); 生产环境启用
+            superAdmin.setPassword("EcoWiki@2025");
             superAdmin.setEmail("admin@ecowiki.com");
             superAdmin.setFullName("超级管理员");
             superAdmin.setUserGroup("superadmin"); // 使用 userGroup
             superAdmin.setActive(true);
-            
+
             userRepository.save(superAdmin);
-            
+
             System.out.println("=================================");
             System.out.println("超级管理员账户已创建:");
             System.out.println("用户名: superadmin");
