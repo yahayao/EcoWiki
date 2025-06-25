@@ -21,36 +21,45 @@ defineEmits(['show-login', 'show-register', 'show-admin'])
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #181f2a !important; /* 深色背景，强制覆盖全局 */
+  /* 渐变背景，仿照登录左侧 */
+  background: linear-gradient(135deg, #7b8fff 0%, #a084ee 100%);
 }
 h1 {
   font-size: 2.5rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
   color: #fff;
+  letter-spacing: 2px;
 }
 .subtitle {
-  color: #b3b8c5;
+  color: #e0e7ff;
   margin-bottom: 2rem;
+  font-size: 1.2rem;
+  letter-spacing: 1px;
 }
 .nav-btns {
   display: flex;
   gap: 1.5rem;
 }
 .nav-btn {
-  padding: 0.7rem 2rem;
-  background: #fff;
-  color: #181f2a;
-  border-radius: 8px;
+  padding: 0.9rem 2.5rem;
+  background: linear-gradient(180deg, #fff 80%, #e6eaff 100%);
+  color: #6a6fd7;
+  border-radius: 32px;
   text-decoration: none;
-  font-size: 1.1rem;
-  transition: background 0.2s, color 0.2s;
-  border: none;
+  font-size: 1.35rem;
   font-weight: bold;
-  box-shadow: none;
+  border: none;
+  box-shadow: 0 6px 24px 0 rgba(120, 120, 200, 0.18), 0 1.5px 0 #d1d5db inset;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
+  cursor: pointer;
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
 }
 .nav-btn:hover {
-  background: #4f8cff;
-  color: #fff;
+  background: linear-gradient(180deg, #f0f4ff 60%, #fff 100%);
+  color: #4f4fcf;
+  box-shadow: 0 12px 32px 0 rgba(120, 120, 200, 0.22), 0 2px 0 #c7d2fe inset;
+  transform: translateY(-2px) scale(1.04);
 }
 </style>
