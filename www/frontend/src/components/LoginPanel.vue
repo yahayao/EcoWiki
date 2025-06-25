@@ -41,15 +41,30 @@
               />
             </div>
             
-            <div class="form-group">
+            <div class="form-group password-group">
               <input
                 id="password"
                 v-model="formData.password"
-                type="password"
+                :type="showPassword ? 'text' : 'password'"
                 class="form-input"
                 placeholder="密码"
                 required
               />
+              <button
+                type="button"
+                class="password-toggle"
+                @click="togglePasswordVisibility"
+                :title="showPassword ? '隐藏密码' : '显示密码'"
+              >
+                <svg v-if="showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
             </div>
             
             <div class="form-group checkbox-group">
@@ -99,12 +114,18 @@ const { setUser } = useAuth()
 
 // 响应式数据
 const isLoading = ref(false)
+const showPassword = ref(false)
 
 const formData = reactive({
   loginField: '', // 改为通用的登录字段
   password: '',
   rememberMe: false
 })
+
+// 切换密码显示状态
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value
+}
 
 // 判断输入的是邮箱还是用户名
 const isEmail = (input: string): boolean => {
@@ -312,6 +333,41 @@ const handleLogin = async () => {
   margin-bottom: 20px;
 }
 
+.password-group {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #a0aec0;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+  z-index: 10;
+}
+
+.password-toggle:hover {
+  color: #667eea;
+}
+
+.password-toggle:focus {
+  outline: none;
+  color: #667eea;
+}
+
+.password-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
 .checkbox-group {
   margin-bottom: 15px;
 }
@@ -365,6 +421,10 @@ const handleLogin = async () => {
   color: #2d3748;
   transition: all 0.3s ease;
   box-sizing: border-box;
+}
+
+.password-group .form-input {
+  padding-right: 40px;
 }
 
 .form-input::placeholder {
