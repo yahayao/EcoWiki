@@ -1,5 +1,9 @@
 <template>
   <div class="simple-home">
+    <div class="bg-circle bg-circle1"></div>
+    <div class="bg-circle bg-circle2"></div>
+    <div class="bg-circle bg-circle3"></div>
+    <div class="bg-circle bg-circle4"></div>
     <h1>EcoWiki</h1>
     <p class="subtitle">极简风格，专注知识本身</p>
     <div class="nav-btns">
@@ -17,49 +21,100 @@ defineEmits(['show-login', 'show-register', 'show-admin'])
 <style scoped>
 .simple-home {
   min-height: 100vh;
+  width: 100vw;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* 渐变背景，仿照登录左侧 */
-  background: linear-gradient(135deg, #7b8fff 0%, #a084ee 100%);
+  background: linear-gradient(135deg, #f6f8ff 0%, #e9eafd 100%);
+  overflow: hidden;
 }
+
+/* 圆形装饰 */
+.bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(120,130,255,0.12) 0%, rgba(120,130,255,0.02) 100%);
+  pointer-events: none;
+}
+.bg-circle1 {
+  width: 180px;
+  height: 180px;
+  left: -60px;
+  top: -60px;
+}
+.bg-circle2 {
+  width: 120px;
+  height: 120px;
+  right: -40px;
+  top: 80px;
+}
+.bg-circle3 {
+  width: 90px;
+  height: 90px;
+  left: 40px;
+  bottom: 80px;
+}
+.bg-circle4 {
+  width: 140px;
+  height: 140px;
+  right: -50px;
+  bottom: -50px;
+}
+
+/* 内容样式 */
 h1 {
   font-size: 2.5rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
-  color: #fff;
+  color: #6a6fd7;
   letter-spacing: 2px;
+  z-index: 1;
 }
 .subtitle {
-  color: #e0e7ff;
+  color: #4b4f6b;
   margin-bottom: 2rem;
   font-size: 1.2rem;
   letter-spacing: 1px;
+  z-index: 1;
 }
 .nav-btns {
   display: flex;
   gap: 1.5rem;
+  z-index: 1;
 }
 .nav-btn {
-  padding: 0.9rem 2.5rem;
-  background: linear-gradient(180deg, #fff 80%, #e6eaff 100%);
-  color: #6a6fd7;
-  border-radius: 32px;
-  text-decoration: none;
-  font-size: 1.35rem;
-  font-weight: bold;
+  padding: 1rem 2.8rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border-radius: 25px;
+  font-size: 1.25rem;
+  font-weight: 600;
   border: none;
-  box-shadow: 0 6px 24px 0 rgba(120, 120, 200, 0.18), 0 1.5px 0 #d1d5db inset;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35);
   cursor: pointer;
-  letter-spacing: 2px;
+  transition: all 0.3s cubic-bezier(.4,2,.6,1), box-shadow 0.3s;
   margin-bottom: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 2px;
+}
+.nav-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  transition: left 0.5s;
+}
+.nav-btn:hover::before {
+  left: 100%;
 }
 .nav-btn:hover {
-  background: linear-gradient(180deg, #f0f4ff 60%, #fff 100%);
-  color: #4f4fcf;
-  box-shadow: 0 12px 32px 0 rgba(120, 120, 200, 0.22), 0 2px 0 #c7d2fe inset;
-  transform: translateY(-2px) scale(1.04);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.45);
 }
 </style>
