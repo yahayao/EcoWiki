@@ -42,8 +42,10 @@ public class UserService {
         // 创建新用户
         User user = new User();
         user.setUsername(dto.getUsername());
-        //user.setPassword(passwordEncoder.encode(dto.getPassword()));  这个用来加密密码
-        user.setPassword(dto.getPassword()); // 这里假设密码已经在前端加密，实际应用中应使用 passwordEncoder.encode(dto.getPassword())
+        
+        //user.setPassword(passwordEncoder.encode(dto.getPassword()));  加密密码
+        user.setPassword(dto.getPassword());// 直接使用明文密码，实际应用中应加密
+        
         user.setEmail(dto.getEmail());
         user.setFullName(dto.getFullName());
         user.setUserGroup("user"); // 设置默认权限组
