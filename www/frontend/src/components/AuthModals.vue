@@ -24,10 +24,10 @@
     </div>
 
     <!-- 管理员设置模态框 -->
-    <div v-if="showAdminSettings" class="auth-modal-overlay" @click.self="$emit('closeModals')">
+    <div v-if="showAdminSettings" class="auth-modal-overlay admin-overlay">
       <div class="admin-modal">
-        <AdminSettings />
-        <button class="close-button" @click="$emit('closeModals')">×</button>
+        <router-view />
+        <button class="close-button" @click="closeAdmin">×</button>
       </div>
     </div>
   </div>
@@ -35,9 +35,11 @@
 
 <script setup lang="ts">
 import { computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import LoginPanel from './LoginPanel.vue'
 import RegisterPanel from './RegisterPanel.vue'
-import AdminSettings from './AdminSettings.vue'
+
+const router = useRouter()
 
 // 定义props
 const props = defineProps<{
@@ -47,7 +49,7 @@ const props = defineProps<{
 }>()
 
 // 定义事件
-defineEmits<{
+const emit = defineEmits<{
   closeModals: []
   switchToRegister: []
   switchToLogin: []
@@ -58,6 +60,17 @@ const showAnyModal = computed(() => {
   return props.showLoginForm || props.showRegisterForm || props.showAdminSettings
 })
 
+// 监听管理面板状态，控制路由
+watch(() => props.showAdminSettings, (isOpen) => {
+  if (isOpen) {
+    // 打开管理面板时，导航到系统设置
+    router.push('/admin/settings')
+  } else {
+    // 关闭管理面板时，返回首页
+    router.push('/')
+  }
+})
+
 // 监听模态框状态，控制页面滚动
 watch(showAnyModal, (isModalOpen) => {
   if (isModalOpen) {
@@ -66,6 +79,11 @@ watch(showAnyModal, (isModalOpen) => {
     document.body.classList.remove('modal-open')
   }
 })
+
+const closeAdmin = () => {
+  router.push('/') // 先导航回首页
+  emit('closeModals') // 再关闭模态框
+}
 </script>
 
 <style scoped>
@@ -102,14 +120,14 @@ watch(showAnyModal, (isModalOpen) => {
 
 .close-button {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 20px;
+  right: 20px;
   background: rgba(0, 0, 0, 0.5);
   border: none;
   font-size: 24px;
   color: white;
   cursor: pointer;
-  z-index: 1001;
+  z-index: 1002;
   width: 36px;
   height: 36px;
   display: flex;
@@ -125,32 +143,34 @@ watch(showAnyModal, (isModalOpen) => {
   transform: scale(1.1);
 }
 
-/* 管理员模态框样式 */
-.admin-modal {
-  position: relative;
-  min-width: 600px;
-  width: 1000px;
-  max-width: 95vw;
-  max-height: 90vh;
-  overflow: auto;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+/* 管理员模态框样式 - 全屏显示 */
+.admin-overlay {
+  background: none;
+  backdrop-filter: none;
 }
 
-@media (max-width: 700px) {
-  .admin-modal {
-    min-width: 0;
-    width: 100vw;
-    border-radius: 0;
-  }
+.admin-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: white;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: hidden;
+  z-index: 1001;
 }
 
 @media (max-width: 768px) {
-  .admin-modal {
-    max-width: 100%;
-    max-height: 100vh;
-    border-radius: 0;
+  .close-button {
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
   }
 }
 </style>

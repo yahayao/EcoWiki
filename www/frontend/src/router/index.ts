@@ -1,5 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DynamicHome from '../views/DynamicHome.vue'
+import AdminLayout from '../components/admin/AdminLayout.vue'
+import SystemSettings from '../components/admin/views/SystemSettings.vue'
+import UserList from '../components/admin/views/UserList.vue'
 
 const routes = [
   { path: '/', name: 'Home', component: DynamicHome },
@@ -7,6 +10,15 @@ const routes = [
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     redirect: '/'
+  },
+  {
+    path: '/admin',
+    component: AdminLayout,
+    redirect: '/admin/settings', // 默认重定向到系统设置
+    children: [
+      { path: 'settings', name: 'AdminSettings', component: SystemSettings },
+      { path: 'users', name: 'AdminUsers', component: UserList }
+    ]
   }
 ]
 
