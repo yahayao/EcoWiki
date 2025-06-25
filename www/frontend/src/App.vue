@@ -988,7 +988,9 @@ const handleLogout = () => {
 /* 新增管理员模态框样式 */
 .admin-modal {
   position: relative;
-  max-width: 95%;
+  min-width: 600px;
+  width: 1000px;
+  max-width: 95vw;
   max-height: 90vh;
   overflow: auto;
   background: white;
@@ -996,17 +998,12 @@ const handleLogout = () => {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
-/* 设置按钮样式 */
-.settings-button {
-  background: linear-gradient(135deg, #38b2ac, #319795);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.settings-button:hover {
-  background: linear-gradient(135deg, #319795, #2c7a7b);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(56, 178, 172, 0.3);
+@media (max-width: 700px) {
+  .admin-modal {
+    min-width: 0;
+    width: 100vw;
+    border-radius: 0;
+  }
 }
 
 /* 响应式设计 */

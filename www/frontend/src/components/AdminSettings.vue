@@ -44,8 +44,9 @@
     <div class="user-management">
       <div class="section-header">
         <h3>👥 用户管理</h3>
+        <!-- 刷新按钮 -->
         <button class="refresh-btn" @click="loadUsers" :disabled="loading">
-          <span v-if="loading">⏳</span>
+          <span v-if="loading" class="loading-spinner"></span>
           <span v-else>🔄</span>
           刷新
         </button>
@@ -115,10 +116,11 @@
 
     <!-- 系统设置 -->
     <div class="settings-card">
-      <div class="settings-header">
-        <span>站点设置</span>
+      <div class="settings-header only-btn">
+        <!-- 应用按钮 -->
         <button class="apply-btn" :disabled="applying" @click="applySettings">
-          应用
+          <span v-if="applying" class="loading-spinner"></span>
+          <span v-else>应用</span>
         </button>
       </div>
     </div>
@@ -377,12 +379,29 @@ const onUserStatusChange = (user: UserResponse, newStatus: boolean) => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .section-header h3 {
   margin: 0;
   color: #1a202c;
   font-size: 1.4rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.refresh-btn, .apply-btn {
+  height: 38px;
+  line-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 120px;
+  min-width: 80px;
+  white-space: nowrap;
 }
 
 .refresh-btn {
@@ -501,7 +520,7 @@ const onUserStatusChange = (user: UserResponse, newStatus: boolean) => {
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  padding: 1rem 1.5rem 1rem 1.5rem;
   position: relative;
 }
 
@@ -510,6 +529,10 @@ const onUserStatusChange = (user: UserResponse, newStatus: boolean) => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.5rem;
+}
+
+.settings-header.only-btn {
+  justify-content: flex-end;
 }
 
 .apply-btn {
@@ -530,6 +553,21 @@ const onUserStatusChange = (user: UserResponse, newStatus: boolean) => {
   background: #2563eb;
 }
 
+.loading-spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid #fff;
+  border-top: 2px solid #4f8cff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+  margin-right: 0.5em;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 @media (max-width: 768px) {
   .admin-settings {
     padding: 16px;
@@ -540,9 +578,8 @@ const onUserStatusChange = (user: UserResponse, newStatus: boolean) => {
   }
   
   .section-header {
-    flex-direction: column;
     gap: 12px;
-    align-items: stretch;
+    align-items: center;
   }
   
   .users-table {
