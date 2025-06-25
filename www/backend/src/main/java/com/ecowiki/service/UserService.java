@@ -3,7 +3,7 @@ package com.ecowiki.service;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+// import org.springframework.security.crypto.password.PasswordEncoder; // 开发阶段注释掉，生产环境时启用
 import org.springframework.stereotype.Service;
 
 import com.ecowiki.dto.LoginRequest;
@@ -17,8 +17,9 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
     
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    // 密码加密器（开发阶段注释掉，生产环境时启用）
+    // @Autowired
+    // private PasswordEncoder passwordEncoder;
     
     public boolean isUsernameAvailable(String username) {
         return !userRepository.existsByUsername(username);
@@ -43,8 +44,11 @@ public class UserService {
         User user = new User();
         user.setUsername(dto.getUsername());
         
-        //user.setPassword(passwordEncoder.encode(dto.getPassword()));  加密密码
-        user.setPassword(dto.getPassword());// 直接使用明文密码，实际应用中应加密
+        // 加密密码（开发阶段注释掉，生产环境时启用）
+        // user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        
+        // 开发阶段使用明文密码
+        user.setPassword(dto.getPassword());
         
         user.setEmail(dto.getEmail());
         user.setFullName(dto.getFullName());
@@ -72,7 +76,13 @@ public class UserService {
         }
         
         // 验证密码
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        // 加密密码验证（开发阶段注释掉，生产环境时启用）
+        // if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        //     throw new RuntimeException("密码错误");
+        // }
+        
+        // 开发阶段使用明文密码验证
+        if (!request.getPassword().equals(user.getPassword())) {
             throw new RuntimeException("密码错误");
         }
         
