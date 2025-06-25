@@ -1,8 +1,30 @@
 <template>
   <div class="admin-settings">
-    <div class="admin-header">
-      <h2>🛠️ 系统设置</h2>
-      <p>管理用户权限和系统配置</p>
+    <!-- 标题区 居中 -->
+    <div class="settings-header-center">
+      <h2 class="settings-title">系统设置</h2>
+      <p class="settings-subtitle">管理用户权限和系统配置</p>
+    </div>
+
+    <!-- 应用按钮单独一行，右对齐 -->
+    <div class="settings-action-row">
+      <div></div>
+      <button class="apply-btn-fixed" :disabled="applying" @click="applySettings">
+      <span v-if="applying" class="loading-spinner"></span>
+      <span v-else>应用</span>
+      </button>
+    </div>
+
+    <!-- 首页风格切换 -->
+    <div class="home-style-switch-row">
+      <label class="switch-label">
+        <span>首页风格：</span>
+        <span class="switch-text">{{ homeStyle === 'simple' ? '简约首页' : '经典首页' }}</span>
+        <label class="switch">
+          <input type="checkbox" v-model="switchChecked" />
+          <span class="slider"></span>
+        </label>
+      </label>
     </div>
 
     <!-- 统计信息 -->
@@ -115,20 +137,12 @@
     </div>
 
     <!-- 系统设置 -->
-    <div class="settings-card">
-      <div class="settings-header only-btn">
-        <!-- 应用按钮 -->
-        <button class="apply-btn" :disabled="applying" @click="applySettings">
-          <span v-if="applying" class="loading-spinner"></span>
-          <span v-else>应用</span>
-        </button>
-      </div>
-    </div>
+    
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, watch } from 'vue'
 import { adminApi, USER_GROUPS, type UserResponse, type UserGroup } from '../api/user'
 import { userService } from '@/services/userService'
 import toast from '../utils/toast'
@@ -250,6 +264,15 @@ const deleteUser = async (userId: number) => {
   }
 }
 
+// 首页风格
+const homeStyle = ref(localStorage.getItem('homeStyle') || 'classic')
+const switchChecked = ref(homeStyle.value === 'simple')
+
+// 监听开关变化，实时切换风格
+watch(switchChecked, (val) => {
+  homeStyle.value = val ? 'simple' : 'classic'
+})
+
 // 应用按钮事件
 const applySettings = async () => {
   applying.value = true
@@ -276,6 +299,10 @@ const applySettings = async () => {
     toast.success('设置已应用')
     await loadUsers()
     await loadStats()
+
+    // 保存首页风格设置
+    localStorage.setItem('homeStyle', homeStyle.value)
+    toast.success('首页风格已切换')
   } catch (e: any) {
     toast.error(e.message || '应用设置失败')
   } finally {
@@ -317,23 +344,55 @@ const onUserStatusChange = (user: UserResponse, newStatus: boolean) => {
   border-radius: 12px;
   max-width: 1200px;
   margin: 0 auto;
+  position: relative;
 }
 
-.admin-header {
-  margin-bottom: 32px;
+/* 首页风格切换和应用按钮同一行，按钮靠右 */
+.settings-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  margin-top: -0.5rem;
+}
+
+/* 应用按钮右上角固定 */
+.apply-btn-fixed {
+  background: #4f8cff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  z-index: 10;
+  position: static; /* 取消绝对定位 */
+  margin-left: 1rem;
+}
+.apply-btn-fixed:disabled {
+  background: #b3d1ff;
+  cursor: not-allowed;
+}
+.apply-btn-fixed:not(:disabled):hover {
+  background: #2563eb;
+}
+
+/* 标题和副标题居中 */
+.settings-header-center {
   text-align: center;
+  margin-bottom: 1.5rem;
 }
-
-.admin-header h2 {
-  margin: 0 0 8px 0;
-  color: #1a202c;
-  font-size: 1.8rem;
-}
-
-.admin-header p {
+.settings-title {
+  font-size: 1.5rem;
+  font-weight: bold;
   margin: 0;
+}
+.settings-subtitle {
   color: #718096;
-  font-size: 1.1rem;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  margin-top: 0.5rem;
 }
 
 .stats-grid {
@@ -524,6 +583,13 @@ const onUserStatusChange = (user: UserResponse, newStatus: boolean) => {
   position: relative;
 }
 
+.settings-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
 .settings-header {
   display: flex;
   justify-content: space-between;
@@ -535,22 +601,67 @@ const onUserStatusChange = (user: UserResponse, newStatus: boolean) => {
   justify-content: flex-end;
 }
 
-.apply-btn {
-  background: #4f8cff;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1.5rem;
-  font-size: 1rem;
+/* Switch风格 */
+.home-style-switch-row {
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.switch-label {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.1rem;
+}
+
+.switch-text {
+  min-width: 70px;
+  display: inline-block;
+  text-align: center;
+  color: #4f8cff;
+  font-weight: 500;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
   cursor: pointer;
-  transition: background 0.2s;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
 }
-.apply-btn:disabled {
-  background: #b3d1ff;
-  cursor: not-allowed;
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px; width: 20px;
+  left: 2px; bottom: 2px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
 }
-.apply-btn:not(:disabled):hover {
-  background: #2563eb;
+
+.switch input:checked + .slider {
+  background-color: #4f8cff;
+}
+
+.switch input:checked + .slider:before {
+  transform: translateX(24px);
 }
 
 .loading-spinner {

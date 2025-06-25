@@ -1,7 +1,8 @@
+<!-- filepath: c:\Users\Z9495\Desktop\EcoWiki_project\EcoWiki-3\www\frontend\src\views\SimpleHome.vue -->
 <template>
-  <div class="home-simple">
+  <div class="simple-home">
     <h1>EcoWiki</h1>
-    <p class="subtitle">开放环境，共享知识的百科平台</p>
+    <p class="subtitle">极简风格，专注知识本身</p>
     <div class="nav-btns">
       <router-link to="/login" class="nav-btn">登录</router-link>
       <router-link to="/register" class="nav-btn">注册</router-link>
@@ -11,7 +12,7 @@
 </template>
 
 <style scoped>
-.home-simple {
+.simple-home {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -34,7 +35,7 @@ h1 {
 }
 .nav-btn {
   padding: 0.7rem 2rem;
-  background: #667eea;
+  background: #4f8cff;
   color: #fff;
   border-radius: 8px;
   text-decoration: none;
@@ -42,6 +43,6 @@ h1 {
   transition: background 0.2s;
 }
 .nav-btn:hover {
-  background: #5a67d8;
+  background: #2563eb;
 }
 </style>

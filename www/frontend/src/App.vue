@@ -292,6 +292,8 @@ import RegisterPanel from './components/RegisterPanel.vue'
 import AdminSettings from './components/AdminSettings.vue'
 import { useAuth } from './composables/useAuth'
 import { userApi } from './api/user'
+import Home from './views/Home.vue'
+import SimpleHome from './views/SimpleHome.vue'
 
 // 获取认证状态
 const { user, isAuthenticated, userAvatar, clearUser } = useAuth()
@@ -360,6 +362,15 @@ const closeModals = () => {
 const handleLogout = () => {
   clearUser()
 }
+
+const homeStyle = ref(localStorage.getItem('homeStyle') || 'classic')
+window.addEventListener('storage', () => {
+  homeStyle.value = localStorage.getItem('homeStyle') || 'classic'
+})
+
+const currentHomeComponent = computed(() =>
+  homeStyle.value === 'simple' ? SimpleHome : Home
+)
 </script>
 
 <style scoped>
