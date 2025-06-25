@@ -114,22 +114,12 @@
     </div>
 
     <!-- 系统设置 -->
-    <div class="system-settings-section">
-      <div class="system-options">
-        <label>
-          站点名称：
-          <input v-model="pendingSettings.siteName" />
-        </label>
-        <label>
-          站点描述：
-          <input v-model="pendingSettings.siteDescription" />
-        </label>
-        <!-- 其他设置项... -->
-      </div>
-      <div style="text-align:right;margin-top:1rem;">
-        <BaseButton :loading="applying" @click="applySettings" variant="primary">
+    <div class="settings-card">
+      <div class="settings-header">
+        <span>站点设置</span>
+        <button class="apply-btn" :disabled="applying" @click="applySettings">
           应用
-        </BaseButton>
+        </button>
       </div>
     </div>
   </div>
@@ -506,32 +496,38 @@ const onUserStatusChange = (user: UserResponse, newStatus: boolean) => {
   cursor: not-allowed;
 }
 
-.system-settings-section {
-  margin-top: 32px;
-  padding: 24px;
-  background: #f8fafc;
+.settings-card {
+  margin-top: 2rem;
+  background: #fff;
   border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  position: relative;
 }
 
-.system-options {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-
-.system-options label {
+.settings-header {
   display: flex;
-  flex-direction: column;
-  color: #2d3748;
-  font-size: 0.9rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
 }
 
-.system-options input {
-  padding: 8px;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  background: white;
-  font-size: 0.9rem;
+.apply-btn {
+  background: #4f8cff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.apply-btn:disabled {
+  background: #b3d1ff;
+  cursor: not-allowed;
+}
+.apply-btn:not(:disabled):hover {
+  background: #2563eb;
 }
 
 @media (max-width: 768px) {
