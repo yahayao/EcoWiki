@@ -9,31 +9,13 @@
       @switchToRegister="switchToRegister"
       @switchToLogin="switchToLogin"
     />
-
-    <!-- 主页面布局 -->
-    <div class="wiki-home">
-      <!-- 顶部导航栏 -->
-      <AppHeader
-        @showLogin="showLoginModal"
-        @showRegister="showRegisterModal"
-        @showAdminSettings="showAdminModal"
-        @logout="handleLogout"
-      />
-
-      <!-- 主要内容区 -->
-      <main class="main-content">
-        <div class="container">
-          <!-- 侧边导航 -->
-          <AppSidebar />
-          
-          <!-- 内容区 -->
-          <AppMainContent />
-        </div>
-      </main>
-
-      <!-- 页脚 -->
-      <AppFooter />
-    </div>
+    <!-- 主页内容交给 <router-view /> 渲染 -->
+    <router-view
+      @show-login="showLoginModal"
+      @show-register="showRegisterModal"
+      @show-admin="showAdminModal"
+      @logout="handleLogout"
+    />
   </div>
 </template>
 
@@ -41,10 +23,6 @@
 import { ref } from 'vue'
 import { useAuth } from './composables/useAuth'
 import AuthModals from './components/AuthModals.vue'
-import AppHeader from './components/AppHeader.vue'
-import AppSidebar from './components/AppSidebar.vue'
-import AppMainContent from './components/AppMainContent.vue'
-import AppFooter from './components/AppFooter.vue'
 
 // 获取认证状态
 const { clearUser } = useAuth()

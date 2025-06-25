@@ -268,7 +268,7 @@ const deleteUser = async (userId: number) => {
 const homeStyle = ref(localStorage.getItem('homeStyle') || 'classic')
 const switchChecked = ref(homeStyle.value === 'simple')
 
-// 监听开关变化，实时切换风格
+// 只切换本地变量
 watch(switchChecked, (val) => {
   homeStyle.value = val ? 'simple' : 'classic'
 })
@@ -302,6 +302,8 @@ const applySettings = async () => {
 
     // 保存首页风格设置
     localStorage.setItem('homeStyle', homeStyle.value)
+    // 派发自定义事件，通知 DynamicHome.vue 主动切换
+    window.dispatchEvent(new Event('ecowiki-home-style-change'))
     toast.success('首页风格已切换')
   } catch (e: any) {
     toast.error(e.message || '应用设置失败')
