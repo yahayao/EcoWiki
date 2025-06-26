@@ -99,14 +99,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { adminApi } from '../../../api/user'
 import toast from '../../../utils/toast'
 
-// 响应式数据
+// 统计信息
 const stats = ref<any>({})
 
-// 系统设置
+// 系统设置表单
 const systemSettings = ref({
   siteName: 'EcoWiki',
   siteDescription: '知识共享平台',
@@ -121,6 +121,13 @@ const systemSettings = ref({
 
 const applying = ref(false)
 
+// 首页风格切换
+const homeStyle = ref(localStorage.getItem('homeStyle') || 'classic')
+const switchChecked = ref(homeStyle.value === 'simple')
+watch(switchChecked, val => {
+  homeStyle.value = val ? 'simple' : 'classic'
+})
+
 // 加载统计信息
 const loadStats = async () => {
   try {
@@ -133,24 +140,12 @@ const loadStats = async () => {
   }
 }
 
-// 首页风格
-const homeStyle = ref(localStorage.getItem('homeStyle') || 'classic')
-const switchChecked = ref(homeStyle.value === 'simple')
-
-// 只切换本地变量
-watch(switchChecked, (val) => {
-  homeStyle.value = val ? 'simple' : 'classic'
-})
-
-// 应用按钮事件
+// 应用设置
 const applySettings = async () => {
   applying.value = true
   try {
-    // 保存首页风格设置
     localStorage.setItem('homeStyle', homeStyle.value)
-    // 派发自定义事件，通知 DynamicHome.vue 主动切换
     window.dispatchEvent(new Event('ecowiki-home-style-change'))
-    
     toast.success('设置已应用')
     await loadStats()
   } catch (e: any) {
@@ -160,7 +155,6 @@ const applySettings = async () => {
   }
 }
 
-// 组件挂载时加载数据
 onMounted(() => {
   loadStats()
 })
