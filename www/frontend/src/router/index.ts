@@ -1,11 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DynamicHome from '../views/DynamicHome.vue'
+import ArticleDetail from '../views/ArticleDetail.vue'
 import AdminLayout from '../components/admin/AdminLayout.vue'
 import SystemSettings from '../components/admin/views/SystemSettings.vue'
 import UserList from '../components/admin/views/UserList.vue'
 
 const routes = [
   { path: '/', name: 'Home', component: DynamicHome },
+  { path: '/article/:id', name: 'ArticleDetail', component: ArticleDetail },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',

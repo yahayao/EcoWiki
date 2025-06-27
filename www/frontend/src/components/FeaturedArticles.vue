@@ -3,7 +3,7 @@
     <h2 class="section-title">🔥 热门内容</h2>
     <div class="article-grid">
       <!-- 示例文章卡片 -->
-      <div class="article-card">
+      <div class="article-card" @click="navigateToArticle('1')">
         <div class="article-header">
           <span class="article-category">学术研究</span>
           <span class="article-rating">⭐ 4.8</span>
@@ -19,7 +19,7 @@
         </div>
       </div>
       
-      <div class="article-card">
+      <div class="article-card" @click="navigateToArticle('2')">
         <div class="article-header">
           <span class="article-category">文化历史</span>
           <span class="article-rating">⭐ 4.9</span>
@@ -35,7 +35,7 @@
         </div>
       </div>
       
-      <div class="article-card">
+      <div class="article-card" @click="navigateToArticle('3')">
         <div class="article-header">
           <span class="article-category">科技创新</span>
           <span class="article-rating">⭐ 4.7</span>
@@ -51,7 +51,7 @@
         </div>
       </div>
       
-      <div class="article-card">
+      <div class="article-card" @click="navigateToArticle('4')">
         <div class="article-header">
           <span class="article-category">艺术人文</span>
           <span class="article-rating">⭐ 4.6</span>
@@ -71,8 +71,13 @@
 </template>
 
 <script setup lang="ts">
-// 热门文章相关逻辑
-// 可以在这里定义文章数据、点击事件等
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const navigateToArticle = (articleId: string) => {
+  router.push(`/article/${articleId}`)
+}
 </script>
 
 <style scoped>
