@@ -128,7 +128,7 @@ public class UserController {
     // 创建用户响应对象（不包含密码等敏感信息）
     private Map<String, Object> createUserResponse(User user) {
         Map<String, Object> userResponse = new HashMap<>();
-        userResponse.put("id", user.getId());
+        userResponse.put("id", user.getUserId());
         userResponse.put("username", user.getUsername());
         userResponse.put("email", user.getEmail());
         userResponse.put("fullName", user.getFullName());
