@@ -40,10 +40,10 @@ public class User {
     private Boolean active = true;
     
     @Column
-    private TINYINT gender; // 0为不设置，1为男，2为女
+    private Byte gender; // 0为不设置，1为男，2为女
     
     @Column
-    private BOOLEAN emailVerified; // 邮箱验证状态
+    private Boolean emailVerified; // 邮箱验证状态
     
     @Column
     private String loginToken; // 登录令牌
@@ -62,6 +62,12 @@ public class User {
     
     @Column
     private String bio; // 个人简介
+
+    @Column
+    private String securityQuestion; // 安全问题
+    
+    @Column
+    private String securityAnswer; // 问题答案
     
     @CreationTimestamp
     @Column(updatable = false)
@@ -103,11 +109,11 @@ public class User {
     public Boolean getActive() { return active; }
     public void setActive(Boolean active) { this.active = active; }
     
-    public TINYINT getGender() { return gender; }
-    public void setGender(TINYINT gender) { this.gender = gender; }
+    public Byte getGender() { return gender; }
+    public void setGender(Byte gender) { this.gender = gender; }
     
-    public BOOLEAN getEmailVerified() { return emailVerified; }
-    public void setEmailVerified(BOOLEAN emailVerified) { this.emailVerified = emailVerified; }
+    public Boolean getEmailVerified() { return emailVerified; }
+    public void setEmailVerified(Boolean emailVerified) { this.emailVerified = emailVerified; }
     
     public String getLoginToken() { return loginToken; }
     public void setLoginToken(String loginToken) { this.loginToken = loginToken; }
@@ -132,6 +138,11 @@ public class User {
     
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getSecurityQuestion() { return securityQuestion; }
+    public void setSecurityQuestion(String securityQuestion) { this.securityQuestion = securityQuestion; }
+    public String getSecurityAnswer() { return securityAnswer; }
+    public void setSecurityAnswer(String securityAnswer) { this.securityAnswer = securityAnswer; }
     
     // 权限检查方法
     public boolean isAdmin() {
