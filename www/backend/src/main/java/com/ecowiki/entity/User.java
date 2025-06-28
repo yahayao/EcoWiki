@@ -19,7 +19,8 @@ import jakarta.persistence.Table;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "user_id")
+    private Long userId;
     
     @Column(unique = true, nullable = false)
     private String username;
@@ -32,12 +33,35 @@ public class User {
     
     private String fullName;
     
-    // 只保留 userGroup 字段，移除任何 role 相关字段
     @Column(nullable = false)
     private String userGroup = "user";
     
     @Column(nullable = false)
     private Boolean active = true;
+    
+    @Column
+    private TINYINT gender; // 0为不设置，1为男，2为女
+    
+    @Column
+    private BOOLEAN emailVerified; // 邮箱验证状态
+    
+    @Column
+    private String loginToken; // 登录令牌
+    
+    @Column
+    private Integer roleId; // 角色ID
+    
+    @Column
+    private String permissions; // 权限描述
+    
+    @Column
+    private LocalDateTime lastLogin; // 最后登录时间
+    
+    @Column
+    private String avatarUrl; // 头像地址
+    
+    @Column
+    private String bio; // 个人简介
     
     @CreationTimestamp
     @Column(updatable = false)
@@ -57,9 +81,9 @@ public class User {
         this.active = true;
     }
     
-    // Getters and Setters - 确保没有 role 相关的 getter/setter
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    // Getters and Setters
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
     
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
@@ -78,6 +102,30 @@ public class User {
     
     public Boolean getActive() { return active; }
     public void setActive(Boolean active) { this.active = active; }
+    
+    public TINYINT getGender() { return gender; }
+    public void setGender(TINYINT gender) { this.gender = gender; }
+    
+    public BOOLEAN getEmailVerified() { return emailVerified; }
+    public void setEmailVerified(BOOLEAN emailVerified) { this.emailVerified = emailVerified; }
+    
+    public String getLoginToken() { return loginToken; }
+    public void setLoginToken(String loginToken) { this.loginToken = loginToken; }
+    
+    public Integer getRoleId() { return roleId; }
+    public void setRoleId(Integer roleId) { this.roleId = roleId; }
+    
+    public String getPermissions() { return permissions; }
+    public void setPermissions(String permissions) { this.permissions = permissions; }
+    
+    public LocalDateTime getLastLogin() { return lastLogin; }
+    public void setLastLogin(LocalDateTime lastLogin) { this.lastLogin = lastLogin; }
+    
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+    
+    public String getBio() { return bio; }
+    public void setBio(String bio) { this.bio = bio; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
