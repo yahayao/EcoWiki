@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.ResponseEntity.BodyBuilder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecowiki.dto.ApiResponse;
+import com.ecowiki.dto.ForgotPasswordRequest;
 import com.ecowiki.dto.LoginRequest;
+import com.ecowiki.dto.ResetPasswordRequest;
 import com.ecowiki.dto.UserRegistrationDto;
 import com.ecowiki.entity.User;
 import com.ecowiki.security.JwtUtil;
@@ -88,6 +91,29 @@ public class UserController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody ForgotPasswordRequest forgotPasswordRequest) {
+    User user = userService.findUserByEmail(forgotPasswordRequest.getEmail());
+    if (user == null) {
+         return ((BodyBuilder) ResponseEntity.notFound()).body(ApiResponse.error("用户不存在"));
+     }
+     String securityQuestion = userService.getSecurityQuestion(user);
+     return ResponseEntity.ok(ApiResponse.success(securityQuestion));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) {
+        User user = userService.findUserByEmail(resetPasswordRequest.getEmail());
+        if (user == null || !resetPasswordRequest.getAnswer().equals(user.getSecurityAnswer())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("安全问题答案错误"));
+        }
+        boolean success = userService.resetPassword(user, resetPasswordRequest.getNewPassword());
+        if (success) {
+            return ResponseEntity.ok(ApiResponse.success("密码重置成功"));
+        } else {
+            return ResponseEntity.internalServerError().body(ApiResponse.error("密码重置失败"));
         }
     }
     

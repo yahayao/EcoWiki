@@ -26,4 +26,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     @Query("SELECT u FROM User u WHERE u.userGroup = ?1")
     java.util.List<User> findByUserGroup(String userGroup);
+
 }

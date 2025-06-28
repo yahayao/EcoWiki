@@ -96,4 +96,17 @@ public class UserService {
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
+    public User findUserByEmail(String email) {
+    return userRepository.findByEmail(email).orElse(null);
+}
+
+    public String getSecurityQuestion(User user) {
+        // 根据用户信息返回对应的安全问题
+        // 这里只是一个示例，您需要根据实际情况来实现
+        return user.getSecurityQuestion();
+    }
+    public boolean resetPassword(User user, String newPassword) {
+        user.setPassword(newPassword);
+        return userRepository.save(user) != null;
+    }
 }
