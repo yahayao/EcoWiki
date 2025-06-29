@@ -27,7 +27,7 @@ import com.ecowiki.service.UserService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @CrossOrigin(origins = "http://localhost:5173")
 @Validated
 public class AuthController {

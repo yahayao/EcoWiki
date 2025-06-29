@@ -28,7 +28,7 @@ import com.ecowiki.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/admin")
 @CrossOrigin(origins = "http://localhost:5173")
 public class AdminController {
     

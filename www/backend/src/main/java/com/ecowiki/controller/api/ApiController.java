@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ecowiki.dto.ApiResponse;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("")
 @CrossOrigin(origins = "http://localhost:5173")
 public class ApiController {
     
@@ -42,8 +42,27 @@ public class ApiController {
         adminEndpoints.put("DELETE /api/admin/users/{id}", "删除用户");
         adminEndpoints.put("GET /api/admin/stats", "获取系统统计");
         
+        // 文章相关 API
+        Map<String, String> articleEndpoints = new HashMap<>();
+        articleEndpoints.put("POST /api/articles", "创建文章");
+        articleEndpoints.put("GET /api/articles", "获取文章列表（分页）");
+        articleEndpoints.put("GET /api/articles/{id}", "根据ID获取文章");
+        articleEndpoints.put("PUT /api/articles/{id}", "更新文章");
+        articleEndpoints.put("DELETE /api/articles/{id}", "删除文章");
+        articleEndpoints.put("GET /api/articles/category/{category}", "根据分类获取文章");
+        articleEndpoints.put("GET /api/articles/author/{author}", "根据作者获取文章");
+        articleEndpoints.put("GET /api/articles/search", "搜索文章");
+        articleEndpoints.put("GET /api/articles/tag/{tag}", "根据标签获取文章");
+        articleEndpoints.put("GET /api/articles/popular", "获取热门文章");
+        articleEndpoints.put("GET /api/articles/latest", "获取最新文章");
+        articleEndpoints.put("POST /api/articles/{id}/like", "点赞文章");
+        articleEndpoints.put("DELETE /api/articles/{id}/like", "取消点赞");
+        articleEndpoints.put("PUT /api/articles/{id}/comments", "更新评论数");
+        articleEndpoints.put("GET /api/articles/statistics", "获取文章统计");
+        
         endpoints.put("auth", authEndpoints);
         endpoints.put("admin", adminEndpoints);
+        endpoints.put("articles", articleEndpoints);
         
         apiInfo.put("endpoints", endpoints);
         
