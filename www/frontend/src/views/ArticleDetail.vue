@@ -57,6 +57,17 @@
         class="comments-section"
       />
     </div>
+
+    <!-- 右侧浮动按钮 -->
+    <FloatingActionButtons
+      v-if="article"
+      :article-id="article.id"
+      @view="handleView"
+      @edit="handleEdit"
+      @history="handleHistory"
+      @favorite="handleFavorite"
+      @more="handleMore"
+    />
   </div>
 </template>
 
@@ -66,6 +77,7 @@ import { useRoute, useRouter } from 'vue-router'
 import ArticleContent from '../components/article/ArticleContent.vue'
 import ArticleComments from '../components/article/ArticleComments.vue'
 import RelatedArticles from '../components/article/RelatedArticles.vue'
+import FloatingActionButtons from '../components/article/FloatingActionButtons.vue'
 
 interface Article {
   id: string
@@ -268,6 +280,43 @@ const showLoginModal = () => {
   // 触发登录模态框显示
   // 这里应该调用全局的登录状态管理
   console.log('Show login modal')
+}
+
+// 浮动按钮处理函数
+const handleView = () => {
+  // 重新加载文章或滚动到顶部
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  console.log('查看文章')
+}
+
+const handleEdit = () => {
+  // 跳转到编辑页面
+  if (article.value) {
+    console.log('编辑文章:', article.value.id)
+    router.push(`/edit/${article.value.id}`)
+  }
+}
+
+const handleHistory = () => {
+  // 查看文章历史版本
+  if (article.value) {
+    console.log('查看历史:', article.value.id)
+    // router.push(`/history/${article.value.id}`)
+  }
+}
+
+const handleFavorite = () => {
+  // 收藏或取消收藏文章
+  if (article.value) {
+    console.log('收藏文章:', article.value.id)
+    // 这里应该调用收藏API
+  }
+}
+
+const handleMore = () => {
+  // 显示更多操作菜单
+  console.log('更多操作')
+  // 可以显示一个下拉菜单或模态框
 }
 </script>
 

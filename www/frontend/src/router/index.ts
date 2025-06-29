@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DynamicHome from '../views/DynamicHome.vue'
 import ArticleDetail from '../views/ArticleDetail.vue'
+import ArticleEdit from '../views/ArticleEdit.vue'
 import AdminLayout from '../components/admin/AdminLayout.vue'
 import SystemSettings from '../components/admin/views/SystemSettings.vue'
 import UserList from '../components/admin/views/UserList.vue'
@@ -8,6 +9,7 @@ import UserList from '../components/admin/views/UserList.vue'
 const routes = [
   { path: '/', name: 'Home', component: DynamicHome },
   { path: '/article/:id', name: 'ArticleDetail', component: ArticleDetail },
+  { path: '/edit/:id', name: 'ArticleEdit', component: ArticleEdit },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
