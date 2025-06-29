@@ -152,6 +152,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useAuth } from '@/composables/useAuth'
+import toast from '@/utils/toast'
 
 interface Comment {
   id: string
@@ -180,6 +182,9 @@ const emit = defineEmits<{
   showLogin: []
 }>()
 
+// 认证状态
+const { isLoggedIn, user } = useAuth()
+
 // 状态管理
 const comments = ref<Comment[]>([])
 const newComment = ref('')
@@ -188,54 +193,67 @@ const replyingTo = ref<string | null>(null)
 const sortBy = ref('newest')
 const loading = ref(false)
 const hasMore = ref(true)
-const isLoggedIn = ref(false) // 从认证状态获取
-const currentUser = ref('当前用户') // 从用户信息获取
 
-// 模拟评论数据
+const currentUser = computed(() => user.value?.username || '匿名用户')
+
+// 模拟评论数据 - 待后端评论API实现后替换
 onMounted(() => {
   loadComments()
 })
 
-const loadComments = () => {
-  // 模拟数据，实际应该从API获取
-  comments.value = [
-    {
-      id: '1',
-      author: '科技爱好者',
-      content: '这篇文章写得很不错，对我理解这个问题很有帮助！特别是关于技术发展趋势的分析部分，非常有见地。',
-      createdAt: '2025-01-15T10:30:00Z',
-      likes: 15,
-      isLiked: false,
-      replies: [
-        {
-          id: '1-1',
-          author: '学术研究员',
-          content: '同意你的观点，作者的分析确实很深入。',
-          createdAt: '2025-01-15T11:00:00Z',
-          likes: 3,
-          isLiked: false
-        }
-      ]
-    },
-    {
-      id: '2',
-      author: '求知青年',
-      content: '感谢分享！这个话题一直很感兴趣，终于找到一篇这么详细的文章了。',
-      createdAt: '2025-01-15T09:45:00Z',
-      likes: 8,
-      isLiked: true,
-      replies: []
-    },
-    {
-      id: '3',
-      author: '专业人士',
-      content: '文章内容很专业，不过建议可以加一些实际案例来说明，这样会更容易理解。',
-      createdAt: '2025-01-15T08:20:00Z',
-      likes: 12,
-      isLiked: false,
-      replies: []
-    }
-  ]
+const loadComments = async () => {
+  loading.value = true
+  try {
+    // TODO: 当后端实现评论API时，替换为真实API调用
+    // const response = await getArticleComments(props.articleId, { sort: sortBy.value })
+    // comments.value = response.data
+    
+    // 模拟数据
+    await new Promise(resolve => setTimeout(resolve, 500))
+    comments.value = [
+      {
+        id: '1',
+        author: '科技爱好者',
+        content: '这篇文章写得很不错，对我理解这个问题很有帮助！特别是关于技术发展趋势的分析部分，非常有见地。',
+        createdAt: '2025-01-15T10:30:00Z',
+        likes: 15,
+        isLiked: false,
+        replies: [
+          {
+            id: '1-1',
+            author: '学术研究员',
+            content: '同意你的观点，作者的分析确实很深入。',
+            createdAt: '2025-01-15T11:00:00Z',
+            likes: 3,
+            isLiked: false
+          }
+        ]
+      },
+      {
+        id: '2',
+        author: '求知青年',
+        content: '感谢分享！这个话题一直很感兴趣，终于找到一篇这么详细的文章了。',
+        createdAt: '2025-01-15T09:45:00Z',
+        likes: 8,
+        isLiked: true,
+        replies: []
+      },
+      {
+        id: '3',
+        author: '专业人士',
+        content: '文章内容很专业，不过建议可以加一些实际案例来说明，这样会更容易理解。',
+        createdAt: '2025-01-15T08:20:00Z',
+        likes: 12,
+        isLiked: false,
+        replies: []
+      }
+    ]
+  } catch (error) {
+    console.error('加载评论失败:', error)
+    toast.show('加载评论失败，请稍后重试', '错误', { type: 'error' })
+  } finally {
+    loading.value = false
+  }
 }
 
 const sortedComments = computed(() => {
@@ -272,23 +290,34 @@ const formatDate = (dateString: string) => {
   }
 }
 
-const submitComment = () => {
+const submitComment = async () => {
   if (!newComment.value.trim()) return
-  
-  const comment: Comment = {
-    id: Date.now().toString(),
-    author: currentUser.value,
-    content: newComment.value,
-    createdAt: new Date().toISOString(),
-    likes: 0,
-    isLiked: false,
-    replies: []
+  if (!isLoggedIn.value) {
+    emit('showLogin')
+    return
   }
   
-  comments.value.unshift(comment)
-  newComment.value = ''
-  
-  // 这里应该调用API提交评论
+  try {
+    // TODO: 当后端实现评论API时，替换为真实API调用
+    // await createComment(props.articleId, { content: newComment.value })
+    
+    const comment: Comment = {
+      id: Date.now().toString(),
+      author: currentUser.value,
+      content: newComment.value,
+      createdAt: new Date().toISOString(),
+      likes: 0,
+      isLiked: false,
+      replies: []
+    }
+    
+    comments.value.unshift(comment)
+    newComment.value = ''
+    toast.show('评论发表成功', '成功', { type: 'success' })
+  } catch (error) {
+    console.error('发表评论失败:', error)
+    toast.show('发表评论失败，请稍后重试', '错误', { type: 'error' })
+  }
 }
 
 const showReplyForm = (comment: Comment) => {
@@ -301,61 +330,108 @@ const cancelReply = () => {
   replyContent.value = ''
 }
 
-const submitReply = (comment: Comment) => {
+const submitReply = async (comment: Comment) => {
   if (!replyContent.value.trim()) return
-  
-  const reply: Reply = {
-    id: `${comment.id}-${Date.now()}`,
-    author: currentUser.value,
-    content: replyContent.value,
-    createdAt: new Date().toISOString(),
-    likes: 0,
-    isLiked: false
+  if (!isLoggedIn.value) {
+    emit('showLogin')
+    return
   }
   
-  if (!comment.replies) {
-    comment.replies = []
+  try {
+    // TODO: 当后端实现评论API时，替换为真实API调用
+    // await createReply(comment.id, { content: replyContent.value })
+    
+    const reply: Reply = {
+      id: `${comment.id}-${Date.now()}`,
+      author: currentUser.value,
+      content: replyContent.value,
+      createdAt: new Date().toISOString(),
+      likes: 0,
+      isLiked: false
+    }
+    
+    if (!comment.replies) {
+      comment.replies = []
+    }
+    comment.replies.push(reply)
+    
+    cancelReply()
+    toast.show('回复发表成功', '成功', { type: 'success' })
+  } catch (error) {
+    console.error('发表回复失败:', error)
+    toast.show('发表回复失败，请稍后重试', '错误', { type: 'error' })
   }
-  comment.replies.push(reply)
-  
-  cancelReply()
-  
-  // 这里应该调用API提交回复
 }
 
-const toggleCommentLike = (comment: Comment) => {
-  comment.isLiked = !comment.isLiked
-  comment.likes = (comment.likes || 0) + (comment.isLiked ? 1 : -1)
+const toggleCommentLike = async (comment: Comment) => {
+  if (!isLoggedIn.value) {
+    emit('showLogin')
+    return
+  }
   
-  // 这里应该调用API更新点赞状态
+  try {
+    // TODO: 当后端实现评论API时，替换为真实API调用
+    // await toggleCommentLike(comment.id, !comment.isLiked)
+    
+    comment.isLiked = !comment.isLiked
+    comment.likes = (comment.likes || 0) + (comment.isLiked ? 1 : -1)
+  } catch (error) {
+    console.error('点赞失败:', error)
+    toast.show('操作失败，请稍后重试', '错误', { type: 'error' })
+  }
 }
 
-const toggleReplyLike = (reply: Reply) => {
-  reply.isLiked = !reply.isLiked
-  reply.likes = (reply.likes || 0) + (reply.isLiked ? 1 : -1)
+const toggleReplyLike = async (reply: Reply) => {
+  if (!isLoggedIn.value) {
+    emit('showLogin')
+    return
+  }
   
-  // 这里应该调用API更新点赞状态
+  try {
+    // TODO: 当后端实现评论API时，替换为真实API调用
+    // await toggleReplyLike(reply.id, !reply.isLiked)
+    
+    reply.isLiked = !reply.isLiked
+    reply.likes = (reply.likes || 0) + (reply.isLiked ? 1 : -1)
+  } catch (error) {
+    console.error('点赞失败:', error)
+    toast.show('操作失败，请稍后重试', '错误', { type: 'error' })
+  }
 }
 
-const deleteComment = (comment: Comment) => {
-  if (confirm('确定要删除这条评论吗？')) {
+const deleteComment = async (comment: Comment) => {
+  if (!confirm('确定要删除这条评论吗？')) return
+  
+  try {
+    // TODO: 当后端实现评论API时，替换为真实API调用
+    // await deleteComment(comment.id)
+    
     const index = comments.value.findIndex(c => c.id === comment.id)
     if (index > -1) {
       comments.value.splice(index, 1)
+      toast.show('评论已删除', '成功', { type: 'success' })
     }
-    
-    // 这里应该调用API删除评论
+  } catch (error) {
+    console.error('删除评论失败:', error)
+    toast.show('删除失败，请稍后重试', '错误', { type: 'error' })
   }
 }
 
-const deleteReply = (comment: Comment, reply: Reply) => {
-  if (confirm('确定要删除这条回复吗？')) {
+const deleteReply = async (comment: Comment, reply: Reply) => {
+  if (!confirm('确定要删除这条回复吗？')) return
+  
+  try {
+    // TODO: 当后端实现评论API时，替换为真实API调用
+    // await deleteReply(reply.id)
+    
     const index = comment.replies?.findIndex(r => r.id === reply.id) || -1
     if (index > -1) {
       comment.replies?.splice(index, 1)
+      toast.show('回复已删除', '成功', { type: 'success' })
     }
-    
-    // 这里应该调用API删除回复
+  } catch (error) {
+    console.error('删除回复失败:', error)
+    toast.show('删除失败，请稍后重试', '错误', { type: 'error' })
   }
 }
 
@@ -363,15 +439,27 @@ const sortComments = () => {
   // 排序逻辑已在计算属性中处理
 }
 
-const loadMoreComments = () => {
+const loadMoreComments = async () => {
   loading.value = true
   
-  // 模拟异步加载
-  setTimeout(() => {
-    // 这里应该调用API加载更多评论
-    loading.value = false
+  try {
+    // TODO: 当后端实现评论API时，替换为真实API调用
+    // const response = await getArticleComments(props.articleId, { 
+    //   sort: sortBy.value, 
+    //   offset: comments.value.length 
+    // })
+    // comments.value.push(...response.data)
+    // hasMore.value = response.hasMore
+    
+    // 模拟异步加载
+    await new Promise(resolve => setTimeout(resolve, 1000))
     hasMore.value = false // 假设没有更多评论了
-  }, 1000)
+  } catch (error) {
+    console.error('加载更多评论失败:', error)
+    toast.show('加载失败，请稍后重试', '错误', { type: 'error' })
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 

@@ -1,6 +1,11 @@
 <template>
   <div class="floating-action-buttons">
-    <div class="action-button active" @click="handleView" title="查看">
+    <div 
+      class="action-button" 
+      :class="{ active: isViewMode }"
+      @click="handleView" 
+      title="查看文章"
+    >
       <div class="button-icon">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -10,7 +15,12 @@
       <span class="button-text">查看</span>
     </div>
     
-    <div class="action-button" @click="handleEdit" title="编辑">
+    <div 
+      class="action-button"
+      :class="{ active: isEditMode, disabled: !canEdit }"
+      @click="handleEdit" 
+      title="编辑文章"
+    >
       <div class="button-icon">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -20,7 +30,7 @@
       <span class="button-text">编辑</span>
     </div>
     
-    <div class="action-button" @click="handleHistory" title="历史">
+    <div class="action-button" @click="handleHistory" title="查看历史">
       <div class="button-icon">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/>
@@ -30,66 +40,123 @@
       <span class="button-text">历史</span>
     </div>
     
-    <div class="action-button" @click="handleFavorite" title="收藏">
+    <div 
+      class="action-button" 
+      :class="{ active: isFavorited, disabled: !isLoggedIn }"
+      @click="handleFavorite" 
+      title="收藏文章"
+    >
       <div class="button-icon">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
         </svg>
       </div>
-      <span class="button-text">收藏</span>
+      <span class="button-text">{{ isFavorited ? '已收藏' : '收藏' }}</span>
     </div>
     
-    <div class="action-button" @click="handleMore" title="更多">
+    <div class="action-button" @click="handleShare" title="分享文章">
       <div class="button-icon">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="1"/>
-          <circle cx="12" cy="5" r="1"/>
-          <circle cx="12" cy="19" r="1"/>
+          <circle cx="18" cy="5" r="3"/>
+          <circle cx="6" cy="12" r="3"/>
+          <circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
         </svg>
       </div>
-      <span class="button-text">更多</span>
+      <span class="button-text">分享</span>
+    </div>
+    
+    <div class="action-button" @click="handlePrint" title="打印文章">
+      <div class="button-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6,9 6,2 18,2 18,9"/>
+          <path d="M6,18H4a2,2,0,0,1-2-2V11a2,2,0,0,1,2-2H20a2,2,0,0,1,2,2v5a2,2,0,0,1-2,2H18"/>
+          <polyline points="6,14 18,14 18,22 6,22 6,14"/>
+        </svg>
+      </div>
+      <span class="button-text">打印</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
+
 interface Props {
-  articleId?: string
+  articleId: string
+  mode?: 'view' | 'edit' | 'history'
+  isFavorited?: boolean
+  canEdit?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  mode: 'view',
+  isFavorited: false,
+  canEdit: true
+})
 
 const emit = defineEmits<{
   view: []
   edit: []
   history: []
-  favorite: []
-  more: []
+  favorite: [favorited: boolean]
+  share: []
+  print: []
 }>()
 
+const router = useRouter()
+const { isLoggedIn } = useAuth()
+
+const isViewMode = computed(() => props.mode === 'view')
+const isEditMode = computed(() => props.mode === 'edit')
+
 const handleView = () => {
-  emit('view')
-  console.log('查看文章')
+  if (!isViewMode.value) {
+    emit('view')
+    router.push(`/article/${props.articleId}`)
+  }
 }
 
 const handleEdit = () => {
-  emit('edit')
-  console.log('编辑文章')
+  if (props.canEdit) {
+    emit('edit')
+    router.push(`/edit/${props.articleId}`)
+  }
 }
 
 const handleHistory = () => {
   emit('history')
-  console.log('查看历史')
+  // TODO: 实现历史记录功能
+  console.log('查看文章历史')
 }
 
 const handleFavorite = () => {
-  emit('favorite')
-  console.log('收藏文章')
+  if (!isLoggedIn.value) {
+    return
+  }
+  emit('favorite', !props.isFavorited)
 }
 
-const handleMore = () => {
-  emit('more')
-  console.log('更多操作')
+const handleShare = () => {
+  emit('share')
+  // 实现分享功能
+  if (navigator.share) {
+    navigator.share({
+      title: '分享文章',
+      url: window.location.href
+    })
+  } else {
+    // 复制链接到剪贴板
+    navigator.clipboard.writeText(window.location.href)
+  }
+}
+
+const handlePrint = () => {
+  emit('print')
+  window.print()
 }
 </script>
 
@@ -141,7 +208,13 @@ const handleMore = () => {
   box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
 }
 
-.action-button:hover::before {
+.action-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.action-button.active::before {
   opacity: 1;
 }
 

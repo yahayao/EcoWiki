@@ -20,9 +20,9 @@
     <div v-else-if="articles.length > 0" class="related-grid">
       <div 
         v-for="article in articles" 
-        :key="article.id"
+        :key="article.articleId"
         class="related-card"
-        @click="navigateToArticle(article.id)"
+        @click="navigateToArticle(article.articleId)"
       >
         <div class="related-header">
           <span class="related-category">{{ article.category }}</span>
@@ -73,6 +73,8 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { articleApi, type Article } from '@/api/article'
+import toast from '@/utils/toast'
 
 interface RelatedArticle {
   id: string
@@ -80,11 +82,11 @@ interface RelatedArticle {
   excerpt: string
   author: string
   category: string
-  rating: number
+  rating?: number
   publishDate: string
   views?: number
   likes?: number
-  readTime: number
+  readTime?: number
 }
 
 const props = defineProps<{
@@ -103,71 +105,115 @@ const router = useRouter()
 
 // 状态管理
 const articles = ref<RelatedArticle[]>([])
-const loading = ref(true)
+const loading = ref(false)
 const loadingMore = ref(false)
 const hasMore = ref(true)
-const currentPage = ref(1)
 
+// 模拟推荐算法的文章转换
+const convertToRelatedArticle = (article: Article): RelatedArticle => {
+  return {
+    id: article.articleId,
+    title: article.title,
+    excerpt: article.content.substring(0, 150) + '...',
+    author: article.author,
+    category: article.tags.split(',')[0] || '未分类',
+    rating: 4 + Math.random(), // 模拟评分
+    publishDate: article.createdAt,
+    views: article.views,
+    likes: article.likes,
+    readTime: Math.ceil(article.content.length / 500) // 估算阅读时间
+  }
+}
+
+// 初始化
 onMounted(() => {
   loadRelatedArticles()
 })
 
-// 监听当前文章变化，重新加载推荐
+// 监听当前文章变化
 watch(() => props.currentArticleId, () => {
   if (props.currentArticleId) {
-    currentPage.value = 1
-    hasMore.value = true
     loadRelatedArticles()
   }
 })
 
 const loadRelatedArticles = async () => {
+  loading.value = true
   try {
-    loading.value = true
+    // 获取相关文章 - 基于分类、标签等进行推荐
+    const response = await articleApi.getArticles({
+      page: 1,
+      size: props.maxResults || 6,
+      category: props.currentCategory,
+      // 排除当前文章
+      excludeId: props.currentArticleId
+    })
     
-    // 模拟API调用延迟
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    // 模拟基于当前文章的相关推荐算法
-    const mockArticles: RelatedArticle[] = generateMockRecommendations()
-    
-    articles.value = mockArticles.slice(0, props.maxResults || 3)
-    hasMore.value = mockArticles.length > (props.maxResults || 3)
-    
+    articles.value = response.data.map(convertToRelatedArticle)
+    hasMore.value = response.totalElements > (props.maxResults || 6)
   } catch (error) {
-    console.error('Failed to load related articles:', error)
-    articles.value = []
+    console.error('加载相关文章失败:', error)
+    toast.show('加载相关文章失败', '错误', { type: 'error' })
+    // 降级到模拟数据
+    loadMockData()
   } finally {
     loading.value = false
   }
 }
 
-const loadMore = async () => {
-  try {
-    loadingMore.value = true
-    currentPage.value++
-    
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 600))
-    
-    const moreArticles = generateMockRecommendations(currentPage.value)
-    articles.value.push(...moreArticles.slice(0, 3))
-    
-    // 模拟没有更多数据
-    if (currentPage.value >= 3) {
-      hasMore.value = false
+const loadMockData = () => {
+  // 降级模拟数据
+  articles.value = [
+    {
+      id: '2',
+      title: '深入理解现代Web技术架构',
+      excerpt: '随着互联网技术的快速发展，现代Web应用的架构变得越来越复杂和精细。本文将带您深入了解当前主流的Web技术架构模式...',
+      author: '技术专家',
+      category: '技术',
+      rating: 4.8,
+      publishDate: '2025-01-14T15:30:00Z',
+      views: 1580,
+      likes: 89,
+      readTime: 8
+    },
+    {
+      id: '3',
+      title: '可持续发展与绿色技术创新',
+      excerpt: '在全球气候变化的背景下，可持续发展已成为各行各业关注的焦点。绿色技术作为实现可持续发展的重要手段...',
+      author: '环保专家',
+      category: '环保',
+      rating: 4.6,
+      publishDate: '2025-01-13T09:20:00Z',
+      views: 2340,
+      likes: 156,
+      readTime: 6
     }
+  ]
+}
+
+const loadMore = async () => {
+  loadingMore.value = true
+  try {
+    // 加载更多相关文章
+    const response = await articleApi.getArticles({
+      page: 2,
+      size: 3,
+      category: props.currentCategory,
+      excludeId: props.currentArticleId
+    })
     
+    const moreArticles = response.data.map(convertToRelatedArticle)
+    articles.value.push(...moreArticles)
+    hasMore.value = response.data.length === 3
   } catch (error) {
-    console.error('Failed to load more articles:', error)
+    console.error('加载更多文章失败:', error)
+    toast.show('加载更多失败', '错误', { type: 'error' })
   } finally {
     loadingMore.value = false
   }
 }
 
 const refreshRecommendations = () => {
-  currentPage.value = 1
-  hasMore.value = true
   loadRelatedArticles()
 }
 
@@ -199,88 +245,6 @@ const formatNumber = (num: number) => {
   if (num < 1000) return num.toString()
   if (num < 10000) return (num / 1000).toFixed(1) + 'k'
   return (num / 10000).toFixed(1) + 'w'
-}
-
-// 生成模拟推荐数据（实际应该从API获取）
-const generateMockRecommendations = (page = 1): RelatedArticle[] => {
-  const baseArticles = [
-    {
-      id: '2',
-      title: '量子计算原理与应用前景探析',
-      excerpt: '深入浅出地解释量子计算的基本原理，探讨其在密码学、药物研发等领域的应用潜力...',
-      author: '量子物理学家',
-      category: '科技创新',
-      rating: 4.7,
-      publishDate: '2025-01-10T14:30:00Z',
-      views: 2156,
-      likes: 89,
-      readTime: 12
-    },
-    {
-      id: '3',
-      title: '区块链技术发展现状与挑战',
-      excerpt: '全面分析区块链技术的核心特性、当前发展现状以及面临的技术和监管挑战...',
-      author: '区块链专家',
-      category: '技术分析',
-      rating: 4.5,
-      publishDate: '2025-01-08T09:15:00Z',
-      views: 1834,
-      likes: 76,
-      readTime: 10
-    },
-    {
-      id: '4',
-      title: '5G通信技术与物联网的融合发展',
-      excerpt: '深入探讨5G技术如何推动物联网应用的发展，以及两者结合带来的新机遇和挑战...',
-      author: '通信工程师',
-      category: '通信技术',
-      rating: 4.6,
-      publishDate: '2025-01-05T16:45:00Z',
-      views: 2467,
-      likes: 102,
-      readTime: 14
-    },
-    {
-      id: '5',
-      title: '机器学习算法在金融风控中的应用',
-      excerpt: '介绍机器学习在金融风险控制领域的具体应用案例，包括信用评估、欺诈检测等...',
-      author: '金融科技专家',
-      category: '金融科技',
-      rating: 4.4,
-      publishDate: '2025-01-03T11:20:00Z',
-      views: 1923,
-      likes: 67,
-      readTime: 11
-    },
-    {
-      id: '6',
-      title: '云计算架构设计最佳实践',
-      excerpt: '分享云计算系统架构设计的最佳实践，包括可扩展性、可靠性和成本优化等方面...',
-      author: '云架构师',
-      category: '云计算',
-      rating: 4.8,
-      publishDate: '2025-01-01T08:30:00Z',
-      views: 3102,
-      likes: 134,
-      readTime: 16
-    },
-    {
-      id: '7',
-      title: '数据可视化设计原则与实践',
-      excerpt: '探讨有效数据可视化的设计原则，以及如何创建既美观又实用的数据展示图表...',
-      author: '数据科学家',
-      category: '数据科学',
-      rating: 4.3,
-      publishDate: '2024-12-28T14:15:00Z',
-      views: 1567,
-      likes: 45,
-      readTime: 9
-    }
-  ]
-  
-  // 根据页数返回不同的文章
-  const startIndex = (page - 1) * 3
-  return baseArticles.slice(startIndex, startIndex + 6)
 }
 </script>
 
