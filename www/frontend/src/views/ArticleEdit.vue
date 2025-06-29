@@ -12,16 +12,18 @@
         <!-- 页面标题栏 -->
         <div class="edit-header">
                 <div class="title-section">
-                    <h1>编辑 "{{ articleTitle }}"</h1>
+                    <h1>{{ articleTitle ? `编辑 "${articleTitle}"` : '新建文章' }}</h1>
                     <p class="subtitle">
-                        您正在编辑此页面的当前版本。 请在"摘要"框中描述您的更改摘要，并记录您对各条目的编辑摘要，
-                        以帮助其他编辑者和未来的自己了解您的更改。
+                        {{ articleTitle 
+                            ? '您正在编辑此页面的当前版本。 请在"摘要"框中描述您的更改摘要，并记录您对各条目的编辑摘要，以帮助其他编辑者和未来的自己了解您的更改。'
+                            : '您正在创建一个新的文章页面。请输入文章标题和内容，在"摘要"框中描述您创建的内容。'
+                        }}
                     </p>
                 </div>
                 <div class="action-buttons">
                     <button @click="goBack" class="back-btn">
                         <span class="back-icon">←</span>
-                        返回文章
+                        {{ articleTitle ? '返回文章' : '取消创建' }}
                     </button>
                 </div>
             </div>
@@ -185,7 +187,10 @@
                     <div class="save-buttons">
                         <button @click="saveChanges" class="save-btn primary" :disabled="saving">
                             <span v-if="saving" class="loading-spinner"></span>
-                            {{ saving ? '保存中...' : '保存更改' }}
+                            {{ saving 
+                                ? (articleTitle ? '保存中...' : '创建中...')
+                                : (articleTitle ? '保存更改' : '创建文章')
+                            }}
                         </button>
                         <button @click="showPreview" class="preview-btn">显示预览</button>
                         <button @click="showDiff" class="diff-btn">显示更改</button>
@@ -252,6 +257,7 @@ const editSummary = ref('')
 const isMinorEdit = ref(false)
 const watchPage = ref(true)
 const saving = ref(false)
+const referrerPath = ref('/') // 记录来源页面，默认为首页
 
 const showPreviewMode = ref(false)
 const showDiffMode = ref(false)
@@ -262,6 +268,20 @@ const loading = ref(true)
 const editorTextarea = ref<HTMLTextAreaElement>()
 
 onMounted(() => {
+    // 记录来源页面
+    try {
+        if (document.referrer) {
+            const referrerUrl = new URL(document.referrer)
+            const currentOrigin = window.location.origin
+            // 只有当来源页面是同站点时才使用
+            if (referrerUrl.origin === currentOrigin) {
+                referrerPath.value = referrerUrl.pathname
+            }
+        }
+    } catch (error) {
+        console.warn('Failed to parse referrer:', error)
+    }
+    
     loadArticleForEdit()
     // 添加浏览器 beforeunload 事件监听器
     window.addEventListener('beforeunload', handleBeforeUnload)
@@ -333,42 +353,32 @@ const loadArticleForEdit = async () => {
 * '''多模态AI'''：DALL-E、Midjourney等
 * '''深度学习'''：神经网络的突破性进展`
             },
-            '2': {
-                title: 'U(龙与雀斑公主)',
-                content: `== 概述 ==
-《U(龙与雀斑公主)》是一部由[[细田守]]执导的日本动画电影。
-
-== 剧情简介 ==
-故事讲述了一个关于[[虚拟世界]]和[[现实世界]]的冒险故事。
-
-== 角色介绍 ==
-* '''主人公'''：铃
-* '''配角'''：其他角色
-
-== 制作信息 ==
-* '''导演'''：细田守
-* '''制作公司'''：Studio Chizu`
-            }
         }
         
-        // 获取对应ID的文章数据，如果不存在则使用默认数据
-        const articleData = mockArticles[articleId] || {
-            title: `文章 ${articleId}`,
-            content: `== 标题 ==
-这是文章 ${articleId} 的内容。
+        // 获取对应ID的文章数据
+        const articleData = mockArticles[articleId]
+        
+        if (articleData) {
+            // 文章存在，编辑模式
+            articleTitle.value = articleData.title
+            originalContent.value = articleData.content
+            editorContent.value = originalContent.value
+        } else {
+            // 文章不存在，新建模式
+            articleTitle.value = '' // 空标题表示新建模式
+            originalContent.value = `== 标题 ==
 
 请在此处编辑内容...`
+            editorContent.value = originalContent.value
         }
-
-        articleTitle.value = articleData.title
-        originalContent.value = articleData.content
-        editorContent.value = originalContent.value
 
     } catch (error) {
         console.error('Failed to load article for editing:', error)
-        // 设置默认值，避免页面出错
-        articleTitle.value = '未知文章'
-        originalContent.value = '== 标题 ==\n\n请在此处编辑内容...'
+        // 设置为新建模式
+        articleTitle.value = ''
+        originalContent.value = `== 标题 ==
+
+请在此处编辑内容...`
         editorContent.value = originalContent.value
     } finally {
         loading.value = false
@@ -444,11 +454,17 @@ const saveChanges = async () => {
             content: editorContent.value,
             summary: editSummary.value,
             minor: isMinorEdit.value,
-            watch: watchPage.value
+            watch: watchPage.value,
+            isNew: !articleTitle.value
         })
 
-        // 保存成功后跳转回文章页面
-        router.push(`/article/${route.params.id}`)
+        if (articleTitle.value) {
+            // 编辑模式，保存成功后跳转回文章页面
+            router.push(`/article/${route.params.id}`)
+        } else {
+            // 新建模式，保存成功后跳转到新文章页面（这里用ID模拟）
+            router.push(`/article/${route.params.id}`)
+        }
 
     } catch (error) {
         console.error('Failed to save changes:', error)
@@ -481,10 +497,22 @@ const hideDiff = () => {
 const goBack = () => {
     if (editorContent.value !== originalContent.value) {
         if (confirm('是否离开网站？\n您所做的更改可能未保存。')) {
-            router.push(`/article/${route.params.id}`)
+            if (articleTitle.value) {
+                // 编辑模式，返回文章页
+                router.push(`/article/${route.params.id}`)
+            } else {
+                // 新建模式，返回来源页面
+                router.push(referrerPath.value)
+            }
         }
     } else {
-        router.push(`/article/${route.params.id}`)
+        if (articleTitle.value) {
+            // 编辑模式，返回文章页
+            router.push(`/article/${route.params.id}`)
+        } else {
+            // 新建模式，返回来源页面
+            router.push(referrerPath.value)
+        }
     }
 }
 
