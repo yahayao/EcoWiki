@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuth } from './composables/useAuth'
 import AuthModals from './components/AuthModals.vue'
 
@@ -76,6 +76,21 @@ const closeModals = () => {
 const handleLogout = () => {
   clearUser()
 }
+
+// 监听关闭管理后台模态框的事件
+const handleCloseAdminModal = () => {
+  showAdminSettings.value = false
+}
+
+// 组件挂载时添加事件监听器
+onMounted(() => {
+  window.addEventListener('close-admin-modal', handleCloseAdminModal)
+})
+
+// 组件卸载时移除事件监听器
+onUnmounted(() => {
+  window.removeEventListener('close-admin-modal', handleCloseAdminModal)
+})
 </script>
 
 <style scoped>

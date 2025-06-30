@@ -98,11 +98,11 @@ public class AdminController {
         }
     }
     
-    // 更新用户权限组
+    // 更新用户角色
     @PutMapping("/users/{userId}/group")
     public ResponseEntity<ApiResponse<User>> updateUserGroup(
             @PathVariable Long userId,
-            @RequestBody Map<String, String> groupUpdate,
+            @RequestBody Map<String, String> roleUpdate,
             HttpServletRequest request) {
         
         try {
@@ -128,10 +128,16 @@ public class AdminController {
                 }
             }
             
-            String newGroup = groupUpdate.get("userGroup");
+            String newRole = roleUpdate.get("userGroup");
+            
+            // 防止非超级管理员分配superadmin权限
+            if ("superadmin".equals(newRole) && !permissionService.isSuperAdmin(currentUser)) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("只有超级管理员才能分配超级管理员权限"));
+            }
             
             // 使用新的用户角色管理逻辑
-            userService.updateUserRole(userId.intValue(), newGroup);
+            userService.updateUserRole(userId.intValue(), newRole);
             
             // 获取更新后的用户信息
             Optional<User> updatedUserOpt = userService.findById(userId);

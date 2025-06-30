@@ -27,7 +27,6 @@
     <div v-if="showAdminSettings" class="auth-modal-overlay admin-overlay">
       <div class="admin-modal">
         <router-view />
-        <button class="close-button" @click="closeAdmin">×</button>
       </div>
     </div>
   </div>
@@ -65,9 +64,6 @@ watch(() => props.showAdminSettings, (isOpen) => {
   if (isOpen) {
     // 打开管理面板时，导航到系统设置
     router.push('/admin/settings')
-  } else {
-    // 关闭管理面板时，返回首页
-    router.push('/')
   }
 })
 
@@ -79,11 +75,6 @@ watch(showAnyModal, (isModalOpen) => {
     document.body.classList.remove('modal-open')
   }
 })
-
-const closeAdmin = () => {
-  router.push('/') // 先导航回首页
-  emit('closeModals') // 再关闭模态框
-}
 </script>
 
 <style scoped>

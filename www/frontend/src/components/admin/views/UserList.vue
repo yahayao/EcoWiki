@@ -42,7 +42,7 @@
                   class="role-select"
                 >
                   <option v-if="roles.length === 0" disabled>加载中...</option>
-                  <option v-for="role in roles" :key="role" :value="role">
+                  <option v-for="role in availableRoles" :key="role" :value="role">
                     {{ getRoleDisplayName(role) }}
                   </option>
                 </select>
@@ -107,6 +107,11 @@ const getCurrentUser = () => {
 
 // Token存在检查
 const hasToken = computed(() => !!localStorage.getItem('token'))
+
+// 计算可用角色（过滤掉superadmin，普通管理员不能分配superadmin权限）
+const availableRoles = computed(() => {
+  return roles.value.filter(role => role !== 'superadmin')
+})
 
 // 组件挂载时加载数据
 onMounted(async () => {

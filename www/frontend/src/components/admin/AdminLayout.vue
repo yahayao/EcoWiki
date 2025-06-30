@@ -38,14 +38,22 @@
           <h2 v-else-if="$route.name === 'AdminRoles'">权限管理</h2>
           <p class="header-subtitle">管理用户权限和系统配置</p>
         </div>
-        <button 
-          class="apply-btn-global" 
-          :disabled="applying || !hasPendingChanges" 
-          @click="applyAllSettings"
-        >
-          <span v-if="applying" class="loading-spinner"></span>
-          <span v-else>应用</span>
-        </button>
+        <div class="header-actions">
+          <button 
+            class="return-btn" 
+            @click="goBack"
+          >
+            ← 返回
+          </button>
+          <button 
+            class="apply-btn-global" 
+            :disabled="applying || !hasPendingChanges" 
+            @click="applyAllSettings"
+          >
+            <span v-if="applying" class="loading-spinner"></span>
+            <span v-else>应用</span>
+          </button>
+        </div>
       </div>
       
       <div class="admin-content">
@@ -58,18 +66,37 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 import { useAdminUserStore } from '../../stores/adminUserStore'
 import toast from '../../utils/toast'
 
+const router = useRouter()
 const adminUserStore = useAdminUserStore()
 const { pendingUserChanges } = storeToRefs(adminUserStore)
 
 const applying = ref(false)
 
-// 计算是否有待处理的变更
+// 计算是否有待处理的变更（始终显示按钮，但根据此状态禁用/启用）
 const hasPendingChanges = computed(() => {
   return Object.keys(pendingUserChanges.value).length > 0
 })
+
+// 返回到管理后台之外的最近界面
+const goBack = () => {
+  // 检查localStorage中是否保存了进入管理后台前的路由
+  const previousRoute = localStorage.getItem('previous-route-before-admin')
+  
+  // 清除保存的路由（无论是否使用）
+  localStorage.removeItem('previous-route-before-admin')
+  
+  if (previousRoute && previousRoute !== '/admin' && !previousRoute.startsWith('/admin/')) {
+    // 如果有保存的非管理后台路由，则返回到该路由
+    router.push(previousRoute)
+  } else {
+    // 否则返回到主页
+    router.push('/')
+  }
+}
 
 // 应用所有设置
 const applyAllSettings = async () => {
@@ -200,6 +227,35 @@ const applyAllSettings = async () => {
   margin: 4px 0 0 0;
   color: #718096;
   font-size: 0.875rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.return-btn {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  min-width: 80px;
+  justify-content: center;
+}
+
+.return-btn:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.4);
 }
 
 .apply-btn-global {
