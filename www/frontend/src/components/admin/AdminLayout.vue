@@ -22,7 +22,7 @@
           </li>
           <li :class="{active: $route.name==='AdminRoles'}">
             <router-link to="/admin/roles">
-              <span class="nav-icon">�</span>
+              <span class="nav-icon">🔑</span>
               权限管理
             </router-link>
           </li>
@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useAdminUserStore } from '../../stores/adminUserStore'
@@ -75,14 +75,70 @@ const adminUserStore = useAdminUserStore()
 const { pendingUserChanges } = storeToRefs(adminUserStore)
 
 const applying = ref(false)
+const pendingChangesKey = ref(0) // 用于强制重新计算
+
+// 保存进入管理后台时的原始首页风格
+onMounted(() => {
+  const currentHomeStyle = localStorage.getItem('homeStyle') || 'classic'
+  if (!localStorage.getItem('original-homeStyle')) {
+    localStorage.setItem('original-homeStyle', currentHomeStyle)
+  }
+  
+  // 监听系统设置变更事件
+  window.addEventListener('ecowiki-admin-pending-changes', handlePendingChanges)
+})
+
+// 清理函数
+onUnmounted(() => {
+  window.removeEventListener('ecowiki-admin-pending-changes', handlePendingChanges)
+})
+
+// 处理待处理变更
+const handlePendingChanges = () => {
+  pendingChangesKey.value++
+}
 
 // 计算是否有待处理的变更（始终显示按钮，但根据此状态禁用/启用）
 const hasPendingChanges = computed(() => {
-  return Object.keys(pendingUserChanges.value).length > 0
+  // 强制重新计算
+  pendingChangesKey.value
+  
+  // 检查用户角色变更
+  const hasUserChanges = Object.keys(pendingUserChanges.value).length > 0
+  
+  // 检查系统设置变更（首页风格）
+  const currentHomeStyle = localStorage.getItem('homeStyle') || 'classic'
+  const originalHomeStyle = localStorage.getItem('original-homeStyle') || 'classic'
+  const hasStyleChanges = currentHomeStyle !== originalHomeStyle
+  
+  return hasUserChanges || hasStyleChanges
 })
 
 // 返回到管理后台之外的最近界面
 const goBack = () => {
+  // 检查是否有未应用的变更
+  const hasUserChanges = Object.keys(pendingUserChanges.value).length > 0
+  const currentHomeStyle = localStorage.getItem('homeStyle') || 'classic'
+  const originalHomeStyle = localStorage.getItem('original-homeStyle') || 'classic'
+  const hasStyleChanges = currentHomeStyle !== originalHomeStyle
+  
+  if (hasUserChanges || hasStyleChanges) {
+    if (confirm('您有未应用的变更，是否要丢弃这些变更并返回？')) {
+      // 恢复原始设置
+      if (hasStyleChanges) {
+        localStorage.setItem('homeStyle', originalHomeStyle)
+        window.dispatchEvent(new Event('ecowiki-home-style-change'))
+      }
+      // 清除用户变更
+      adminUserStore.clearPendingChanges()
+    } else {
+      return // 用户取消返回
+    }
+  }
+  
+  // 清除原始设置标记
+  localStorage.removeItem('original-homeStyle')
+  
   // 检查localStorage中是否保存了进入管理后台前的路由
   const previousRoute = localStorage.getItem('previous-route-before-admin')
   
@@ -100,22 +156,58 @@ const goBack = () => {
 
 // 应用所有设置
 const applyAllSettings = async () => {
+  if (applying.value) return // 防止重复点击
+  
   applying.value = true
+  
   try {
+    // 显示开始应用的动画效果
+    const applyBtn = document.querySelector('.apply-btn-global')
+    if (applyBtn) {
+      applyBtn.classList.add('applying-animation')
+    }
+    
+    // 延迟2.5秒，让用户看到漂亮的加载动画
+    await new Promise(resolve => setTimeout(resolve, 2500))
+    
     // 应用用户管理的变更
     if (Object.keys(pendingUserChanges.value).length > 0) {
       await adminUserStore.applyAllUserChanges()
     }
     
-    // 如果在系统设置页面，应用系统设置
-    // 触发首页风格变更事件，让系统设置页面保存设置
-    const homeStyle = localStorage.getItem('homeStyle') || 'classic'
-    localStorage.setItem('homeStyle', homeStyle)
+    // 应用系统设置变更（首页风格）
+    const currentHomeStyle = localStorage.getItem('homeStyle') || 'classic'
+    localStorage.setItem('original-homeStyle', currentHomeStyle)
     window.dispatchEvent(new Event('ecowiki-home-style-change'))
     
-    toast.success('所有设置已应用')
+    // 成功动画
+    if (applyBtn) {
+      applyBtn.classList.remove('applying-animation')
+      applyBtn.classList.add('success-animation')
+      setTimeout(() => {
+        applyBtn.classList.remove('success-animation')
+      }, 1000)
+    }
+    
+    // 延迟显示成功消息，让动画完成
+    setTimeout(() => {
+      toast.success('🎉 所有设置已成功应用！', '应用成功')
+    }, 300)
+    
   } catch (e: any) {
-    toast.error(e.message || '应用设置失败')
+    // 错误动画
+    const applyBtn = document.querySelector('.apply-btn-global')
+    if (applyBtn) {
+      applyBtn.classList.remove('applying-animation')
+      applyBtn.classList.add('error-animation')
+      setTimeout(() => {
+        applyBtn.classList.remove('error-animation')
+      }, 1000)
+    }
+    
+    setTimeout(() => {
+      toast.error('❌ ' + (e.message || '应用设置失败'), '应用失败')
+    }, 300)
   } finally {
     applying.value = false
   }
@@ -236,7 +328,7 @@ const applyAllSettings = async () => {
 }
 
 .return-btn {
-  background: #6b7280;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   padding: 10px 16px;
@@ -253,13 +345,13 @@ const applyAllSettings = async () => {
 }
 
 .return-btn:hover {
-  background: #4b5563;
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.4);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .apply-btn-global {
-  background: #4f46e5;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -276,9 +368,9 @@ const applyAllSettings = async () => {
 }
 
 .apply-btn-global:hover:not(:disabled) {
-  background: #4338ca;
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .apply-btn-global:disabled {
@@ -298,9 +390,75 @@ const applyAllSettings = async () => {
   animation: spin 1s linear infinite;
 }
 
+/* 应用按钮动画效果 */
+.applying-animation {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  transform: scale(0.95) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.applying-animation::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+.success-animation {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  transform: scale(1.05) !important;
+  animation: successPulse 0.6s ease-out;
+}
+
+.error-animation {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  animation: shake 0.6s ease-in-out;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-3px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(3px);
   }
 }
 

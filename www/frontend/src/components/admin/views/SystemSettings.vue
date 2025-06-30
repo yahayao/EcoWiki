@@ -81,8 +81,28 @@ const systemSettings = ref({
 // 首页风格切换
 const homeStyle = ref(localStorage.getItem('homeStyle') || 'classic')
 const switchChecked = ref(homeStyle.value === 'simple')
+
 watch(switchChecked, val => {
-  homeStyle.value = val ? 'simple' : 'classic'
+  const newStyle = val ? 'simple' : 'classic'
+  homeStyle.value = newStyle
+  localStorage.setItem('homeStyle', newStyle)
+  // 触发变更事件，让AdminLayout知道有待处理的变更
+  window.dispatchEvent(new Event('ecowiki-admin-pending-changes'))
+})
+
+// 监听AdminLayout的初始化完成
+onMounted(() => {
+  // 延迟一点确保AdminLayout已经设置了original-homeStyle
+  setTimeout(() => {
+    const originalStyle = localStorage.getItem('original-homeStyle') || 'classic'
+    // 使用原始风格来初始化界面状态，而不是当前的homeStyle
+    homeStyle.value = originalStyle
+    switchChecked.value = originalStyle === 'simple'
+    // 确保localStorage中的homeStyle与显示状态一致
+    localStorage.setItem('homeStyle', originalStyle)
+  }, 100)
+  
+  loadStats()
 })
 
 // 获取用户管理 store
@@ -99,10 +119,6 @@ const loadStats = async () => {
     console.error('加载统计信息失败:', err)
   }
 }
-
-onMounted(() => {
-  loadStats()
-})
 </script>
 
 <style scoped>

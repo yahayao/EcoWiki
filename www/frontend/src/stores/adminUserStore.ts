@@ -197,6 +197,16 @@ export const useAdminUserStore = defineStore('adminUser', () => {
     await applyAllRoleChanges()
   }
 
+  // 清除所有待处理变更
+  const clearPendingChanges = () => {
+    pendingUserChanges.value = {}
+    pendingRoleChanges.value = {
+      create: [],
+      update: {},
+      delete: []
+    }
+  }
+
   return {
     users,
     loading,
@@ -217,6 +227,7 @@ export const useAdminUserStore = defineStore('adminUser', () => {
     deletePendingRole,
     removePendingRole,
     applyAllRoleChanges,
-    applyAllChanges
+    applyAllChanges,
+    clearPendingChanges
   }
 })
