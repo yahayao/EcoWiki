@@ -20,10 +20,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecowiki.dto.ApiResponse;
+import com.ecowiki.dto.UserWithRoleDto;
 import com.ecowiki.entity.User;
 import com.ecowiki.repository.RoleRepository;
 import com.ecowiki.security.JwtUtil;
 import com.ecowiki.service.AdminService;
+import com.ecowiki.service.PermissionService;
 import com.ecowiki.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,6 +40,9 @@ public class AdminController {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private PermissionService permissionService;
     
     @Autowired
     private RoleRepository roleRepository;
@@ -67,7 +72,7 @@ public class AdminController {
     
     // 获取用户列表
     @GetMapping("/users")
-    public ResponseEntity<ApiResponse<Page<User>>> getAllUsers(
+    public ResponseEntity<ApiResponse<Page<UserWithRoleDto>>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -76,7 +81,7 @@ public class AdminController {
         
         try {
             User currentUser = getCurrentUser(request);
-            if (!currentUser.isAdmin()) {
+            if (!permissionService.isAdmin(currentUser)) {
                 return ResponseEntity.status(403)
                     .body(ApiResponse.error("权限不足，需要管理员权限"));
             }
@@ -85,7 +90,7 @@ public class AdminController {
                 Sort.Direction.DESC : Sort.Direction.ASC;
             Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
             
-            Page<User> users = adminService.getAllUsers(pageable);
+            Page<UserWithRoleDto> users = adminService.getAllUsers(pageable);
             return ResponseEntity.ok(ApiResponse.success(users, "获取用户列表成功"));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -102,24 +107,39 @@ public class AdminController {
         
         try {
             User currentUser = getCurrentUser(request);
-            if (!currentUser.isAdmin()) {
+            if (!permissionService.isAdmin(currentUser)) {
                 return ResponseEntity.status(403)
                     .body(ApiResponse.error("权限不足，需要管理员权限"));
+            }
+            
+            // 防止用户修改自己的角色
+            if (currentUser.getUserId().equals(userId)) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("不能修改自己的角色权限"));
             }
             
             // 防止修改超级管理员
             Optional<User> targetUserOpt = userService.findById(userId);
             if (targetUserOpt.isPresent()) {
                 User targetUser = targetUserOpt.get();
-                if (targetUser.isSuperAdmin() && !currentUser.isSuperAdmin()) {
+                if (permissionService.isSuperAdmin(targetUser) && !permissionService.isSuperAdmin(currentUser)) {
                     return ResponseEntity.status(403)
                         .body(ApiResponse.error("无法修改超级管理员权限"));
                 }
             }
             
             String newGroup = groupUpdate.get("userGroup");
-            User updatedUser = adminService.updateUserGroup(userId, newGroup);
-            return ResponseEntity.ok(ApiResponse.success(updatedUser, "权限更新成功"));
+            
+            // 使用新的用户角色管理逻辑
+            userService.updateUserRole(userId.intValue(), newGroup);
+            
+            // 获取更新后的用户信息
+            Optional<User> updatedUserOpt = userService.findById(userId);
+            if (updatedUserOpt.isPresent()) {
+                return ResponseEntity.ok(ApiResponse.success(updatedUserOpt.get(), "权限更新成功"));
+            } else {
+                throw new RuntimeException("用户不存在");
+            }
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("权限更新失败: " + e.getMessage()));
@@ -135,7 +155,7 @@ public class AdminController {
         
         try {
             User currentUser = getCurrentUser(request);
-            if (!currentUser.isAdmin()) {
+            if (!permissionService.isAdmin(currentUser)) {
                 return ResponseEntity.status(403)
                     .body(ApiResponse.error("权限不足，需要管理员权限"));
             }
@@ -144,7 +164,7 @@ public class AdminController {
             Optional<User> targetUserOpt = userService.findById(userId);
             if (targetUserOpt.isPresent()) {
                 User targetUser = targetUserOpt.get();
-                if (targetUser.isSuperAdmin()) {
+                if (permissionService.isSuperAdmin(targetUser)) {
                     return ResponseEntity.status(403)
                         .body(ApiResponse.error("无法禁用超级管理员"));
                 }
@@ -165,7 +185,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> getSystemStats(HttpServletRequest request) {
         try {
             User currentUser = getCurrentUser(request);
-            if (!currentUser.isAdmin()) {
+            if (!permissionService.isAdmin(currentUser)) {
                 return ResponseEntity.status(403)
                     .body(ApiResponse.error("权限不足，需要管理员权限"));
             }
@@ -183,7 +203,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<java.util.List<String>>> getAllRoles(HttpServletRequest request) {
         try {
             User currentUser = getCurrentUser(request);
-            if (!currentUser.isAdmin()) {
+            if (!permissionService.isAdmin(currentUser)) {
                 return ResponseEntity.status(403)
                     .body(ApiResponse.error("权限不足，需要管理员权限"));
             }
@@ -201,7 +221,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<java.util.List<com.ecowiki.entity.Role>>> getAllRolesDetails(HttpServletRequest request) {
         try {
             User currentUser = getCurrentUser(request);
-            if (!currentUser.isAdmin()) {
+            if (!permissionService.isAdmin(currentUser)) {
                 return ResponseEntity.status(403)
                     .body(ApiResponse.error("权限不足，需要管理员权限"));
             }
@@ -221,7 +241,7 @@ public class AdminController {
             HttpServletRequest request) {
         try {
             User currentUser = getCurrentUser(request);
-            if (!currentUser.isSuperAdmin()) {
+            if (!permissionService.isSuperAdmin(currentUser)) {
                 return ResponseEntity.status(403)
                     .body(ApiResponse.error("权限不足，需要超级管理员权限"));
             }
@@ -262,7 +282,7 @@ public class AdminController {
             HttpServletRequest request) {
         try {
             User currentUser = getCurrentUser(request);
-            if (!currentUser.isSuperAdmin()) {
+            if (!permissionService.isSuperAdmin(currentUser)) {
                 return ResponseEntity.status(403)
                     .body(ApiResponse.error("权限不足，需要超级管理员权限"));
             }
@@ -307,7 +327,7 @@ public class AdminController {
             HttpServletRequest request) {
         try {
             User currentUser = getCurrentUser(request);
-            if (!currentUser.isSuperAdmin()) {
+            if (!permissionService.isSuperAdmin(currentUser)) {
                 return ResponseEntity.status(403)
                     .body(ApiResponse.error("权限不足，需要超级管理员权限"));
             }

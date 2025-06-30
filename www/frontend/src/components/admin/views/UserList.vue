@@ -38,7 +38,7 @@
                 <select
                   :value="pendingUserChanges[user.userId]?.userGroup ?? user.userGroup"
                   @change="e => onUserGroupChange(user, (e.target as HTMLSelectElement).value)"
-                  :disabled="user.userGroup === 'superadmin'"
+                  :disabled="user.userGroup === 'superadmin' || getCurrentUser()?.username === user.username"
                   class="role-select"
                 >
                   <option v-if="roles.length === 0" disabled>加载中...</option>
@@ -48,6 +48,9 @@
                 </select>
                 <small v-if="roles.length === 0" style="color: #e53e3e;">
                   角色数据加载失败，请刷新页面
+                </small>
+                <small v-if="getCurrentUser()?.username === user.username" style="color: #666; display: block;">
+                  不能修改自己的角色
                 </small>
               </td>
               <td>
@@ -86,7 +89,21 @@ import toast from '../../../utils/toast'
 
 const adminUserStore = useAdminUserStore()
 const { users, loading, error, pendingUserChanges, roles } = storeToRefs(adminUserStore)
-const { loadUsers, loadRoles, loadRolesDetails, deleteUser } = adminUserStore
+const { loadUsers, loadRoles, loadRolesDetails, deleteUser, updateUserGroup } = adminUserStore
+
+// 获取当前用户信息（从token中解析）
+const getCurrentUser = () => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      return { username: payload.sub, userId: payload.userId }
+    } catch (e) {
+      return null
+    }
+  }
+  return null
+}
 
 // Token存在检查
 const hasToken = computed(() => !!localStorage.getItem('token'))
@@ -99,6 +116,14 @@ onMounted(async () => {
 })
 
 const onUserGroupChange = (user: UserResponse, newGroup: string) => {
+  // 防止修改自己的角色
+  const currentUser = getCurrentUser()
+  if (currentUser?.username === user.username) {
+    toast.error('不能修改自己的角色')
+    return
+  }
+  
+  // 暂存角色变更，等待用户点击"应用"按钮
   if (!pendingUserChanges.value[user.userId]) {
     pendingUserChanges.value[user.userId] = {}
   }
@@ -286,6 +311,15 @@ const getRoleDisplayName = (role: string) => {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+
+
+
+
+
+
+
+
 
 .loading-spinner {
   display: inline-block;

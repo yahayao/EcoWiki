@@ -10,6 +10,7 @@ import com.ecowiki.entity.Role;
 import com.ecowiki.entity.User;
 import com.ecowiki.repository.RoleRepository;
 import com.ecowiki.repository.UserRepository;
+import com.ecowiki.service.UserService;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -19,6 +20,9 @@ public class DataInitializer implements CommandLineRunner {
     
     @Autowired
     private RoleRepository roleRepository;
+    
+    @Autowired
+    private UserService userService;
 
     // 生产环境启用
     // @Autowired
@@ -38,10 +42,12 @@ public class DataInitializer implements CommandLineRunner {
             superAdmin.setPassword("EcoWiki@2025");
             superAdmin.setEmail("admin@ecowiki.com");
             superAdmin.setFullName("超级管理员");
-            superAdmin.setUserGroup("superadmin"); // 使用 userGroup
             superAdmin.setActive(true);
 
-            userRepository.save(superAdmin);
+            User savedSuperAdmin = userRepository.save(superAdmin);
+            
+            // 为超级管理员分配角色
+            userService.assignUserRole(savedSuperAdmin.getUserId().intValue(), "superadmin");
 
             System.out.println("=================================");
             System.out.println("超级管理员账户已创建:");

@@ -21,9 +21,6 @@ public class UserRegistrationDto {
     
     @Size(max = 100, message = "全名长度不能超过100个字符")
     private String fullName;
-    
-    @Size(max = 255, message = "用户组长度不能超过255个字符")
-    private String userGroup;
 
     // Constructors
     public UserRegistrationDto() {}
@@ -47,7 +44,4 @@ public class UserRegistrationDto {
     
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
-    
-    public String getUserGroup() { return userGroup; }
-    public void setUserGroup(String userGroup) { this.userGroup = userGroup; }
 }

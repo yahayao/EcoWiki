@@ -19,12 +19,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     // 权限相关查询
     long countByActiveTrue();
-    long countByUserGroup(String userGroup);
     
     @Query("SELECT u FROM User u WHERE u.active = true")
     java.util.List<User> findAllActiveUsers();
-    
-    @Query("SELECT u FROM User u WHERE u.userGroup = ?1")
-    java.util.List<User> findByUserGroup(String userGroup);
 
 }

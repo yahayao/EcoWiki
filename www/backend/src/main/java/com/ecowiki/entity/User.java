@@ -34,9 +34,6 @@ public class User {
     private String fullName;
     
     @Column(nullable = false)
-    private String userGroup = "user";
-    
-    @Column(nullable = false)
     private Boolean active = true;
     
     @Column
@@ -83,8 +80,9 @@ public class User {
         this.username = username;
         this.password = password;
         this.email = email;
-        this.userGroup = "user";
         this.active = true;
+        this.emailVerified = false;
+        this.gender = 0;
     }
     
     // Getters and Setters
@@ -102,9 +100,6 @@ public class User {
     
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
-    
-    public String getUserGroup() { return userGroup; }
-    public void setUserGroup(String userGroup) { this.userGroup = userGroup; }
     
     public Boolean getActive() { return active; }
     public void setActive(Boolean active) { this.active = active; }
@@ -144,32 +139,46 @@ public class User {
     public String getSecurityAnswer() { return securityAnswer; }
     public void setSecurityAnswer(String securityAnswer) { this.securityAnswer = securityAnswer; }
     
-    // 权限检查方法
+    // 临时权限检查方法 - 这些方法现在需要通过UserService来实现
+    // 为了保持向后兼容性，暂时返回false，实际使用时应该通过UserService检查
     public boolean isAdmin() {
-        return "admin".equals(this.userGroup) || "superadmin".equals(this.userGroup);
+        // TODO: 这个方法现在应该通过UserService.getUserRoleName()来实现
+        return false;
     }
     
     public boolean isSuperAdmin() {
-        return "superadmin".equals(this.userGroup);
+        // TODO: 这个方法现在应该通过UserService.getUserRoleName()来实现
+        return false;
     }
     
     public boolean hasPermission(String requiredGroup) {
-        if ("superadmin".equals(this.userGroup)) return true;
-        if ("admin".equals(this.userGroup) && ("admin".equals(requiredGroup) || "moderator".equals(requiredGroup) || "user".equals(requiredGroup))) return true;
-        if ("moderator".equals(this.userGroup) && ("moderator".equals(requiredGroup) || "user".equals(requiredGroup))) return true;
-        if ("user".equals(this.userGroup) && "user".equals(requiredGroup)) return true;
+        // TODO: 这个方法现在应该通过UserService来实现权限检查
         return false;
+    }
+    
+    // 临时兼容性方法 - 角色信息现在存储在User_Roles表中
+    public String getUserGroup() {
+        // TODO: 这个方法现在应该通过UserService.getUserRoleName()来实现
+        return "user"; // 返回默认值以保持兼容性
+    }
+    
+    public void setUserGroup(String userGroup) {
+        // TODO: 这个方法现在应该通过UserService来实现角色设置
+        // 暂时不做任何操作，保持兼容性
     }
     
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
-        if (this.userGroup == null || this.userGroup.trim().isEmpty()) {
-            this.userGroup = "user";
-        }
         if (this.active == null) {
             this.active = true;
+        }
+        if (this.emailVerified == null) {
+            this.emailVerified = false;
+        }
+        if (this.gender == null) {
+            this.gender = 0;
         }
     }
     

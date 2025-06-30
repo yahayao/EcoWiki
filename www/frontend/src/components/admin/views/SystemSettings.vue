@@ -7,15 +7,6 @@
       <p class="settings-subtitle">管理用户权限和系统配置</p>
     </div>
 
-    <!-- 应用按钮单独一行，右对齐 -->
-    <div class="settings-action-row">
-      <div></div>
-      <button class="apply-btn-fixed" :disabled="applying" @click="applySettings">
-        <span v-if="applying" class="loading-spinner"></span>
-        <span v-else>应用</span>
-      </button>
-    </div>
-
     <!-- 首页风格切换 -->
     <div class="home-style-switch-row">
       <label class="switch-label">
@@ -87,8 +78,6 @@ const systemSettings = ref({
   cacheEnabled: true
 })
 
-const applying = ref(false)
-
 // 首页风格切换
 const homeStyle = ref(localStorage.getItem('homeStyle') || 'classic')
 const switchChecked = ref(homeStyle.value === 'simple')
@@ -108,26 +97,6 @@ const loadStats = async () => {
     }
   } catch (err: any) {
     console.error('加载统计信息失败:', err)
-  }
-}
-
-// 应用设置
-const applySettings = async () => {
-  applying.value = true
-  try {
-    // 应用系统设置
-    localStorage.setItem('homeStyle', homeStyle.value)
-    window.dispatchEvent(new Event('ecowiki-home-style-change'))
-    
-    // 应用用户管理的变更
-    await adminUserStore.applyAllUserChanges()
-    
-    toast.success('系统设置已应用')
-    await loadStats()
-  } catch (e: any) {
-    toast.error(e.message || '应用设置失败')
-  } finally {
-    applying.value = false
   }
 }
 

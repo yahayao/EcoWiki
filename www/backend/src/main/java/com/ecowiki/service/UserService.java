@@ -1,5 +1,7 @@
 package com.ecowiki.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,14 +9,24 @@ import org.springframework.stereotype.Service;
 
 import com.ecowiki.dto.LoginRequest;
 import com.ecowiki.dto.UserRegistrationDto;
+import com.ecowiki.entity.Role;
 import com.ecowiki.entity.User;
+import com.ecowiki.entity.UserRole;
+import com.ecowiki.repository.RoleRepository;
 import com.ecowiki.repository.UserRepository;
+import com.ecowiki.repository.UserRoleRepository;
 
 @Service
 public class UserService {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private UserRoleRepository userRoleRepository;
+    
+    @Autowired
+    private RoleRepository roleRepository;
     
     // 密码加密器（开发阶段注释掉，生产环境时启用）
     // @Autowired
@@ -51,11 +63,15 @@ public class UserService {
         
         user.setEmail(dto.getEmail());
         user.setFullName(dto.getFullName());
-        user.setUserGroup("user"); // 设置默认权限组
         user.setActive(true);
         
         // 保存到数据库
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        
+        // 为新用户分配默认角色
+        assignUserRole(savedUser.getUserId().intValue(), "user");
+        
+        return savedUser;
     }
     
     public User authenticateUser(LoginRequest request) {
@@ -92,9 +108,13 @@ public class UserService {
         return userRepository.findById(id);
     }
     
-    // 根据用户组统计用户数量
-    public long countByUserGroup(String userGroup) {
-        return userRepository.countByUserGroup(userGroup);
+    // 根据角色统计用户数量（通过User_Roles表）
+    public long countByUserGroup(String roleName) {
+        Role role = roleRepository.findByRoleName(roleName);
+        if (role == null) {
+            return 0;
+        }
+        return userRoleRepository.countByRoleId(role.getRoleId());
     }
 
     public Optional<User> findByUsername(String username) {
@@ -112,5 +132,79 @@ public class UserService {
     public boolean resetPassword(User user, String newPassword) {
         user.setPassword(newPassword);
         return userRepository.save(user) != null;
+    }
+    
+    // 用户角色管理方法
+    
+    /**
+     * 为用户分配角色（通过角色名称）
+     */
+    public void assignUserRole(Integer userId, String roleName) {
+        Role role = roleRepository.findByRoleName(roleName);
+        if (role == null) {
+            throw new RuntimeException("角色不存在: " + roleName);
+        }
+        
+        // 检查用户角色关系是否已存在
+        Optional<UserRole> existingUserRole = userRoleRepository.findByUserIdAndRoleId(userId, role.getRoleId());
+        if (existingUserRole.isPresent()) {
+            return; // 关系已存在，不需要重复添加
+        }
+        
+        // 创建新的用户角色关系
+        UserRole userRole = new UserRole();
+        userRole.setUserId(userId);
+        userRole.setRoleId(role.getRoleId());
+        userRole.setCreatedAt(LocalDateTime.now());
+        
+        userRoleRepository.save(userRole);
+        
+        // 用户角色关系已保存，不再需要同步User表的userGroup字段
+    }
+    
+    /**
+     * 移除用户的所有角色并分配新角色
+     */
+    public void updateUserRole(Integer userId, String newRoleName) {
+        // 先删除用户的所有角色
+        userRoleRepository.deleteByUserId(userId);
+        
+        // 分配新角色
+        assignUserRole(userId, newRoleName);
+    }
+    
+    /**
+     * 获取用户的主要角色名称
+     */
+    public String getUserRoleName(Integer userId) {
+        List<UserRole> userRoles = userRoleRepository.findPrimaryRoleByUserId(userId);
+        if (!userRoles.isEmpty()) {
+            Role role = roleRepository.findById(userRoles.get(0).getRoleId()).orElse(null);
+            if (role != null) {
+                return role.getRoleName();
+            }
+        }
+        return "user"; // 默认角色
+    }
+    
+    /**
+     * 获取用户的所有角色
+     */
+    public List<String> getUserRoleNames(Integer userId) {
+        List<UserRole> userRoles = userRoleRepository.findByUserId(userId);
+        return userRoles.stream()
+                .map(ur -> {
+                    Role role = roleRepository.findById(ur.getRoleId()).orElse(null);
+                    return role != null ? role.getRoleName() : null;
+                })
+                .filter(roleName -> roleName != null)
+                .toList();
+    }
+    
+    /**
+     * 删除用户时清理角色关系
+     */
+    public void cleanupUserRoles(Integer userId) {
+        userRoleRepository.deleteByUserId(userId);
     }
 }

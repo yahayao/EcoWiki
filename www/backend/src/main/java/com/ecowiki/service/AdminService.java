@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ecowiki.dto.UserWithRoleDto;
 import com.ecowiki.entity.User;
 import com.ecowiki.repository.UserRepository;
 
@@ -20,9 +21,24 @@ public class AdminService {
     @Autowired
     private UserRepository userRepository;
     
+    @Autowired
+    private UserService userService;
+    
     // 获取所有用户（分页）
-    public Page<User> getAllUsers(Pageable pageable) {
-        return userRepository.findAll(pageable);
+    public Page<UserWithRoleDto> getAllUsers(Pageable pageable) {
+        Page<User> userPage = userRepository.findAll(pageable);
+        return userPage.map(user -> {
+            String roleName = userService.getUserRoleName(user.getUserId().intValue());
+            return new UserWithRoleDto(
+                user.getUserId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getActive(),
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
+                roleName
+            );
+        });
     }
     
     // 更新用户权限组
@@ -33,8 +49,9 @@ public class AdminService {
         }
         
         User user = userOpt.get();
-        user.setUserGroup(newUserGroup);
-        return userRepository.save(user);
+        // 使用UserService更新用户角色
+        userService.updateUserRole(userId.intValue(), newUserGroup);
+        return user;
     }
     
     // 更新用户状态
@@ -61,11 +78,11 @@ public class AdminService {
         long activeUsers = userRepository.countByActiveTrue();
         stats.put("activeUsers", activeUsers);
         
-        // 各权限组用户数
-        stats.put("userCount", userRepository.countByUserGroup("user"));
-        stats.put("moderatorCount", userRepository.countByUserGroup("moderator"));
-        stats.put("adminCount", userRepository.countByUserGroup("admin"));
-        stats.put("superadminCount", userRepository.countByUserGroup("superadmin"));
+        // 各权限组用户数（通过UserService统计）
+        stats.put("userCount", userService.countByUserGroup("user"));
+        stats.put("moderatorCount", userService.countByUserGroup("moderator"));
+        stats.put("adminCount", userService.countByUserGroup("admin"));
+        stats.put("superadminCount", userService.countByUserGroup("superadmin"));
         
         return stats;
     }

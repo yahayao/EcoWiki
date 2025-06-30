@@ -133,7 +133,8 @@ public class AuthController {
         userResponse.put("username", user.getUsername());
         userResponse.put("email", user.getEmail());
         userResponse.put("fullName", user.getFullName());
-        userResponse.put("userGroup", user.getUserGroup());
+        // 角色信息现在通过UserService获取
+        // userResponse.put("userGroup", userService.getUserRoleName(user.getUserId()));
         userResponse.put("active", user.getActive());
         userResponse.put("createdAt", user.getCreatedAt());
         userResponse.put("updatedAt", user.getUpdatedAt());
