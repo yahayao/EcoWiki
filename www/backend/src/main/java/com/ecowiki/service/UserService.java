@@ -3,7 +3,6 @@ package com.ecowiki.service;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.security.crypto.password.PasswordEncoder; // 开发阶段注释掉，生产环境时启用
 import org.springframework.stereotype.Service;
 
 import com.ecowiki.dto.LoginRequest;
@@ -91,6 +90,11 @@ public class UserService {
 
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
+    }
+    
+    // 根据用户组统计用户数量
+    public long countByUserGroup(String userGroup) {
+        return userRepository.countByUserGroup(userGroup);
     }
 
     public Optional<User> findByUsername(String username) {

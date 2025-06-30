@@ -20,6 +20,12 @@
               用户管理
             </router-link>
           </li>
+          <li :class="{active: $route.name==='AdminRoles'}">
+            <router-link to="/admin/roles">
+              <span class="nav-icon">�</span>
+              权限管理
+            </router-link>
+          </li>
         </ul>
       </nav>
     </aside>

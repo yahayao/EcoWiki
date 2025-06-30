@@ -62,39 +62,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 系统设置项 -->
-    <div class="settings-card">
-      <h3>系统配置</h3>
-      <div class="settings-grid">
-        <div class="setting-item">
-          <label>站点名称</label>
-          <input v-model="systemSettings.siteName" type="text" />
-        </div>
-        <div class="setting-item">
-          <label>站点描述</label>
-          <textarea v-model="systemSettings.siteDescription"></textarea>
-        </div>
-        <div class="setting-item">
-          <label>
-            <input v-model="systemSettings.allowRegistration" type="checkbox" />
-            允许用户注册
-          </label>
-          <div class="setting-desc">
-            <small>关闭后，用户将无法自行注册账号。</small>
-          </div>
-        </div>
-        <div class="setting-item">
-          <label>
-            <input v-model="systemSettings.emailVerification" type="checkbox" :disabled="!systemSettings.allowRegistration" />
-            邮箱验证
-          </label>
-          <div class="setting-desc">
-            <small>开启后，新用户注册需通过邮箱验证。</small>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -152,10 +119,10 @@ const applySettings = async () => {
     localStorage.setItem('homeStyle', homeStyle.value)
     window.dispatchEvent(new Event('ecowiki-home-style-change'))
     
-    // 应用用户管理的所有变更
+    // 应用用户管理的变更
     await adminUserStore.applyAllUserChanges()
     
-    toast.success('所有设置已应用')
+    toast.success('系统设置已应用')
     await loadStats()
   } catch (e: any) {
     toast.error(e.message || '应用设置失败')

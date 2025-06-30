@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ecowiki.dto.ApiResponse;
 import com.ecowiki.entity.User;
+import com.ecowiki.repository.RoleRepository;
 import com.ecowiki.security.JwtUtil;
 import com.ecowiki.service.AdminService;
 import com.ecowiki.service.UserService;
@@ -37,6 +38,9 @@ public class AdminController {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private RoleRepository roleRepository;
     
     @Autowired
     private JwtUtil jwtUtil;
@@ -174,11 +178,9 @@ public class AdminController {
         }
     }
     
-    // 删除用户
-    @DeleteMapping("/users/{userId}")
-    public ResponseEntity<ApiResponse<String>> deleteUser(
-            @PathVariable Long userId,
-            HttpServletRequest request) {
+    // 获取所有角色列表
+    @GetMapping("/roles")
+    public ResponseEntity<ApiResponse<java.util.List<String>>> getAllRoles(HttpServletRequest request) {
         try {
             User currentUser = getCurrentUser(request);
             if (!currentUser.isAdmin()) {
@@ -186,21 +188,156 @@ public class AdminController {
                     .body(ApiResponse.error("权限不足，需要管理员权限"));
             }
             
-            // 防止删除超级管理员
-            Optional<User> targetUserOpt = userService.findById(userId);
-            if (targetUserOpt.isPresent()) {
-                User targetUser = targetUserOpt.get();
-                if (targetUser.isSuperAdmin()) {
-                    return ResponseEntity.status(403)
-                        .body(ApiResponse.error("无法删除超级管理员"));
-                }
-            }
-            
-            adminService.deleteUser(userId);
-            return ResponseEntity.ok(ApiResponse.success("用户删除成功"));
+            java.util.List<String> roleNames = roleRepository.findAllRoleNames();
+            return ResponseEntity.ok(ApiResponse.success(roleNames, "获取角色列表成功"));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(ApiResponse.error("删除用户失败: " + e.getMessage()));
+                .body(ApiResponse.error("获取角色列表失败: " + e.getMessage()));
+        }
+    }
+    
+    // 获取所有角色详细信息
+    @GetMapping("/roles/details")
+    public ResponseEntity<ApiResponse<java.util.List<com.ecowiki.entity.Role>>> getAllRolesDetails(HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            if (!currentUser.isAdmin()) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要管理员权限"));
+            }
+            
+            java.util.List<com.ecowiki.entity.Role> roles = roleRepository.findAllByOrderByRoleId();
+            return ResponseEntity.ok(ApiResponse.success(roles, "获取角色详情成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("获取角色详情失败: " + e.getMessage()));
+        }
+    }
+    
+    // 创建新角色
+    @org.springframework.web.bind.annotation.PostMapping("/roles")
+    public ResponseEntity<ApiResponse<com.ecowiki.entity.Role>> createRole(
+            @RequestBody Map<String, String> roleData,
+            HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            if (!currentUser.isSuperAdmin()) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要超级管理员权限"));
+            }
+            
+            String roleName = roleData.get("roleName");
+            String description = roleData.get("description");
+            
+            if (roleName == null || roleName.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("角色名称不能为空"));
+            }
+            
+            // 检查角色是否已存在
+            if (roleRepository.findByRoleName(roleName) != null) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("角色名称已存在"));
+            }
+            
+            com.ecowiki.entity.Role role = new com.ecowiki.entity.Role();
+            role.setRoleName(roleName);
+            role.setDescription(description);
+            role.setCreatedAt(java.time.LocalDateTime.now());
+            role.setUpdatedAt(java.time.LocalDateTime.now());
+            
+            com.ecowiki.entity.Role savedRole = roleRepository.save(role);
+            return ResponseEntity.ok(ApiResponse.success(savedRole, "角色创建成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("创建角色失败: " + e.getMessage()));
+        }
+    }
+    
+    // 更新角色
+    @PutMapping("/roles/{roleId}")
+    public ResponseEntity<ApiResponse<com.ecowiki.entity.Role>> updateRole(
+            @PathVariable Integer roleId,
+            @RequestBody Map<String, String> roleData,
+            HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            if (!currentUser.isSuperAdmin()) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要超级管理员权限"));
+            }
+            
+            Optional<com.ecowiki.entity.Role> roleOpt = roleRepository.findById(roleId);
+            if (!roleOpt.isPresent()) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("角色不存在"));
+            }
+            
+            com.ecowiki.entity.Role role = roleOpt.get();
+            String newRoleName = roleData.get("roleName");
+            String newDescription = roleData.get("description");
+            
+            if (newRoleName != null && !newRoleName.equals(role.getRoleName())) {
+                // 检查新角色名是否已存在
+                if (roleRepository.findByRoleName(newRoleName) != null) {
+                    return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("角色名称已存在"));
+                }
+                role.setRoleName(newRoleName);
+            }
+            
+            if (newDescription != null) {
+                role.setDescription(newDescription);
+            }
+            
+            role.setUpdatedAt(java.time.LocalDateTime.now());
+            com.ecowiki.entity.Role updatedRole = roleRepository.save(role);
+            
+            return ResponseEntity.ok(ApiResponse.success(updatedRole, "角色更新成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("更新角色失败: " + e.getMessage()));
+        }
+    }
+    
+    // 删除角色
+    @DeleteMapping("/roles/{roleId}")
+    public ResponseEntity<ApiResponse<String>> deleteRole(
+            @PathVariable Integer roleId,
+            HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            if (!currentUser.isSuperAdmin()) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要超级管理员权限"));
+            }
+            
+            Optional<com.ecowiki.entity.Role> roleOpt = roleRepository.findById(roleId);
+            if (!roleOpt.isPresent()) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("角色不存在"));
+            }
+            
+            com.ecowiki.entity.Role role = roleOpt.get();
+            
+            // 防止删除基础角色
+            if ("superadmin".equals(role.getRoleName()) || "admin".equals(role.getRoleName())) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("无法删除系统基础角色"));
+            }
+            
+            // 检查是否有用户使用此角色
+            long userCount = userService.countByUserGroup(role.getRoleName());
+            if (userCount > 0) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("无法删除，仍有 " + userCount + " 个用户使用此角色"));
+            }
+            
+            roleRepository.deleteById(roleId);
+            return ResponseEntity.ok(ApiResponse.success("角色删除成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("删除角色失败: " + e.getMessage()));
         }
     }
 }

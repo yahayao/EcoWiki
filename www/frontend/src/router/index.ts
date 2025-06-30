@@ -5,6 +5,7 @@ import ArticleEdit from '../views/ArticleEdit.vue'
 import AdminLayout from '../components/admin/AdminLayout.vue'
 import SystemSettings from '../components/admin/views/SystemSettings.vue'
 import UserList from '../components/admin/views/UserList.vue'
+import RoleManagement from '../components/admin/views/RoleManagement.vue'
 
 const routes = [
   { path: '/', name: 'Home', component: DynamicHome },
@@ -21,7 +22,8 @@ const routes = [
     redirect: '/admin/settings', // 默认重定向到系统设置
     children: [
       { path: 'settings', name: 'AdminSettings', component: SystemSettings },
-      { path: 'users', name: 'AdminUsers', component: UserList }
+      { path: 'users', name: 'AdminUsers', component: UserList },
+      { path: 'roles', name: 'AdminRoles', component: RoleManagement }
     ]
   }
 ]

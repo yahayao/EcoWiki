@@ -41,11 +41,14 @@
                   :disabled="user.userGroup === 'superadmin'"
                   class="role-select"
                 >
-                  <option value="user">普通用户</option>
-                  <option value="moderator">版主</option>
-                  <option value="admin">管理员</option>
-                  <option value="superadmin">超级管理员</option>
+                  <option v-if="roles.length === 0" disabled>加载中...</option>
+                  <option v-for="role in roles" :key="role" :value="role">
+                    {{ getRoleDisplayName(role) }}
+                  </option>
                 </select>
+                <small v-if="roles.length === 0" style="color: #e53e3e;">
+                  角色数据加载失败，请刷新页面
+                </small>
               </td>
               <td>
                 <button
@@ -75,19 +78,24 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAdminUserStore } from '../../../stores/adminUserStore'
 import { type UserResponse, type UserGroup } from '../../../api/user'
 import toast from '../../../utils/toast'
 
 const adminUserStore = useAdminUserStore()
-const { users, loading, error, pendingUserChanges } = storeToRefs(adminUserStore)
-const { loadUsers, deleteUser } = adminUserStore
+const { users, loading, error, pendingUserChanges, roles } = storeToRefs(adminUserStore)
+const { loadUsers, loadRoles, loadRolesDetails, deleteUser } = adminUserStore
+
+// Token存在检查
+const hasToken = computed(() => !!localStorage.getItem('token'))
 
 // 组件挂载时加载数据
-onMounted(() => {
-  loadUsers()
+onMounted(async () => {
+  await loadRoles() // 先加载角色列表
+  await loadRolesDetails() // 加载角色详情
+  await loadUsers()  // 再加载用户列表
 })
 
 const onUserGroupChange = (user: UserResponse, newGroup: string) => {
@@ -122,6 +130,17 @@ const handleDeleteUser = async (userId: number) => {
 const formatDate = (dateString: string) => {
   if (!dateString) return '-'
   return new Date(dateString).toLocaleString('zh-CN')
+}
+
+// 角色显示名称映射
+const getRoleDisplayName = (role: string) => {
+  const roleMap: Record<string, string> = {
+    'user': 'User',
+    'moderator': 'Moderator', 
+    'admin': 'Admin',
+    'superadmin': 'Super Admin'
+  }
+  return roleMap[role] || role
 }
 </script>
 

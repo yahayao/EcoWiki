@@ -1,11 +1,14 @@
 package com.ecowiki.config;
 
+import java.time.LocalDateTime;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import com.ecowiki.entity.Role;
 import com.ecowiki.entity.User;
+import com.ecowiki.repository.RoleRepository;
 import com.ecowiki.repository.UserRepository;
 
 @Component
@@ -13,6 +16,9 @@ public class DataInitializer implements CommandLineRunner {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private RoleRepository roleRepository;
 
     // 生产环境启用
     // @Autowired
@@ -20,6 +26,9 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        // 初始化基础角色数据
+        initializeRoles();
+        
         // 检查是否已存在超级管理员
         if (!userRepository.existsByUsername("superadmin")) {
             // 创建超级管理员账户
@@ -42,5 +51,27 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("权限组: superadmin");
             System.out.println("=================================");
         }
+    }
+    
+    private void initializeRoles() {
+        // 检查是否已有角色数据
+        if (roleRepository.count() == 0) {
+            // 创建基础角色
+            createRole("user", "普通用户");
+            createRole("moderator", "版主"); 
+            createRole("admin", "管理员");
+            createRole("superadmin", "超级管理员");
+            
+            System.out.println("基础角色数据初始化完成");
+        }
+    }
+    
+    private void createRole(String roleName, String description) {
+        Role role = new Role();
+        role.setRoleName(roleName);
+        role.setDescription(description);
+        role.setCreatedAt(LocalDateTime.now());
+        role.setUpdatedAt(LocalDateTime.now());
+        roleRepository.save(role);
     }
 }

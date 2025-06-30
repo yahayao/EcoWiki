@@ -26,15 +26,16 @@ apiClient.interceptors.request.use(
   }
 )
 
-// 修改用户组类型定义 - 改为字符串常量
+// 修改用户组类型定义 - 改为字符串类型，支持动态角色
+export type UserGroup = string
+
+// 保留常用角色常量供参考
 export const USER_GROUPS = {
   USER: 'user',
   MODERATOR: 'moderator', 
   ADMIN: 'admin',
   SUPER_ADMIN: 'superadmin'
 } as const
-
-export type UserGroup = typeof USER_GROUPS[keyof typeof USER_GROUPS]
 
 // 接口类型定义
 export interface LoginRequest {
@@ -60,6 +61,15 @@ export interface UserResponse {
   userGroup: UserGroup  // 改为 userGroup
   active: boolean
   avatar?: string
+  createdAt: string
+  updatedAt: string
+}
+
+// 角色信息接口
+export interface RoleResponse {
+  roleId: number
+  roleName: string
+  description?: string
   createdAt: string
   updatedAt: string
 }
@@ -120,6 +130,61 @@ export const adminApi = {
     } catch (error: any) {
       console.error('获取系统统计失败:', error)
       throw new Error(error.response?.data?.message || error.message || '获取系统统计失败')
+    }
+  },
+  
+  // 获取所有角色列表
+  getRoles: async () => {
+    try {
+      const response = await api.get('/admin/roles')
+      return response.data
+    } catch (error: any) {
+      console.error('获取角色列表失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '获取角色列表失败')
+    }
+  },
+  
+  // 获取角色详细信息
+  getRolesDetails: async () => {
+    try {
+      const response = await api.get('/admin/roles/details')
+      return response.data
+    } catch (error: any) {
+      console.error('获取角色详情失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '获取角色详情失败')
+    }
+  },
+  
+  // 创建角色
+  createRole: async (roleData: { roleName: string; description?: string }) => {
+    try {
+      const response = await api.post('/admin/roles', roleData)
+      return response.data
+    } catch (error: any) {
+      console.error('创建角色失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '创建角色失败')
+    }
+  },
+  
+  // 更新角色
+  updateRole: async (roleId: number, roleData: { roleName?: string; description?: string }) => {
+    try {
+      const response = await api.put(`/admin/roles/${roleId}`, roleData)
+      return response.data
+    } catch (error: any) {
+      console.error('更新角色失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '更新角色失败')
+    }
+  },
+  
+  // 删除角色
+  deleteRole: async (roleId: number) => {
+    try {
+      const response = await api.delete(`/admin/roles/${roleId}`)
+      return response.data
+    } catch (error: any) {
+      console.error('删除角色失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '删除角色失败')
     }
   },
   
@@ -313,24 +378,10 @@ export const userApi = {
     }
   },
 
-  // 检查用户权限
-  hasPermission: (user: UserResponse | null, requiredGroup: UserGroup): boolean => {
-    if (!user) return false
-    
-    const groupOrder = {
-      [USER_GROUPS.USER]: 0,
-      [USER_GROUPS.MODERATOR]: 1,
-      [USER_GROUPS.ADMIN]: 2,
-      [USER_GROUPS.SUPER_ADMIN]: 3
-    }
-    
-    return groupOrder[user.userGroup] >= groupOrder[requiredGroup]
-  },
-  
-  // 检查是否为管理员
-  isAdmin: (user: UserResponse | null): boolean => {
-    return user?.userGroup === USER_GROUPS.ADMIN || user?.userGroup === USER_GROUPS.SUPER_ADMIN
-  },
+// 检查是否为管理员
+isAdmin: (user: UserResponse | null): boolean => {
+  return user?.userGroup === USER_GROUPS.ADMIN || user?.userGroup === USER_GROUPS.SUPER_ADMIN
+},
   
   // 检查是否为超级管理员
   isSuperAdmin: (user: UserResponse | null): boolean => {
