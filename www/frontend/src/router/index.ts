@@ -42,34 +42,24 @@ import AdminLayout from '../components/admin/AdminLayout.vue'
 import SystemSettings from '../components/admin/views/SystemSettings.vue'
 import UserList from '../components/admin/views/UserList.vue'
 import RoleManagement from '../components/admin/views/RoleManagement.vue'
-
+import ForgotPassword from '../components/auth/ForgotPassword.vue'
 /**
  * 路由配置数组
  * 定义了应用程序的所有路由规则
  */
 const routes = [
-  // 首页路由
-  { 
-    path: '/', 
-    name: 'Home', 
-    component: DynamicHome 
+  { path: '/', name: 'Home', component: DynamicHome },
+  { path: '/article/:id', name: 'ArticleDetail', component: ArticleDetail },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    redirect: '/'
   },
-  
-  // 文章详情页路由
-  { 
-    path: '/article/:id', 
-    name: 'ArticleDetail', 
-    component: ArticleDetail 
-  },
-  
-  // 文章编辑页路由
-  { 
-    path: '/edit/:id', 
-    name: 'ArticleEdit', 
-    component: ArticleEdit 
-  },
-  
-  // 管理后台嵌套路由
+  {
+  path: '/forgot-password',
+  name: 'ForgotPassword',
+  component: ForgotPassword
+},
   {
     path: '/admin',
     component: AdminLayout,

@@ -137,8 +137,11 @@
               <span v-if="isLoading" class="loading-spinner"></span>
               {{ isLoading ? '登录中...' : '登录' }}
             </button>
-            
-            <!-- 底部链接 - 注册提示 -->
+            <div>
+            <!-- 其他登录表单内容 -->
+            <button @click="goToForgotPassword">忘记密码</button>
+            </div>
+            <!-- 底部链接 -->
             <div class="form-footer">
               <span class="register-prompt">还没有账户？</span>
               <a href="#" @click="$emit('switchToRegister')" class="register-link">注册</a>
@@ -159,6 +162,7 @@
  */
 
 import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import { userApi } from '../api/user'
 import { useAuth } from '../composables/useAuth'
 import toast from '../utils/toast'
@@ -297,6 +301,11 @@ const handleLogin = async () => {
     // 重置加载状态
     isLoading.value = false
   }
+}
+const router = useRouter()
+
+const goToForgotPassword = () => {
+  router.push('/forgot-password')
 }
 </script>
 

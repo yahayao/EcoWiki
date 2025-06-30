@@ -52,6 +52,7 @@
       @show-login="showLoginModal"
       @show-register="showRegisterModal"
       @show-admin="showAdminModal"
+      @show-forgot-password="showForgotPassword"
       @logout="handleLogout"
     />
   </div>
@@ -84,6 +85,7 @@ const showRegisterForm = ref(false)
  * 控制管理员设置的显示状态
  */
 const showAdminSettings = ref(false)
+const showForgotPassword = ref(false)
 
 // ======================== 模态框控制方法 ========================
 
@@ -95,6 +97,7 @@ const showLoginModal = () => {
   showLoginForm.value = true
   showRegisterForm.value = false
   showAdminSettings.value = false
+  showForgotPassword.value = false
 }
 
 /**
@@ -134,6 +137,7 @@ const closeModals = () => {
   showLoginForm.value = false
   showRegisterForm.value = false
   showAdminSettings.value = false
+  showForgotPassword.value = false
 }
 
 // 登出处理
