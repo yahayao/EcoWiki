@@ -41,9 +41,11 @@
       :showLoginForm="showLoginForm"
       :showRegisterForm="showRegisterForm"
       :showAdminSettings="showAdminSettings"
+      :showForgotPassword="showForgotPassword"
       @closeModals="closeModals"
       @switchToRegister="switchToRegister"
       @switchToLogin="switchToLogin"
+      @switchToForgot="switchToForgot"
     />
     
     <!-- 主要内容区域 -->
@@ -52,7 +54,7 @@
       @show-login="showLoginModal"
       @show-register="showRegisterModal"
       @show-admin="showAdminModal"
-      @show-forgot-password="showForgotPassword"
+      @show-forgot-password="showForgotPasswordModal"
       @logout="handleLogout"
     />
   </div>
@@ -99,6 +101,13 @@ const showLoginModal = () => {
   showAdminSettings.value = false
   showForgotPassword.value = false
 }
+// 显示忘记密码模态框
+const showForgotPasswordModal = () => {
+  showForgotPassword.value = true
+  showLoginForm.value = false
+  showRegisterForm.value = false
+  showAdminSettings.value = false
+}
 
 /**
  * 显示注册模态框
@@ -108,6 +117,7 @@ const showRegisterModal = () => {
   showRegisterForm.value = true
   showLoginForm.value = false
   showAdminSettings.value = false
+  showForgotPassword.value = false
 }
 
 /**
@@ -124,12 +134,21 @@ const showAdminModal = () => {
 const switchToRegister = () => {
   showLoginForm.value = false
   showRegisterForm.value = true
+  showRegisterForm.value = false
 }
 
 // 切换到登录
 const switchToLogin = () => {
   showRegisterForm.value = false
   showLoginForm.value = true
+  showRegisterForm.value = false
+}
+
+// 切换到忘记密码
+const switchToForgot = () => {
+  showRegisterForm.value = true
+  showRegisterForm.value = false
+  showLoginForm.value = false
 }
 
 // 关闭所有模态框
