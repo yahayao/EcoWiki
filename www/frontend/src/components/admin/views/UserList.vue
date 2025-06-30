@@ -49,7 +49,7 @@
               </td>
               <td>
                 <button
-                  @click="onUserStatusChange(user, !user.active)"
+                  @click="onUserStatusChange(user, !(pendingUserChanges[user.userId]?.active ?? user.active))"
                   :disabled="user.userGroup === 'superadmin'"
                   :class="['status-btn', (pendingUserChanges[user.userId]?.active ?? user.active) ? 'active' : 'inactive']"
                 >
@@ -59,7 +59,7 @@
               <td>{{ formatDate(user.createdAt) }}</td>
               <td>
                 <button 
-                  @click="deleteUser(user.userId)"
+                  @click="handleDeleteUser(user.userId)"
                   :disabled="user.userGroup === 'superadmin'"
                   class="delete-btn"
                 >
@@ -75,98 +75,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { adminApi, USER_GROUPS, type UserResponse, type UserGroup } from '../../../api/user'
+import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useAdminUserStore } from '../../../stores/adminUserStore'
+import { type UserResponse, type UserGroup } from '../../../api/user'
 import toast from '../../../utils/toast'
 
-// 响应式数据
-const users = ref<UserResponse[]>([])
-const loading = ref(false)
-const error = ref('')
-
-// 用于暂存用户更改
-const pendingUserChanges = ref<Record<number, Partial<UserResponse>>>({})
-
-// 加载用户列表
-const loadUsers = async () => {
-  loading.value = true
-  error.value = ''
-  
-  try {
-    const response = await adminApi.getUsers(0, 100) // 获取前100个用户
-    if (response.code === 200) {
-      users.value = response.data.content || []
-    } else {
-      throw new Error(response.message || '获取用户列表失败')
-    }
-  } catch (err: any) {
-    console.error('加载用户列表失败:', err)
-    error.value = err.message || '加载用户列表失败'
-    toast.error(error.value)
-  } finally {
-    loading.value = false
-  }
-}
-
-// 更新用户权限组
-const updateUserGroup = async (userId: number, newGroup: UserGroup) => {
-  try {
-    const response = await adminApi.updateUserGroup(userId, newGroup)
-    if (response.code === 200) {
-      toast.success('用户权限更新成功')
-      await loadUsers() // 重新加载用户列表
-    } else {
-      throw new Error(response.message || '更新用户权限失败')
-    }
-  } catch (err: any) {
-    console.error('更新用户权限失败:', err)
-    toast.error(err.message || '更新用户权限失败')
-    await loadUsers() // 重新加载以恢复原始状态
-  }
-}
-
-// 切换用户状态
-const toggleUserStatus = async (userId: number, active: boolean) => {
-  try {
-    const response = await adminApi.updateUserStatus(userId, active)
-    if (response.code === 200) {
-      toast.success(active ? '用户已启用' : '用户已禁用')
-      await loadUsers()
-    } else {
-      throw new Error(response.message || '更新用户状态失败')
-    }
-  } catch (err: any) {
-    console.error('更新用户状态失败:', err)
-    toast.error(err.message || '更新用户状态失败')
-    await loadUsers()
-  }
-}
-
-// 删除用户
-const deleteUser = async (userId: number) => {
-  if (!confirm('确定要删除该用户吗？此操作不可恢复。')) {
-    return
-  }
-  
-  try {
-    const response = await adminApi.deleteUser(userId)
-    if (response.code === 200) {
-      toast.success('用户删除成功')
-      await loadUsers()
-    } else {
-      throw new Error(response.message || '删除用户失败')
-    }
-  } catch (err: any) {
-    console.error('删除用户失败:', err)
-    toast.error(err.message || '删除用户失败')
-  }
-}
-
-// 格式化日期
-const formatDate = (dateString: string) => {
-  if (!dateString) return '-'
-  return new Date(dateString).toLocaleString('zh-CN')
-}
+const adminUserStore = useAdminUserStore()
+const { users, loading, error, pendingUserChanges } = storeToRefs(adminUserStore)
+const { loadUsers, deleteUser } = adminUserStore
 
 // 组件挂载时加载数据
 onMounted(() => {
@@ -185,6 +102,26 @@ const onUserStatusChange = (user: UserResponse, newStatus: boolean) => {
     pendingUserChanges.value[user.userId] = {}
   }
   pendingUserChanges.value[user.userId].active = newStatus
+}
+
+const handleDeleteUser = async (userId: number) => {
+  if (!confirm('确定要删除该用户吗？此操作不可恢复。')) return
+  try {
+    const response = await deleteUser(userId)
+    if (response.code === 200) {
+      toast.success('用户删除成功')
+      await loadUsers()
+    } else {
+      throw new Error(response.message || '删除用户失败')
+    }
+  } catch (err: any) {
+    toast.error(err.message || '删除用户失败')
+  }
+}
+
+const formatDate = (dateString: string) => {
+  if (!dateString) return '-'
+  return new Date(dateString).toLocaleString('zh-CN')
 }
 </script>
 

@@ -101,6 +101,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { adminApi } from '../../../api/user'
+import { useAdminUserStore } from '../../../stores/adminUserStore'
 import toast from '../../../utils/toast'
 
 // 统计信息
@@ -128,6 +129,9 @@ watch(switchChecked, val => {
   homeStyle.value = val ? 'simple' : 'classic'
 })
 
+// 获取用户管理 store
+const adminUserStore = useAdminUserStore()
+
 // 加载统计信息
 const loadStats = async () => {
   try {
@@ -144,9 +148,14 @@ const loadStats = async () => {
 const applySettings = async () => {
   applying.value = true
   try {
+    // 应用系统设置
     localStorage.setItem('homeStyle', homeStyle.value)
     window.dispatchEvent(new Event('ecowiki-home-style-change'))
-    toast.success('设置已应用')
+    
+    // 应用用户管理的所有变更
+    await adminUserStore.applyAllUserChanges()
+    
+    toast.success('所有设置已应用')
     await loadStats()
   } catch (e: any) {
     toast.error(e.message || '应用设置失败')
