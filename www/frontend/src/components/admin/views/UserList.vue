@@ -29,14 +29,14 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="user in users" :key="user.id">
-              <td>{{ user.id }}</td>
+            <tr v-for="user in users" :key="user.userId">
+              <td>{{ user.userId }}</td>
               <td>{{ user.username }}</td>
               <td>{{ user.email }}</td>
               <td>{{ user.fullName || '-' }}</td>
               <td>
                 <select
-                  :value="pendingUserChanges[user.id]?.userGroup ?? user.userGroup"
+                  :value="pendingUserChanges[user.userId]?.userGroup ?? user.userGroup"
                   @change="e => onUserGroupChange(user, (e.target as HTMLSelectElement).value)"
                   :disabled="user.userGroup === 'superadmin'"
                   class="role-select"
@@ -51,15 +51,15 @@
                 <button
                   @click="onUserStatusChange(user, !user.active)"
                   :disabled="user.userGroup === 'superadmin'"
-                  :class="['status-btn', (pendingUserChanges[user.id]?.active ?? user.active) ? 'active' : 'inactive']"
+                  :class="['status-btn', (pendingUserChanges[user.userId]?.active ?? user.active) ? 'active' : 'inactive']"
                 >
-                  {{ (pendingUserChanges[user.id]?.active ?? user.active) ? '启用' : '禁用' }}
+                  {{ (pendingUserChanges[user.userId]?.active ?? user.active) ? '启用' : '禁用' }}
                 </button>
               </td>
               <td>{{ formatDate(user.createdAt) }}</td>
               <td>
                 <button 
-                  @click="deleteUser(user.id)"
+                  @click="deleteUser(user.userId)"
                   :disabled="user.userGroup === 'superadmin'"
                   class="delete-btn"
                 >
@@ -174,17 +174,17 @@ onMounted(() => {
 })
 
 const onUserGroupChange = (user: UserResponse, newGroup: string) => {
-  if (!pendingUserChanges.value[user.id]) {
-    pendingUserChanges.value[user.id] = {}
+  if (!pendingUserChanges.value[user.userId]) {
+    pendingUserChanges.value[user.userId] = {}
   }
-  pendingUserChanges.value[user.id].userGroup = newGroup as UserGroup
+  pendingUserChanges.value[user.userId].userGroup = newGroup as UserGroup
 }
 
 const onUserStatusChange = (user: UserResponse, newStatus: boolean) => {
-  if (!pendingUserChanges.value[user.id]) {
-    pendingUserChanges.value[user.id] = {}
+  if (!pendingUserChanges.value[user.userId]) {
+    pendingUserChanges.value[user.userId] = {}
   }
-  pendingUserChanges.value[user.id].active = newStatus
+  pendingUserChanges.value[user.userId].active = newStatus
 }
 </script>
 

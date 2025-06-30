@@ -53,7 +53,7 @@ export interface RegisterRequest {
 }
 
 export interface UserResponse {
-  id: number
+  userId: number // 修正为 userId，移除 id
   username: string
   email: string
   fullName?: string
@@ -80,7 +80,7 @@ export interface ApiResponse<T> {
 // 管理员API
 export const adminApi = {
   // 获取用户列表
-  getUsers: async (page = 0, size = 10, sortBy = 'id', sortDir = 'desc') => {
+  getUsers: async (page = 0, size = 10, sortBy = 'userId', sortDir = 'desc') => {
     try {
       const response = await api.get(`/admin/users?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`)
       return response.data
