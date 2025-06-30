@@ -134,7 +134,7 @@ public class AuthController {
         userResponse.put("email", user.getEmail());
         userResponse.put("fullName", user.getFullName());
         // 角色信息现在通过UserService获取
-        // userResponse.put("userGroup", userService.getUserRoleName(user.getUserId()));
+        userResponse.put("userGroup", userService.getUserRoleName(user.getUserId().intValue()));
         userResponse.put("active", user.getActive());
         userResponse.put("createdAt", user.getCreatedAt());
         userResponse.put("updatedAt", user.getUpdatedAt());
