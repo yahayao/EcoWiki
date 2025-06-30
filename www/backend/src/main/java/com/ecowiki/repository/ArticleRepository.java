@@ -13,38 +13,114 @@ import org.springframework.stereotype.Repository;
 
 import com.ecowiki.entity.Article;
 
+/**
+ * 文章数据访问接口
+ * <p>
+ * 继承JpaRepository，提供文章实体的基础CRUD操作和自定义查询方法。
+ * 支持文章检索、分页查询、统计分析、互动操作等功能。
+ * <p>
+ * <b>设计说明：</b>
+ * - 支持多维度查询（标题、作者、分类、标签、内容）
+ * - 提供分页和排序功能
+ * - 支持统计分析和数据修改操作
+ * - 适用于Wiki内容管理、搜索、推荐等场景
+ *
+ * @author EcoWiki
+ * @version 1.0
+ * @since 2024-04
+ */
 @Repository
 public interface ArticleRepository extends JpaRepository<Article, Long> {
-    
-    // 根据标题查找文章
+    /**
+     * 根据标题查找文章
+     * @param title 文章标题
+     * @return 文章实体（可能为空）
+     */
     Optional<Article> findByTitle(String title);
     
-    // 根据作者查找文章
+    /**
+     * 根据作者查找文章
+     * @param author 作者名
+     * @return 文章列表
+     */
     List<Article> findByAuthor(String author);
     
-    // 根据分类查找文章
+    /**
+     * 根据分类查找文章
+     * @param category 分类名
+     * @return 文章列表
+     */
     List<Article> findByCategory(String category);
+    
+    /**
+     * 根据分类分页查找文章
+     * @param category 分类名
+     * @param pageable 分页参数
+     * @return 文章分页数据
+     */
     Page<Article> findByCategory(String category, Pageable pageable);
     
-    // 根据标题包含关键字查找文章
+    /**
+     * 根据标题包含关键字查找文章
+     * @param keyword 关键字
+     * @return 文章列表
+     */
     List<Article> findByTitleContaining(String keyword);
+    
+    /**
+     * 根据标题包含关键字分页查找文章
+     * @param keyword 关键字
+     * @param pageable 分页参数
+     * @return 文章分页数据
+     */
     Page<Article> findByTitleContaining(String keyword, Pageable pageable);
     
-    // 根据内容包含关键字查找文章
+    /**
+     * 根据内容包含关键字查找文章
+     * @param keyword 关键字
+     * @return 文章列表
+     */
     List<Article> findByContentContaining(String keyword);
+    
+    /**
+     * 根据内容包含关键字分页查找文章
+     * @param keyword 关键字
+     * @param pageable 分页参数
+     * @return 文章分页数据
+     */
     Page<Article> findByContentContaining(String keyword, Pageable pageable);
     
-    // 根据标题或内容包含关键字查找文章
+    /**
+     * 根据标题或内容包含关键字查找文章
+     * @param keyword 关键字
+     * @return 文章列表
+     */
     @Query("SELECT a FROM Article a WHERE a.title LIKE CONCAT('%', :keyword, '%') OR a.content LIKE CONCAT('%', :keyword, '%')")
     List<Article> findByTitleOrContentContaining(@Param("keyword") String keyword);
     
+    /**
+     * 根据标题或内容包含关键字分页查找文章
+     * @param keyword 关键字
+     * @param pageable 分页参数
+     * @return 文章分页数据
+     */
     @Query("SELECT a FROM Article a WHERE a.title LIKE CONCAT('%', :keyword, '%') OR a.content LIKE CONCAT('%', :keyword, '%')")
     Page<Article> findByTitleOrContentContaining(@Param("keyword") String keyword, Pageable pageable);
     
-    // 根据标签查找文章
+    /**
+     * 根据标签查找文章
+     * @param tag 标签名
+     * @return 文章列表
+     */
     @Query("SELECT a FROM Article a WHERE a.tags LIKE CONCAT('%', :tag, '%')")
     List<Article> findByTagsContaining(@Param("tag") String tag);
     
+    /**
+     * 根据标签分页查找文章
+     * @param tag 标签名
+     * @param pageable 分页参数
+     * @return 文章分页数据
+     */
     @Query("SELECT a FROM Article a WHERE a.tags LIKE CONCAT('%', :tag, '%')")
     Page<Article> findByTagsContaining(@Param("tag") String tag, Pageable pageable);
     
@@ -68,39 +144,50 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     @Query("SELECT a FROM Article a ORDER BY a.publishDate DESC")
     List<Article> findLatestArticles(Pageable pageable);
     
-    // 增加浏览量
+    /**
+     * 增加文章浏览量
+     * @param articleId 文章ID
+     */
     @Modifying
     @Query("UPDATE Article a SET a.views = a.views + 1 WHERE a.articleId = :articleId")
     void incrementViews(@Param("articleId") Long articleId);
     
-    // 增加点赞数
+    /**
+     * 增加文章点赞数
+     * @param articleId 文章ID
+     */
     @Modifying
     @Query("UPDATE Article a SET a.likes = a.likes + 1 WHERE a.articleId = :articleId")
     void incrementLikes(@Param("articleId") Long articleId);
     
-    // 减少点赞数
+    /**
+     * 减少文章点赞数
+     * @param articleId 文章ID
+     */
     @Modifying
     @Query("UPDATE Article a SET a.likes = CASE WHEN a.likes > 0 THEN a.likes - 1 ELSE 0 END WHERE a.articleId = :articleId")
     void decrementLikes(@Param("articleId") Long articleId);
     
-    // 更新评论数
+    /**
+     * 更新文章评论数
+     * @param articleId 文章ID
+     * @param comments 评论数
+     */
     @Modifying
     @Query("UPDATE Article a SET a.comments = :comments WHERE a.articleId = :articleId")
     void updateComments(@Param("articleId") Long articleId, @Param("comments") Integer comments);
     
-    // 获取分类统计
-    @Query("SELECT a.category, COUNT(a) FROM Article a GROUP BY a.category")
-    List<Object[]> getCategoryStats();
-    
-    // 获取作者统计
-    @Query("SELECT a.author, COUNT(a) FROM Article a GROUP BY a.author")
-    List<Object[]> getAuthorStats();
-    
-    // 获取总浏览量
+    /**
+     * 获取文章总浏览量
+     * @return 总浏览量
+     */
     @Query("SELECT SUM(a.views) FROM Article a")
     Long getTotalViews();
     
-    // 获取总点赞数
+    /**
+     * 获取文章总点赞数
+     * @return 总点赞数
+     */
     @Query("SELECT SUM(a.likes) FROM Article a")
     Long getTotalLikes();
 }

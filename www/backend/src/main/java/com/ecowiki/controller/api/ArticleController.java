@@ -25,16 +25,37 @@ import com.ecowiki.dto.ArticleStatisticsDto;
 import com.ecowiki.dto.ArticleUpdateRequest;
 import com.ecowiki.service.ArticleService;
 
+/**
+ * 文章控制器
+ * <p>
+ * 提供EcoWiki文章相关的RESTful API，包括文章的增删改查、分类、标签、作者、搜索、点赞、评论统计等。
+ * 依赖ArticleService进行业务处理，所有接口均返回统一的ApiResponse结构。
+ * <p>
+ * <b>设计说明：</b>
+ * - 采用Spring Boot REST风格，支持分页、排序、条件过滤。
+ * - 适用于Wiki内容管理、文章展示、社区互动等场景。
+ * - 支持前后端分离，接口安全性可扩展。
+ *
+ * @author EcoWiki
+ * @version 1.0
+ * @since 2024-04
+ */
 @RestController
 @RequestMapping("/articles")
 @CrossOrigin(origins = "http://localhost:5173")
 @Validated
 public class ArticleController {
-    
+    /**
+     * 文章服务，处理所有文章相关业务
+     */
     @Autowired
     private ArticleService articleService;
-    
-    // 创建文章
+
+    /**
+     * 创建新文章
+     * @param request 文章创建请求体
+     * @return 创建成功的文章信息
+     */
     @PostMapping
     public ResponseEntity<ApiResponse<ArticleDto>> createArticle(@Validated @RequestBody ArticleCreateRequest request) {
         try {
@@ -46,8 +67,15 @@ public class ArticleController {
                 .body(ApiResponse.error("创建文章失败: " + e.getMessage()));
         }
     }
-    
-    // 获取所有文章（分页）
+
+    /**
+     * 分页获取所有文章
+     * @param page 页码（默认0）
+     * @param size 每页数量（默认10）
+     * @param sortBy 排序字段（默认publishDate）
+     * @param sortDir 排序方向（默认desc）
+     * @return 文章分页数据
+     */
     @GetMapping
     public ResponseEntity<ApiResponse<Page<ArticleDto>>> getAllArticles(
             @RequestParam(defaultValue = "0") int page,
@@ -62,8 +90,12 @@ public class ArticleController {
                 .body(ApiResponse.error("获取文章列表失败: " + e.getMessage()));
         }
     }
-    
-    // 根据ID获取文章
+
+    /**
+     * 根据ID获取文章详情（并自增浏览量）
+     * @param id 文章ID
+     * @return 文章详情
+     */
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ArticleDto>> getArticleById(@PathVariable Long id) {
         try {
@@ -77,11 +109,16 @@ public class ArticleController {
                 .body(ApiResponse.error("获取文章失败: " + e.getMessage()));
         }
     }
-    
-    // 更新文章
+
+    /**
+     * 更新文章内容
+     * @param id 文章ID
+     * @param request 文章更新请求体
+     * @return 更新后的文章信息
+     */
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ArticleDto>> updateArticle(
-            @PathVariable Long id, 
+            @PathVariable Long id,
             @Validated @RequestBody ArticleUpdateRequest request) {
         try {
             ArticleDto article = articleService.updateArticle(id, request);
@@ -94,8 +131,12 @@ public class ArticleController {
                 .body(ApiResponse.error("更新文章失败: " + e.getMessage()));
         }
     }
-    
-    // 删除文章
+
+    /**
+     * 删除文章
+     * @param id 文章ID
+     * @return 删除结果
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteArticle(@PathVariable Long id) {
         try {
@@ -109,8 +150,14 @@ public class ArticleController {
                 .body(ApiResponse.error("删除文章失败: " + e.getMessage()));
         }
     }
-    
-    // 根据分类获取文章
+
+    /**
+     * 根据分类分页获取文章
+     * @param category 分类名
+     * @param page 页码
+     * @param size 每页数量
+     * @return 分类下的文章分页数据
+     */
     @GetMapping("/category/{category}")
     public ResponseEntity<ApiResponse<Page<ArticleDto>>> getArticlesByCategory(
             @PathVariable String category,
@@ -124,8 +171,12 @@ public class ArticleController {
                 .body(ApiResponse.error("获取分类文章失败: " + e.getMessage()));
         }
     }
-    
-    // 根据作者获取文章
+
+    /**
+     * 根据作者获取文章列表
+     * @param author 作者名
+     * @return 作者的所有文章
+     */
     @GetMapping("/author/{author}")
     public ResponseEntity<ApiResponse<List<ArticleDto>>> getArticlesByAuthor(@PathVariable String author) {
         try {
@@ -136,8 +187,14 @@ public class ArticleController {
                 .body(ApiResponse.error("获取作者文章失败: " + e.getMessage()));
         }
     }
-    
-    // 搜索文章
+
+    /**
+     * 搜索文章
+     * @param keyword 关键词
+     * @param page 页码
+     * @param size 每页数量
+     * @return 搜索结果分页数据
+     */
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<Page<ArticleDto>>> searchArticles(
             @RequestParam String keyword,
@@ -151,8 +208,14 @@ public class ArticleController {
                 .body(ApiResponse.error("搜索文章失败: " + e.getMessage()));
         }
     }
-    
-    // 根据标签获取文章
+
+    /**
+     * 根据标签分页获取文章
+     * @param tag 标签名
+     * @param page 页码
+     * @param size 每页数量
+     * @return 标签下的文章分页数据
+     */
     @GetMapping("/tag/{tag}")
     public ResponseEntity<ApiResponse<Page<ArticleDto>>> getArticlesByTag(
             @PathVariable String tag,
@@ -166,8 +229,12 @@ public class ArticleController {
                 .body(ApiResponse.error("获取标签文章失败: " + e.getMessage()));
         }
     }
-    
-    // 获取热门文章
+
+    /**
+     * 获取热门文章
+     * @param limit 返回数量
+     * @return 热门文章列表
+     */
     @GetMapping("/popular")
     public ResponseEntity<ApiResponse<List<ArticleDto>>> getPopularArticles(
             @RequestParam(defaultValue = "10") int limit) {
@@ -179,8 +246,12 @@ public class ArticleController {
                 .body(ApiResponse.error("获取热门文章失败: " + e.getMessage()));
         }
     }
-    
-    // 获取最新文章
+
+    /**
+     * 获取最新文章
+     * @param limit 返回数量
+     * @return 最新文章列表
+     */
     @GetMapping("/latest")
     public ResponseEntity<ApiResponse<List<ArticleDto>>> getLatestArticles(
             @RequestParam(defaultValue = "10") int limit) {
@@ -192,8 +263,12 @@ public class ArticleController {
                 .body(ApiResponse.error("获取最新文章失败: " + e.getMessage()));
         }
     }
-    
-    // 点赞文章
+
+    /**
+     * 点赞文章
+     * @param id 文章ID
+     * @return 点赞结果
+     */
     @PostMapping("/{id}/like")
     public ResponseEntity<ApiResponse<Void>> likeArticle(@PathVariable Long id) {
         try {
@@ -207,8 +282,12 @@ public class ArticleController {
                 .body(ApiResponse.error("点赞失败: " + e.getMessage()));
         }
     }
-    
-    // 取消点赞
+
+    /**
+     * 取消点赞
+     * @param id 文章ID
+     * @return 取消点赞结果
+     */
     @DeleteMapping("/{id}/like")
     public ResponseEntity<ApiResponse<Void>> unlikeArticle(@PathVariable Long id) {
         try {
@@ -222,11 +301,16 @@ public class ArticleController {
                 .body(ApiResponse.error("取消点赞失败: " + e.getMessage()));
         }
     }
-    
-    // 更新评论数
+
+    /**
+     * 更新评论数
+     * @param id 文章ID
+     * @param count 新评论数
+     * @return 更新结果
+     */
     @PutMapping("/{id}/comments")
     public ResponseEntity<ApiResponse<Void>> updateCommentsCount(
-            @PathVariable Long id, 
+            @PathVariable Long id,
             @RequestParam Integer count) {
         try {
             articleService.updateCommentsCount(id, count);
@@ -239,8 +323,11 @@ public class ArticleController {
                 .body(ApiResponse.error("评论数更新失败: " + e.getMessage()));
         }
     }
-    
-    // 获取文章统计信息
+
+    /**
+     * 获取文章统计信息
+     * @return 统计数据
+     */
     @GetMapping("/statistics")
     public ResponseEntity<ApiResponse<ArticleStatisticsDto>> getStatistics() {
         try {

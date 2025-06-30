@@ -30,27 +30,56 @@ import com.ecowiki.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+/**
+ * 管理员控制器
+ * <p>
+ * 提供后台管理相关的RESTful API，包括用户管理、角色管理、系统统计等。
+ * 依赖权限服务、用户服务、角色仓库等，所有接口均需管理员或超级管理员权限。
+ * <p>
+ * <b>设计说明：</b>
+ * - 采用Spring Boot REST风格，接口安全性依赖JWT认证与权限校验。
+ * - 支持分页、排序、权限分级、角色动态管理。
+ * - 适用于后台管理系统、权限分配、用户状态维护等场景。
+ *
+ * @author EcoWiki
+ * @version 1.0
+ * @since 2024-04
+ */
 @RestController
 @RequestMapping("/admin")
 @CrossOrigin(origins = "http://localhost:5173")
 public class AdminController {
-    
+    /**
+     * 管理员服务，处理用户和系统管理相关业务
+     */
     @Autowired
     private AdminService adminService;
-    
+    /**
+     * 用户服务，处理用户信息相关操作
+     */
     @Autowired
     private UserService userService;
-    
+    /**
+     * 权限服务，负责权限校验
+     */
     @Autowired
     private PermissionService permissionService;
-    
+    /**
+     * 角色仓库，负责角色数据访问
+     */
     @Autowired
     private RoleRepository roleRepository;
-    
+    /**
+     * JWT工具类，用于token解析
+     */
     @Autowired
     private JwtUtil jwtUtil;
-    
-    // 获取当前用户
+
+    /**
+     * 获取当前请求用户实体
+     * @param request HTTP请求
+     * @return 当前用户对象，若无效则为null
+     */
     private User getCurrentUser(HttpServletRequest request) {
         String token = extractTokenFromRequest(request);
         if (token != null) {
@@ -60,8 +89,12 @@ public class AdminController {
         }
         return null;
     }
-    
-    // 提取token
+
+    /**
+     * 从请求头提取JWT Token
+     * @param request HTTP请求
+     * @return Bearer Token字符串，若无则为null
+     */
     private String extractTokenFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
@@ -69,8 +102,16 @@ public class AdminController {
         }
         return null;
     }
-    
-    // 获取用户列表
+
+    /**
+     * 分页获取所有用户及其角色信息
+     * @param page 页码（默认0）
+     * @param size 每页数量（默认10）
+     * @param sortBy 排序字段（默认id）
+     * @param sortDir 排序方向（默认desc）
+     * @param request HTTP请求
+     * @return 用户分页数据，需管理员权限
+     */
     @GetMapping("/users")
     public ResponseEntity<ApiResponse<Page<UserWithRoleDto>>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
@@ -97,8 +138,14 @@ public class AdminController {
                 .body(ApiResponse.error("获取用户列表失败: " + e.getMessage()));
         }
     }
-    
-    // 更新用户角色
+
+    /**
+     * 更新指定用户的角色
+     * @param userId 用户ID
+     * @param roleUpdate 包含新角色的Map（userGroup字段）
+     * @param request HTTP请求
+     * @return 更新后的用户信息，需管理员权限
+     */
     @PutMapping("/users/{userId}/group")
     public ResponseEntity<ApiResponse<User>> updateUserGroup(
             @PathVariable Long userId,
@@ -151,8 +198,14 @@ public class AdminController {
                 .body(ApiResponse.error("权限更新失败: " + e.getMessage()));
         }
     }
-    
-    // 更新用户状态
+
+    /**
+     * 更新指定用户的激活状态
+     * @param userId 用户ID
+     * @param statusUpdate 包含active字段的Map
+     * @param request HTTP请求
+     * @return 更新后的用户信息，需管理员权限
+     */
     @PutMapping("/users/{userId}/status")
     public ResponseEntity<ApiResponse<User>> updateUserStatus(
             @PathVariable Long userId,
@@ -185,8 +238,12 @@ public class AdminController {
                 .body(ApiResponse.error("状态更新失败: " + e.getMessage()));
         }
     }
-    
-    // 获取系统统计
+
+    /**
+     * 获取系统统计信息
+     * @param request HTTP请求
+     * @return 统计数据，需管理员权限
+     */
     @GetMapping("/stats")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getSystemStats(HttpServletRequest request) {
         try {
@@ -203,8 +260,12 @@ public class AdminController {
                 .body(ApiResponse.error("获取统计信息失败: " + e.getMessage()));
         }
     }
-    
-    // 获取所有角色列表
+
+    /**
+     * 获取所有角色名称列表
+     * @param request HTTP请求
+     * @return 角色名称列表，需管理员权限
+     */
     @GetMapping("/roles")
     public ResponseEntity<ApiResponse<java.util.List<String>>> getAllRoles(HttpServletRequest request) {
         try {
@@ -221,8 +282,12 @@ public class AdminController {
                 .body(ApiResponse.error("获取角色列表失败: " + e.getMessage()));
         }
     }
-    
-    // 获取所有角色详细信息
+
+    /**
+     * 获取所有角色详细信息
+     * @param request HTTP请求
+     * @return 角色实体列表，需管理员权限
+     */
     @GetMapping("/roles/details")
     public ResponseEntity<ApiResponse<java.util.List<com.ecowiki.entity.Role>>> getAllRolesDetails(HttpServletRequest request) {
         try {
@@ -239,8 +304,13 @@ public class AdminController {
                 .body(ApiResponse.error("获取角色详情失败: " + e.getMessage()));
         }
     }
-    
-    // 创建新角色
+
+    /**
+     * 创建新角色
+     * @param roleData 包含roleName和description的Map
+     * @param request HTTP请求
+     * @return 新建角色实体，仅超级管理员可用
+     */
     @org.springframework.web.bind.annotation.PostMapping("/roles")
     public ResponseEntity<ApiResponse<com.ecowiki.entity.Role>> createRole(
             @RequestBody Map<String, String> roleData,
@@ -279,8 +349,14 @@ public class AdminController {
                 .body(ApiResponse.error("创建角色失败: " + e.getMessage()));
         }
     }
-    
-    // 更新角色
+
+    /**
+     * 更新角色信息
+     * @param roleId 角色ID
+     * @param roleData 包含新roleName和description的Map
+     * @param request HTTP请求
+     * @return 更新后的角色实体，仅超级管理员可用
+     */
     @PutMapping("/roles/{roleId}")
     public ResponseEntity<ApiResponse<com.ecowiki.entity.Role>> updateRole(
             @PathVariable Integer roleId,
@@ -325,8 +401,13 @@ public class AdminController {
                 .body(ApiResponse.error("更新角色失败: " + e.getMessage()));
         }
     }
-    
-    // 删除角色
+
+    /**
+     * 删除角色
+     * @param roleId 角色ID
+     * @param request HTTP请求
+     * @return 删除结果，仅超级管理员可用
+     */
     @DeleteMapping("/roles/{roleId}")
     public ResponseEntity<ApiResponse<String>> deleteRole(
             @PathVariable Integer roleId,

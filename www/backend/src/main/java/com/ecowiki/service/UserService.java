@@ -1,5 +1,32 @@
 package com.ecowiki.service;
 
+/**
+ * 用户服务类
+ *
+ * 负责处理与用户相关的所有业务逻辑，包括注册、登录、用户信息管理、
+ * 角色分配、权限校验等。是EcoWiki后端的核心服务之一。
+ *
+ * 主要功能：
+ * - 用户注册与唯一性校验
+ * - 用户登录与密码校验
+ * - 用户信息的增删改查
+ * - 用户角色的分配与查询
+ * - 账号状态管理（激活/禁用）
+ *
+ * 依赖组件：
+ * - UserRepository：用户数据访问层
+ * - UserRoleRepository：用户角色关联数据访问层
+ * - RoleRepository：角色数据访问层
+ *
+ * 设计说明：
+ * - 所有用户角色分配均基于user_roles表实现
+ * - 支持多角色分配和权限动态变更
+ * - 密码加密功能可根据环境切换
+ *
+ * @author EcoWiki Team
+ * @version 2.0
+ * @since 2025-06-30
+ */
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;

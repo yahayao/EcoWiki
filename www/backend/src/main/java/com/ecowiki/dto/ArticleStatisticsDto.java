@@ -1,9 +1,26 @@
 package com.ecowiki.dto;
 
+/**
+ * 文章统计数据DTO
+ * <p>
+ * 用于传输文章相关的统计信息，包括文章总数、总浏览量、总点赞数等。
+ * 主要用于管理后台的统计展示和数据分析。
+ * <p>
+ * <b>设计说明：</b>
+ * - 包含核心统计指标
+ * - 处理空值情况，默认为0
+ * - 便于扩展其他统计字段
+ *
+ * @author EcoWiki
+ * @version 1.0
+ * @since 2024-04
+ */
 public class ArticleStatisticsDto {
-    
+    /** 文章总数 */
     private long totalArticles;
+    /** 总浏览量 */
     private Long totalViews;
+    /** 总点赞数 */
     private Long totalLikes;
     
     // 构造函数

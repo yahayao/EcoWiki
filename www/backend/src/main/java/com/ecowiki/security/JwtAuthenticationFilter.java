@@ -15,12 +15,36 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * JWT认证过滤器
+ * <p>
+ * 继承OncePerRequestFilter，在每个HTTP请求中执行一次JWT令牌的验证和认证。
+ * 从请求头中提取JWT令牌，验证其有效性，并设置Spring Security上下文。
+ * <p>
+ * <b>设计说明：</b>
+ * - 从Authorization头部提取Bearer Token
+ * - 验证JWT令牌的有效性和完整性
+ * - 设置Spring Security认证上下文
+ * - 适用于无状态的API认证机制
+ *
+ * @author EcoWiki
+ * @version 1.0
+ * @since 2024-04
+ */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
+    /** JWT工具类，用于令牌解析和验证 */
     @Autowired
     private JwtUtil jwtUtil;
 
+    /**
+     * 过滤器内部处理逻辑
+     * @param request HTTP请求
+     * @param response HTTP响应
+     * @param filterChain 过滤器链
+     * @throws ServletException Servlet异常
+     * @throws IOException IO异常
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
                                   FilterChain filterChain) throws ServletException, IOException {
