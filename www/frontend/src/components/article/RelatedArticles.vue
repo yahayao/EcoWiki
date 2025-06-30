@@ -20,9 +20,9 @@
     <div v-else-if="articles.length > 0" class="related-grid">
       <div 
         v-for="article in articles" 
-        :key="article.articleId"
+        :key="article.id"
         class="related-card"
-        @click="navigateToArticle(article.articleId)"
+        @click="navigateToArticle(article.id)"
       >
         <div class="related-header">
           <span class="related-category">{{ article.category }}</span>
@@ -77,7 +77,7 @@ import { articleApi, type Article } from '@/api/article'
 import toast from '@/utils/toast'
 
 interface RelatedArticle {
-  id: string
+  id: number
   title: string
   excerpt: string
   author: string
@@ -90,7 +90,7 @@ interface RelatedArticle {
 }
 
 const props = defineProps<{
-  currentArticleId: string
+  currentArticleId: number
   currentCategory?: string
   currentTags?: string[]
   maxResults?: number
@@ -98,7 +98,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  articleClick: [articleId: string]
+  articleClick: [articleId: number]
 }>()
 
 const router = useRouter()
@@ -118,7 +118,7 @@ const convertToRelatedArticle = (article: Article): RelatedArticle => {
     author: article.author,
     category: article.tags.split(',')[0] || '未分类',
     rating: 4 + Math.random(), // 模拟评分
-    publishDate: article.createdAt,
+    publishDate: article.publishDate, // 使用正确的字段名
     views: article.views,
     likes: article.likes,
     readTime: Math.ceil(article.content.length / 500) // 估算阅读时间
@@ -141,15 +141,9 @@ const loadRelatedArticles = async () => {
   loading.value = true
   try {
     // 获取相关文章 - 基于分类、标签等进行推荐
-    const response = await articleApi.getArticles({
-      page: 1,
-      size: props.maxResults || 6,
-      category: props.currentCategory,
-      // 排除当前文章
-      excludeId: props.currentArticleId
-    })
+    const response = await articleApi.getArticles(0, props.maxResults || 6)
     
-    articles.value = response.data.map(convertToRelatedArticle)
+    articles.value = response.content.map(convertToRelatedArticle)
     hasMore.value = response.totalElements > (props.maxResults || 6)
   } catch (error) {
     console.error('加载相关文章失败:', error)
@@ -165,7 +159,7 @@ const loadMockData = () => {
   // 降级模拟数据
   articles.value = [
     {
-      id: '2',
+      id: 2,
       title: '深入理解现代Web技术架构',
       excerpt: '随着互联网技术的快速发展，现代Web应用的架构变得越来越复杂和精细。本文将带您深入了解当前主流的Web技术架构模式...',
       author: '技术专家',
@@ -177,7 +171,7 @@ const loadMockData = () => {
       readTime: 8
     },
     {
-      id: '3',
+      id: 3,
       title: '可持续发展与绿色技术创新',
       excerpt: '在全球气候变化的背景下，可持续发展已成为各行各业关注的焦点。绿色技术作为实现可持续发展的重要手段...',
       author: '环保专家',
@@ -195,16 +189,11 @@ const loadMore = async () => {
   loadingMore.value = true
   try {
     // 加载更多相关文章
-    const response = await articleApi.getArticles({
-      page: 2,
-      size: 3,
-      category: props.currentCategory,
-      excludeId: props.currentArticleId
-    })
+    const response = await articleApi.getArticles(1, 3)
     
-    const moreArticles = response.data.map(convertToRelatedArticle)
+    const moreArticles = response.content.map(convertToRelatedArticle)
     articles.value.push(...moreArticles)
-    hasMore.value = response.data.length === 3
+    hasMore.value = response.content.length === 3
   } catch (error) {
     console.error('加载更多文章失败:', error)
     toast.show('加载更多失败', '错误', { type: 'error' })
@@ -217,7 +206,7 @@ const refreshRecommendations = () => {
   loadRelatedArticles()
 }
 
-const navigateToArticle = (articleId: string) => {
+const navigateToArticle = (articleId: number) => {
   emit('articleClick', articleId)
   router.push(`/article/${articleId}`)
 }

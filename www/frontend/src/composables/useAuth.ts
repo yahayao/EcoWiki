@@ -83,7 +83,16 @@ const userDisplayName = computed(() => {
 
 // 检查用户是否有特定权限
 const hasPermission = (permission: UserGroup): boolean => {
-  return userApi.hasPermission(user.value, permission)
+  if (!user.value) return false
+  
+  // 超级管理员拥有所有权限
+  if (userApi.isSuperAdmin(user.value)) return true
+  
+  // 管理员拥有除超级管理员外的所有权限
+  if (userApi.isAdmin(user.value) && permission !== USER_GROUPS.SUPER_ADMIN) return true
+  
+  // 检查用户组是否匹配
+  return user.value.userGroup === permission
 }
 
 // 检查是否为管理员
@@ -105,6 +114,7 @@ export function useAuth() {
     user: readonly(user),
     token: readonly(token),
     isAuthenticated,
+    isLoggedIn: isAuthenticated, // 添加 isLoggedIn 别名
     userAvatar,
     userDisplayName,
     isAdmin,

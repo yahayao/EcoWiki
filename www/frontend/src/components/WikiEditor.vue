@@ -199,13 +199,13 @@
           <h5>模板</h5>
           <div class="help-items">
             <div class="help-item">
-              <code>{{info|信息内容}}</code> - 信息框
+              <code v-html="'{{info|信息内容}}'"></code> - 信息框
             </div>
             <div class="help-item">
-              <code>{{warning|警告内容}}</code> - 警告框
+              <code v-html="'{{warning|警告内容}}'"></code> - 警告框
             </div>
             <div class="help-item">
-              <code>{{note|注意内容}}</code> - 注意框
+              <code v-html="'{{note|注意内容}}'"></code> - 注意框
             </div>
           </div>
         </div>

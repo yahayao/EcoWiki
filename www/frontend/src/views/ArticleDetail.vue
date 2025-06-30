@@ -42,7 +42,7 @@
         v-if="article"
         :current-article-id="article.articleId"
         :current-category="article.category"
-        :current-tags="article.tags"
+        :current-tags="article.tags.split(',')"
         :max-results="6"
         :show-refresh-button="true"
         @article-click="onRelatedArticleClick"
@@ -111,8 +111,8 @@ const goBack = () => {
   router.push('/')
 }
 
-const onRelatedArticleClick = (relatedArticle: any) => {
-  router.push(`/article/${relatedArticle.articleId}`)
+const onRelatedArticleClick = (articleId: number) => {
+  router.push(`/article/${articleId}`)
 }
 
 const showLoginModal = () => {
