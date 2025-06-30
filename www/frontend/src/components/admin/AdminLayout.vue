@@ -1,25 +1,74 @@
-<!-- filepath: c:\Users\Z9495\Desktop\EcoWiki_project\EcoWiki-3\www\frontend\src\components\admin\AdminLayout.vue -->
+<!--
+/**
+ * 管理后台布局组件
+ * 
+ * 这是管理后台的主要布局组件，提供了完整的管理界面框架。
+ * 包含侧边导航、头部操作区和内容展示区域。
+ * 
+ * 主要功能：
+ * - 提供管理后台的整体布局结构
+ * - 统一的导航菜单和页面标题
+ * - 全局的应用和返回按钮
+ * - 支持多个子页面的嵌套路由
+ * - 管理待处理变更的状态
+ * 
+ * 组件结构：
+ * - admin-sider: 左侧导航栏
+ * - admin-main: 主内容区域
+ *   - admin-header: 顶部操作栏
+ *   - admin-content: 内容展示区（router-view）
+ * 
+ * 导航菜单：
+ * - 系统设置: 首页风格配置、系统统计
+ * - 用户管理: 用户列表、角色分配
+ * - 权限管理: 角色创建、权限配置
+ * 
+ * 状态管理：
+ * - 监听用户角色变更
+ * - 监听系统设置变更
+ * - 统一的应用/撤销操作
+ * 
+ * 特殊功能：
+ * - 返回按钮记住进入前的页面
+ * - 应用按钮的智能启用/禁用
+ * - 离开时确认未保存的变更
+ * - 流畅的动画效果
+ * 
+ * @author EcoWiki Team
+ * @version 2.0 (支持系统设置和角色管理)
+ * @since 2025-06-30
+ */
+-->
 <template>
   <div class="admin-layout">
+    <!-- 左侧导航栏 -->
     <aside class="admin-sider">
+      <!-- Logo和标题 -->
       <div class="logo">
         <span class="logo-icon">🌿</span>
         EcoWiki 管理后台
       </div>
+      
+      <!-- 导航菜单 -->
       <nav class="nav-menu">
         <ul>
+          <!-- 系统设置菜单项 -->
           <li :class="{active: $route.name==='AdminSettings'}">
             <router-link to="/admin/settings">
               <span class="nav-icon">⚙️</span>
               系统设置
             </router-link>
           </li>
+          
+          <!-- 用户管理菜单项 -->
           <li :class="{active: $route.name==='AdminUsers'}">
             <router-link to="/admin/users">
               <span class="nav-icon">👥</span>
               用户管理
             </router-link>
           </li>
+          
+          <!-- 权限管理菜单项 -->
           <li :class="{active: $route.name==='AdminRoles'}">
             <router-link to="/admin/roles">
               <span class="nav-icon">🔑</span>
@@ -29,29 +78,37 @@
         </ul>
       </nav>
     </aside>
+    
+    <!-- 主内容区域 -->
     <main class="admin-main">
-      <!-- 统一的应用按钮区域 -->
+      <!-- 统一的头部操作区域 -->
       <div class="admin-header">
+        <!-- 页面标题区域 -->
         <div class="header-title">
           <h2 v-if="$route.name === 'AdminSettings'">系统设置</h2>
           <h2 v-else-if="$route.name === 'AdminUsers'">用户管理</h2>
           <h2 v-else-if="$route.name === 'AdminRoles'">权限管理</h2>
           <p class="header-subtitle">管理用户权限和系统配置</p>
         </div>
+        
+        <!-- 操作按钮区域 -->
         <div class="header-actions">
+          <!-- 返回按钮 -->
           <button 
             class="return-btn" 
             @click="goBack"
+            title="返回到管理后台外的最近页面"
           >
             ← 返回
           </button>
-          <button 
-            class="apply-btn-global" 
-            :disabled="applying || !hasPendingChanges" 
+          
+          <!-- 应用变更按钮 -->
+          <button
+            class="apply-btn-global"
+            :disabled="applying || !hasPendingChanges"
             @click="applyAllSettings"
           >
-            <span v-if="applying" class="loading-spinner"></span>
-            <span v-else>应用</span>
+            应用
           </button>
         </div>
       </div>

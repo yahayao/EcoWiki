@@ -26,18 +26,66 @@ import com.ecowiki.service.UserService;
 
 import jakarta.validation.Valid;
 
+/**
+ * 认证控制器
+ * 
+ * 处理用户认证相关的所有API请求，包括用户注册、登录、密码重置等功能。
+ * 这是前端与后端认证系统交互的主要入口点。
+ * 
+ * 主要功能：
+ * - 用户注册和信息验证
+ * - 用户登录和JWT令牌生成
+ * - 用户名和邮箱可用性检查
+ * - 密码重置功能
+ * - 用户信息返回（包含角色信息）
+ * 
+ * 安全特性：
+ * - 跨域资源共享(CORS)配置
+ * - 请求数据验证
+ * - JWT令牌认证
+ * - 密码安全处理
+ * 
+ * API端点：
+ * - GET /auth/check-username - 检查用户名可用性
+ * - GET /auth/check-email - 检查邮箱可用性
+ * - POST /auth/register - 用户注册
+ * - POST /auth/login - 用户登录
+ * - POST /auth/forgot-password - 忘记密码
+ * - POST /auth/reset-password - 重置密码
+ * 
+ * @author EcoWiki Team
+ * @version 2.0 (支持基于user_roles表的角色系统)
+ * @since 2025-06-30
+ */
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "http://localhost:5173")
-@Validated
+@CrossOrigin(origins = "http://localhost:5173")  // 允许前端跨域访问
+@Validated  // 启用请求参数验证
 public class AuthController {
     
+    /**
+     * 用户服务
+     * 处理用户相关的业务逻辑
+     */
     @Autowired
     private UserService userService;
     
+    /**
+     * JWT工具类
+     * 用于生成和验证JWT令牌
+     */
     @Autowired
     private JwtUtil jwtUtil;
     
+    /**
+     * 检查用户名可用性
+     * 
+     * 在用户注册过程中实时检查用户名是否已被使用。
+     * 支持前端的实时验证功能。
+     * 
+     * @param username 要检查的用户名
+     * @return API响应，包含可用性状态
+     */
     @GetMapping("/check-username")
     public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkUsername(@RequestParam String username) {
         Map<String, Boolean> result = new HashMap<>();
@@ -45,6 +93,15 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
     
+    /**
+     * 检查邮箱可用性
+     * 
+     * 在用户注册过程中实时检查邮箱地址是否已被使用。
+     * 支持前端的实时验证功能。
+     * 
+     * @param email 要检查的邮箱地址
+     * @return API响应，包含可用性状态
+     */
     @GetMapping("/check-email")
     public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkEmail(@RequestParam String email) {
         Map<String, Boolean> result = new HashMap<>();

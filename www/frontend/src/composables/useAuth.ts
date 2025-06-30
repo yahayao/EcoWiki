@@ -1,12 +1,58 @@
+/**
+ * 用户认证状态管理组合函数
+ * 
+ * 这是一个Vue3组合式函数，用于管理用户的认证状态和权限信息。
+ * 提供了用户登录、登出、权限检查等核心功能。
+ * 
+ * 主要功能：
+ * - 管理用户登录状态和JWT令牌
+ * - 提供用户权限检查方法
+ * - 处理用户信息的本地存储
+ * - 自动恢复用户认证状态
+ * - 支持管理员权限验证
+ * 
+ * 状态管理：
+ * - user: 当前登录用户信息
+ * - token: JWT认证令牌
+ * - isAuthenticated: 是否已认证
+ * - hasAdminPermission: 是否具有管理员权限
+ * 
+ * 存储机制：
+ * - 使用localStorage持久化用户状态
+ * - 支持页面刷新后状态恢复
+ * - 自动清理无效认证数据
+ * 
+ * @author EcoWiki Team
+ * @version 2.0 (支持基于user_roles的权限系统)
+ * @since 2025-06-30
+ */
+
 import { ref, computed, readonly } from 'vue'
 import type { UserResponse } from '../api/user'
 import { USER_GROUPS, userApi, type UserGroup } from '../api/user'
 
-// 全局用户状态管理
+// ======================== 响应式状态 ========================
+
+/**
+ * 当前登录用户信息
+ * 包含用户基本信息和角色权限
+ */
 const user = ref<UserResponse | null>(null)
+
+/**
+ * JWT认证令牌
+ * 用于API请求的身份验证
+ */
 const token = ref<string | null>(null)
 
-// 从localStorage恢复用户状态
+// ======================== 状态初始化 ========================
+
+/**
+ * 从localStorage恢复用户认证状态
+ * 
+ * 在应用启动时调用，从本地存储中恢复用户的登录状态。
+ * 如果恢复失败，会自动清理无效的认证数据。
+ */
 const initializeAuth = () => {
   const savedToken = localStorage.getItem('token')
   const savedUser = localStorage.getItem('user')
@@ -23,7 +69,12 @@ const initializeAuth = () => {
   }
 }
 
-// 清除无效的认证数据
+/**
+ * 清除无效的认证数据
+ * 
+ * 当认证数据损坏或过期时，清理所有相关的本地存储数据，
+ * 并重置内存中的用户状态。
+ */
 const clearInvalidAuthData = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
@@ -32,7 +83,17 @@ const clearInvalidAuthData = () => {
   token.value = null
 }
 
-// 设置用户状态
+// ======================== 状态管理方法 ========================
+
+/**
+ * 设置用户认证状态
+ * 
+ * 在用户登录成功后调用，保存用户信息和令牌到内存和本地存储。
+ * 
+ * @param userData 用户信息对象
+ * @param authToken JWT认证令牌
+ * @param refreshToken 可选的刷新令牌
+ */
 const setUser = (userData: UserResponse, authToken: string, refreshToken?: string) => {
   user.value = userData
   token.value = authToken
@@ -47,7 +108,9 @@ const setUser = (userData: UserResponse, authToken: string, refreshToken?: strin
   console.log('设置用户认证状态:', userData.username, userData.userGroup)
 }
 
-// 清除用户状态
+/**
+ * 清除用户认证状态（登出）
+ */
 const clearUser = () => {
   const username = user.value?.username || 'unknown'
   

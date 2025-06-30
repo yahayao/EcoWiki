@@ -1,6 +1,42 @@
+<!--
+/**
+ * EcoWiki应用程序根组件
+ * 
+ * 这是整个Vue应用的根组件，作为所有其他组件的容器。
+ * 负责管理全局的模态框状态和处理顶层的用户交互事件。
+ * 
+ * 主要功能：
+ * - 管理认证模态框的显示状态（登录、注册、管理后台）
+ * - 处理子组件发出的全局事件
+ * - 提供路由视图的渲染容器
+ * - 管理用户登出功能
+ * - 监听管理后台关闭事件
+ * 
+ * 组件结构：
+ * - AuthModals: 认证相关的模态框容器
+ * - router-view: 路由视图，渲染当前路由对应的页面组件
+ * 
+ * 状态管理：
+ * - showLoginForm: 控制登录表单显示
+ * - showRegisterForm: 控制注册表单显示  
+ * - showAdminSettings: 控制管理后台显示
+ * 
+ * 事件处理：
+ * - show-login: 显示登录模态框
+ * - show-register: 显示注册模态框
+ * - show-admin: 显示管理后台
+ * - logout: 处理用户登出
+ * - admin-close: 关闭管理后台
+ * 
+ * @author EcoWiki Team
+ * @version 2.0 (支持管理后台模态框)
+ * @since 2025-06-30
+ */
+-->
 <template>
   <div id="app">
-    <!-- 认证模态框 -->
+    <!-- 认证模态框组件 -->
+    <!-- 包含登录、注册、管理后台三种模态框 -->
     <AuthModals 
       :showLoginForm="showLoginForm"
       :showRegisterForm="showRegisterForm"
@@ -9,7 +45,9 @@
       @switchToRegister="switchToRegister"
       @switchToLogin="switchToLogin"
     />
-    <!-- 主页内容交给 <router-view /> 渲染 -->
+    
+    <!-- 主要内容区域 -->
+    <!-- 路由视图，根据当前路由渲染对应的页面组件 -->
     <router-view
       @show-login="showLoginModal"
       @show-register="showRegisterModal"
@@ -24,29 +62,55 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuth } from './composables/useAuth'
 import AuthModals from './components/AuthModals.vue'
 
-// 获取认证状态
+/**
+ * 获取认证状态管理功能
+ * 使用组合式函数来管理用户认证状态
+ */
 const { clearUser } = useAuth()
 
-// 控制登录和注册表单的显示
+// ======================== 响应式状态 ========================
+
+/**
+ * 控制登录表单的显示状态
+ */
 const showLoginForm = ref(false)
+
+/**
+ * 控制注册表单的显示状态
+ */
 const showRegisterForm = ref(false)
+
+/**
+ * 控制管理员设置的显示状态
+ */
 const showAdminSettings = ref(false)
 
-// 显示登录模态框
+// ======================== 模态框控制方法 ========================
+
+/**
+ * 显示登录模态框
+ * 同时隐藏其他模态框以确保只显示一个
+ */
 const showLoginModal = () => {
   showLoginForm.value = true
   showRegisterForm.value = false
   showAdminSettings.value = false
 }
 
-// 显示注册模态框
+/**
+ * 显示注册模态框
+ * 同时隐藏其他模态框以确保只显示一个
+ */
 const showRegisterModal = () => {
   showRegisterForm.value = true
   showLoginForm.value = false
   showAdminSettings.value = false
 }
 
-// 显示管理员设置
+/**
+ * 显示管理员设置模态框
+ * 同时隐藏其他模态框以确保只显示一个
+ */
 const showAdminModal = () => {
   showAdminSettings.value = true
   showLoginForm.value = false

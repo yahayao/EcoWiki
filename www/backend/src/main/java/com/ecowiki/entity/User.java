@@ -14,39 +14,111 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+/**
+ * 用户实体类
+ * 
+ * 代表系统中的用户信息，包含用户的基本信息和认证相关数据。
+ * 该实体类已经过重构，移除了原有的userGroup字段，改用独立的user_roles表
+ * 来管理用户与角色的多对多关系。
+ * 
+ * 数据库表：user
+ * 
+ * 主要字段：
+ * - userId: 用户唯一标识
+ * - username: 用户名（唯一）
+ * - email: 邮箱地址（唯一，用于登录）
+ * - password: 加密后的密码
+ * - fullName: 用户全名
+ * - active: 账户是否激活
+ * - gender: 性别（0=未设置，1=男，2=女）
+ * - emailVerified: 邮箱验证状态
+ * - loginToken: 登录令牌
+ * - roleId: 角色ID（与user_roles表配合使用）
+ * 
+ * 关系：
+ * - 通过user_roles表与Role实体建立多对多关系
+ * 
+ * @author EcoWiki Team
+ * @version 2.0 (重构后，移除userGroup字段)
+ * @since 2025-06-30
+ */
 @Entity
 @Table(name = "user")
 public class User {
+    
+    /**
+     * 用户ID - 主键，自动递增
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long userId;
     
+    /**
+     * 用户名 - 唯一，非空
+     * 用于用户登录和显示
+     */
     @Column(unique = true, nullable = false)
     private String username;
     
+    /**
+     * 密码 - 非空
+     * 存储加密后的密码哈希值
+     */
     @Column(nullable = false)
     private String password;
     
+    /**
+     * 邮箱地址 - 唯一，非空
+     * 可用于登录和找回密码
+     */
     @Column(unique = true, nullable = false)
     private String email;
     
+    /**
+     * 用户全名 - 可选
+     * 用于显示用户的真实姓名
+     */
     private String fullName;
     
+    /**
+     * 账户激活状态 - 非空，默认为true
+     * false表示账户被禁用
+     */
     @Column(nullable = false)
     private Boolean active = true;
     
+    /**
+     * 性别 - 可选
+     * 0: 不设置/保密
+     * 1: 男
+     * 2: 女
+     */
     @Column
-    private Byte gender; // 0为不设置，1为男，2为女
+    private Byte gender;
     
+    /**
+     * 邮箱验证状态 - 可选
+     * true: 已验证
+     * false: 未验证
+     * null: 未设置
+     */
     @Column
-    private Boolean emailVerified; // 邮箱验证状态
+    private Boolean emailVerified;
     
+    /**
+     * 登录令牌 - 可选
+     * 用于记住登录状态或单点登录
+     */
     @Column
-    private String loginToken; // 登录令牌
+    private String loginToken;
     
+    /**
+     * 角色ID - 可选
+     * 与user_roles表配合使用，支持多角色分配
+     */
     @Column
-    private Integer roleId; // 角色ID
+    private Integer roleId;
     
     @Column
     private String permissions; // 权限描述
