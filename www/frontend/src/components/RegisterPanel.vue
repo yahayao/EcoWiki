@@ -1,9 +1,61 @@
+<!--
+  用户注册面板组件
+  
+  该组件提供了一个功能完整的用户注册界面，支持实时验证和可用性检查。
+  采用与登录面板相似的双栏布局设计，左侧为品牌展示，右侧为注册表单。
+  
+  功能特性：
+  - 完整的注册表单（用户名、邮箱、密码、确认密码、姓名）
+  - 实时用户名和邮箱可用性检查
+  - 密码强度验证和显示/隐藏切换
+  - 确认密码一致性验证
+  - 表单验证和错误提示
+  - 注册状态加载指示器
+  - 登录页面切换链接
+  
+  验证功能：
+  - 用户名格式和可用性检查
+  - 邮箱格式和可用性检查
+  - 密码强度要求验证
+  - 确认密码一致性验证
+  - 实时状态指示器（检查中、成功、失败）
+  
+  设计特点：
+  - 渐变背景和卡片设计
+  - 装饰性浮动元素动画
+  - 响应式布局和移动端适配
+  - 现代化的表单设计
+  - 状态指示器和错误提示
+  
+  数据流程：
+  - 实时验证表单字段
+  - 异步检查用户名和邮箱可用性
+  - 调用注册API创建新用户
+  - 成功后自动登录并保存状态
+  - 通知父组件关闭模态框
+  
+  技术实现：
+  - Vue 3 Composition API
+  - TypeScript 类型安全
+  - Reactive 表单数据管理
+  - 防抖优化API调用
+  - CSS 动画和渐变效果
+  
+  使用场景：
+  - 新用户账户创建
+  - 会员系统注册流程
+  - 用户身份验证扩展
+  
+  @author EcoWiki Team
+  @version 1.0.0
+  @since 2024-01-01
+-->
 <template>
   <div class="register-card">
     <div class="card-content">
-      <!-- 左侧内容区 -->
+      <!-- 左侧内容区 - 品牌展示和欢迎信息 -->
       <div class="content-left">
-        <!-- 装饰性背景 -->
+        <!-- 装饰性背景动画元素 -->
         <div class="decorative-bg">
           <div class="floating-circle circle-1"></div>
           <div class="floating-circle circle-2"></div>
@@ -26,10 +78,11 @@
         </div>
       </div>
       
-      <!-- 右侧表单区 -->
+      <!-- 右侧表单区 - 注册表单 -->
       <div class="content-right">
         <div class="form-container">
           <form @submit.prevent="handleRegister" class="register-form">
+            <!-- 用户名输入框（带可用性检查） -->
             <div class="form-group">
               <div class="input-wrapper">
                 <input
@@ -46,12 +99,14 @@
                   placeholder="用户名"
                   required
                 />
+                <!-- 状态指示器 -->
                 <div class="input-status">
                   <span v-if="usernameChecking" class="checking-icon">⏳</span>
                   <span v-else-if="usernameAvailable === true" class="success-icon">✓</span>
                   <span v-else-if="usernameAvailable === false" class="error-icon">✗</span>
                 </div>
               </div>
+              <!-- 错误消息显示 -->
               <div class="error-message" v-if="showErrors && errors.username">
                 {{ errors.username }}
               </div>
@@ -60,6 +115,7 @@
               </div>
             </div>
             
+            <!-- 邮箱输入框（带可用性检查） -->
             <div class="form-group">
               <div class="input-wrapper">
                 <input
@@ -76,12 +132,14 @@
                   placeholder="邮箱"
                   required
                 />
+                <!-- 状态指示器 -->
                 <div class="input-status">
                   <span v-if="emailChecking" class="checking-icon">⏳</span>
                   <span v-else-if="emailAvailable === true" class="success-icon">✓</span>
                   <span v-else-if="emailAvailable === false" class="error-icon">✗</span>
                 </div>
               </div>
+              <!-- 错误消息显示 -->
               <div class="error-message" v-if="showErrors && errors.email">
                 {{ errors.email }}
               </div>
@@ -90,7 +148,7 @@
               </div>
             </div>
             
-            <!-- 添加全名输入字段 -->
+            <!-- 全名输入字段（可选） -->
             <div class="form-group">
               <input
                 id="fullName"

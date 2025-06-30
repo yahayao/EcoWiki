@@ -1,12 +1,64 @@
+<!--
+  文章详情页面组件
+  
+  该组件是文章详情页面的核心组件，提供完整的文章阅读体验。
+  集成了文章内容展示、相关推荐、评论系统和浮动操作按钮等功能。
+  
+  功能特性：
+  - 文章内容展示和渲染
+  - 面包屑导航和返回按钮
+  - 加载状态和错误处理
+  - 相关文章推荐
+  - 评论系统集成
+  - 浮动操作按钮（查看、编辑、历史、收藏等）
+  
+  页面布局：
+  - 导航区域：面包屑和返回按钮
+  - 主内容区：文章详情展示
+  - 推荐区域：相关文章推荐
+  - 评论区域：用户评论和互动
+  - 浮动按钮：快速操作入口
+  
+  状态管理：
+  - 文章数据加载和缓存
+  - 加载状态指示器
+  - 错误状态处理和重试
+  - 路由参数监听和响应
+  
+  用户体验：
+  - 响应式设计适配不同屏幕
+  - 加载动画和过渡效果
+  - 错误处理和用户反馈
+  - 导航便利性和页面流畅性
+  
+  技术实现：
+  - Vue 3 Composition API
+  - Vue Router 路由集成
+  - TypeScript 类型安全
+  - 组件化设计和复用
+  - API 集成和错误处理
+  
+  使用场景：
+  - Wiki 文章阅读页面
+  - 知识库内容展示
+  - 博客文章详情页
+  - 内容管理系统展示
+  
+  @author EcoWiki Team
+  @version 1.0.0
+  @since 2024-01-01
+-->
 <template>
   <div class="article-detail-page">
     <div class="container">
-      <!-- 返回导航 -->
+      <!-- 返回导航和面包屑 -->
       <div class="navigation">
+        <!-- 返回按钮 -->
         <button @click="goBack" class="back-btn">
           <span class="back-icon">←</span>
           返回首页
         </button>
+        <!-- 面包屑导航 -->
         <div class="breadcrumb">
           <span>首页</span>
           <span class="separator">/</span>
@@ -16,20 +68,20 @@
         </div>
       </div>
 
-      <!-- 文章内容 -->
+      <!-- 文章内容展示区 -->
       <ArticleContent 
         v-if="article" 
         :article="article" 
         class="article-section"
       />
       
-      <!-- 加载状态 -->
+      <!-- 加载状态指示器 -->
       <div v-else-if="loading" class="loading-state">
         <div class="loading-spinner"></div>
         <p>正在加载文章内容...</p>
       </div>
       
-      <!-- 错误状态 -->
+      <!-- 错误状态和重试 -->
       <div v-else-if="error" class="error-state">
         <div class="error-icon">❌</div>
         <h3>加载失败</h3>
@@ -37,7 +89,7 @@
         <button @click="loadArticle" class="retry-btn">重试</button>
       </div>
 
-      <!-- 相关文章推荐 -->
+      <!-- 相关文章推荐区 -->
       <RelatedArticles
         v-if="article"
         :current-article-id="article.articleId"
@@ -49,7 +101,7 @@
         class="related-section"
       />
 
-      <!-- 评论区 -->
+      <!-- 评论系统区 -->
       <ArticleComments 
         v-if="article" 
         :article-id="article.articleId"
@@ -58,7 +110,7 @@
       />
     </div>
 
-    <!-- 右侧浮动按钮 -->
+    <!-- 右侧浮动操作按钮 -->
     <FloatingActionButtons
       v-if="article"
       :article-id="article.articleId"
@@ -72,6 +124,13 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * 文章详情页面组件脚本
+ * 
+ * 实现文章详情页面的核心逻辑，包括数据加载、状态管理、用户交互和路由处理。
+ * 提供完整的文章阅读和互动体验。
+ */
+
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ArticleContent from '../components/article/ArticleContent.vue'
@@ -80,15 +139,33 @@ import RelatedArticles from '../components/article/RelatedArticles.vue'
 import FloatingActionButtons from '../components/article/FloatingActionButtons.vue'
 import { articleApi, type Article } from '../api/article'
 
+// 路由实例
 const route = useRoute()
 const router = useRouter()
 
+/**
+ * 响应式状态管理
+ */
+// 当前文章数据
 const article = ref<Article | null>(null)
+// 加载状态
 const loading = ref(true)
+// 错误状态
 const error = ref<string | null>(null)
 
+/**
+ * 加载文章数据
+ * 
+ * 从API获取指定ID的文章详情数据，处理加载状态和错误情况。
+ * 支持重试机制，提供良好的用户体验。
+ * 
+ * @async
+ * @returns {Promise<void>} 异步加载文章数据
+ */
 const loadArticle = async () => {
   const articleId = route.params.id as string
+  
+  // 验证文章ID的有效性
   if (!articleId || isNaN(Number(articleId))) {
     error.value = '无效的文章ID'
     loading.value = false

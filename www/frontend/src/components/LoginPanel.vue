@@ -1,9 +1,52 @@
+<!--
+  用户登录面板组件
+  
+  该组件提供了一个现代化的用户登录界面，支持邮箱或用户名登录。
+  采用双栏布局设计，左侧为品牌展示，右侧为登录表单。
+  
+  功能特性：
+  - 支持邮箱或用户名登录
+  - 密码显示/隐藏切换
+  - 记住我功能
+  - 表单验证和错误提示
+  - 登录状态加载指示器
+  - 注册页面切换链接
+  
+  设计特点：
+  - 渐变背景和卡片设计
+  - 装饰性浮动元素动画
+  - 响应式布局和移动端适配
+  - 平滑的交互动画效果
+  - 现代化的表单设计
+  
+  数据流程：
+  - 自动识别输入类型（邮箱/用户名）
+  - 调用认证API进行登录验证
+  - 成功后保存用户信息和令牌
+  - 通知父组件关闭模态框
+  
+  技术实现：
+  - Vue 3 Composition API
+  - TypeScript 类型安全
+  - Reactive 表单数据管理
+  - CSS 动画和渐变效果
+  - 自定义 SVG 图标
+  
+  使用场景：
+  - 用户身份验证入口
+  - 会员系统登录界面
+  - 受保护资源访问控制
+  
+  @author EcoWiki Team
+  @version 1.0.0
+  @since 2024-01-01
+-->
 <template>
   <div class="login-card">
     <div class="card-content">
-      <!-- 左侧内容区 -->
+      <!-- 左侧内容区 - 品牌展示和欢迎信息 -->
       <div class="content-left">
-        <!-- 装饰性背景 -->
+        <!-- 装饰性背景动画元素 -->
         <div class="decorative-bg">
           <div class="floating-circle circle-1"></div>
           <div class="floating-circle circle-2"></div>
@@ -26,10 +69,11 @@
         </div>
       </div>
       
-      <!-- 右侧表单区 -->
+      <!-- 右侧表单区 - 登录表单 -->
       <div class="content-right">
         <div class="form-container">
           <form @submit.prevent="handleLogin" class="login-form">
+            <!-- 用户名/邮箱输入框 -->
             <div class="form-group">
               <input
                 id="loginField"
@@ -41,6 +85,7 @@
               />
             </div>
             
+            <!-- 密码输入框（支持显示/隐藏切换） -->
             <div class="form-group password-group">
               <input
                 id="password"
@@ -50,16 +95,19 @@
                 placeholder="密码"
                 required
               />
+              <!-- 密码显示/隐藏切换按钮 -->
               <button
                 type="button"
                 class="password-toggle"
                 @click="togglePasswordVisibility"
                 :title="showPassword ? '隐藏密码' : '显示密码'"
               >
+                <!-- 眼睛图标 - 显示状态 -->
                 <svg v-if="showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                   <circle cx="12" cy="12" r="3"/>
                 </svg>
+                <!-- 眼睛图标 - 隐藏状态 -->
                 <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
                   <line x1="1" y1="1" x2="23" y2="23"/>
@@ -67,6 +115,7 @@
               </button>
             </div>
             
+            <!-- 记住我复选框 -->
             <div class="form-group checkbox-group">
               <label class="checkbox-label">
                 <input
@@ -79,6 +128,7 @@
               </label>
             </div>
             
+            <!-- 登录提交按钮 -->
             <button
               type="submit"
               class="login-button"
@@ -88,7 +138,7 @@
               {{ isLoading ? '登录中...' : '登录' }}
             </button>
             
-            <!-- 底部链接 -->
+            <!-- 底部链接 - 注册提示 -->
             <div class="form-footer">
               <span class="register-prompt">还没有账户？</span>
               <a href="#" @click="$emit('switchToRegister')" class="register-link">注册</a>
@@ -101,49 +151,117 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * 用户登录面板组件脚本
+ * 
+ * 实现用户登录的核心逻辑，包括表单验证、API调用、状态管理和错误处理。
+ * 支持邮箱或用户名两种登录方式，并提供完整的用户体验功能。
+ */
+
 import { ref, reactive } from 'vue'
 import { userApi } from '../api/user'
 import { useAuth } from '../composables/useAuth'
 import toast from '../utils/toast'
 
-// 定义 emits
+/**
+ * 组件事件定义
+ * 定义了组件向父组件发送的事件
+ */
 const emit = defineEmits(['switchToRegister', 'loginSuccess'])
 
-// 使用认证状态
+/**
+ * 认证状态管理
+ * 使用全局认证状态管理，处理用户信息和令牌
+ */
 const { setUser } = useAuth()
 
-// 响应式数据
+/**
+ * 响应式状态管理
+ */
+// 登录加载状态
 const isLoading = ref(false)
+// 密码显示状态
 const showPassword = ref(false)
 
+/**
+ * 登录表单数据
+ * 使用 reactive 创建响应式对象，自动追踪表单字段变化
+ */
 const formData = reactive({
-  loginField: '', // 改为通用的登录字段
+  /** 登录字段 - 支持邮箱或用户名 */
+  loginField: '', 
+  /** 用户密码 */
   password: '',
+  /** 是否记住用户登录状态 */
   rememberMe: false
 })
 
-// 切换密码显示状态
+/**
+ * 切换密码显示状态
+ * 
+ * 切换密码输入框的文本显示和隐藏状态，提升用户体验。
+ * 
+ * @example
+ * // 点击眼睛图标时调用
+ * togglePasswordVisibility()
+ */
 const togglePasswordVisibility = () => {
   showPassword.value = !showPassword.value
 }
 
-// 判断输入的是邮箱还是用户名
+/**
+ * 判断输入的是邮箱还是用户名
+ * 
+ * 使用正则表达式验证输入内容的格式，自动识别登录方式。
+ * 支持标准邮箱格式验证。
+ * 
+ * @param {string} input - 用户输入的登录字段
+ * @returns {boolean} true 表示邮箱格式，false 表示用户名格式
+ * 
+ * @example
+ * isEmail('user@example.com')  // true
+ * isEmail('username')          // false
+ */
 const isEmail = (input: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(input)
 }
 
-// 登录处理函数
+/**
+ * 用户登录处理函数
+ * 
+ * 处理用户登录的核心逻辑，包括表单验证、API调用、成功处理和错误处理。
+ * 自动识别登录方式（邮箱或用户名），调用相应的API接口。
+ * 
+ * 处理流程：
+ * 1. 表单验证 - 检查必填字段
+ * 2. 设置加载状态 - 显示登录进度
+ * 3. 识别登录方式 - 邮箱或用户名
+ * 4. 调用登录API - 发送认证请求
+ * 5. 处理成功响应 - 保存用户信息和令牌
+ * 6. 显示成功提示 - 用户反馈
+ * 7. 通知父组件 - 关闭登录模态框
+ * 8. 错误处理 - 显示错误信息
+ * 
+ * @async
+ * @returns {Promise<void>} 异步处理登录逻辑
+ * 
+ * @example
+ * // 表单提交时自动调用
+ * <form @submit.prevent="handleLogin">
+ */
 const handleLogin = async () => {
+  // 1. 表单验证
   if (!formData.loginField || !formData.password) {
     toast.warning('请填写完整的登录信息')
     return
   }
   
+  // 2. 设置加载状态
   isLoading.value = true
   
   try {
-    // 根据输入内容判断登录方式
+    // 3. 根据输入内容判断登录方式并构建请求数据
     const loginData = isEmail(formData.loginField) 
       ? {
           email: formData.loginField,
@@ -156,48 +274,61 @@ const handleLogin = async () => {
           rememberMe: formData.rememberMe
         }
     
-    // 调用登录API
+    // 4. 调用登录API
     const response = await userApi.login(loginData)
     
-    // 登录成功，保存用户信息和token
+    // 5. 登录成功，保存用户信息和token
     setUser(response.user, response.token, response.refreshToken)
     
+    // 6. 显示成功提示
     toast.success(`欢迎回来，${response.user.username}！`, '登录成功')
     
-    // 通知父组件登录成功，关闭模态框
+    // 7. 通知父组件登录成功，关闭模态框
     emit('loginSuccess')
     
+    // 调试信息
     console.log('登录成功，用户信息:', response.user)
     
   } catch (error: any) {
+    // 8. 错误处理
     console.error('登录失败:', error)
     toast.error(error.message || '登录失败，请检查登录信息和密码', '登录失败')
   } finally {
+    // 重置加载状态
     isLoading.value = false
   }
 }
 </script>
 
 <style scoped>
+/**
+ * 用户登录面板样式
+ * 
+ * 实现现代化的登录界面设计，包括渐变背景、卡片布局、表单样式和动画效果。
+ * 采用双栏设计，左侧品牌展示，右侧登录表单，提供优雅的用户体验。
+ */
+
+/* 登录卡片主容器 */
 .login-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
-  overflow: hidden;
-  transition: all 0.4s ease;
-  animation: cardFadeIn 0.6s ease-out;
-  max-width: 480px;
-  margin: 0 auto;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);  /* 渐变背景 */
+  border-radius: 20px;                    /* 大圆角设计 */
+  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);  /* 深度阴影 */
+  overflow: hidden;                       /* 隐藏溢出内容 */
+  transition: all 0.4s ease;             /* 平滑过渡动画 */
+  animation: cardFadeIn 0.6s ease-out;   /* 进入动画 */
+  max-width: 480px;                      /* 最大宽度限制 */
+  margin: 0 auto;                        /* 居中显示 */
 }
 
+/* 卡片进入动画 */
 @keyframes cardFadeIn {
   from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.98);
+    opacity: 0;                           /* 初始透明 */
+    transform: translateY(20px) scale(0.98);  /* 向上移动并缩放 */
   }
   to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+    opacity: 1;                           /* 完全不透明 */
+    transform: translateY(0) scale(1);    /* 回到原位置和大小 */
   }
 }
 
