@@ -86,7 +86,7 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 
 interface Props {
-  articleId: string
+  articleId: number
   mode?: 'view' | 'edit' | 'history'
   isFavorited?: boolean
   canEdit?: boolean

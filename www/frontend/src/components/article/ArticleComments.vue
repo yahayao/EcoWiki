@@ -175,7 +175,7 @@ interface Reply {
 }
 
 const props = defineProps<{
-  articleId: string
+  articleId: number
 }>()
 
 const emit = defineEmits<{

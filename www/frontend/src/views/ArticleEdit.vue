@@ -502,13 +502,17 @@ onMounted(() => {
 // 监听内容变化自动生成预览
 watch(() => articleForm.value.content, (newContent) => {
   if (showPreview.value) {
-    updatePreview()
+    debouncedUpdatePreview()
   }
-}, { debounce: 500 })
+})
 
 onUnmounted(() => {
   // 组件卸载时移除事件监听器
   window.removeEventListener('beforeunload', handleBeforeUnload)
+  // 清理防抖定时器
+  if (debounceTimer) {
+    clearTimeout(debounceTimer)
+  }
 })
 
 // 处理浏览器 beforeunload 事件（刷新页面、关闭标签页等）
@@ -604,6 +608,17 @@ const handleInput = () => {
 const updatePreview = () => {
   // 这里应该调用wiki解析器
   previewHtml.value = wikiParser.parseToHtml(articleForm.value.content)
+}
+
+// 创建防抖版本的 updatePreview
+let debounceTimer: number | null = null
+const debouncedUpdatePreview = () => {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer)
+  }
+  debounceTimer = setTimeout(() => {
+    updatePreview()
+  }, 500)
 }
 
 const updateSelection = () => {
