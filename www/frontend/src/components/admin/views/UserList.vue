@@ -3,12 +3,13 @@
   <div class="user-management">
     <div class="section-header">
       <h3>👥 用户管理</h3>
-      <!-- 刷新按钮 -->
-      <button class="refresh-btn" @click="loadUsers" :disabled="loading">
-        <span v-if="loading" class="loading-spinner"></span>
-        <span v-else>🔄</span>
-        刷新
-      </button>
+      <div class="header-actions">
+        <!-- 刷新按钮 -->
+        <button class="refresh-btn" @click="loadUsers" :disabled="loading">
+          <span v-if="loading" class="loading-spinner"></span>
+          刷新
+        </button>
+      </div>
     </div>
 
     <div v-if="loading" class="loading">加载中...</div>
@@ -54,22 +55,20 @@
                 </small>
               </td>
               <td>
-                <button
-                  @click="onUserStatusChange(user, !(pendingUserChanges[user.userId]?.active ?? user.active))"
-                  :disabled="user.userGroup === 'superadmin'"
-                  :class="['status-btn', (pendingUserChanges[user.userId]?.active ?? user.active) ? 'active' : 'inactive']"
+                <span
+                  :class="['status-indicator', (pendingUserChanges[user.userId]?.active ?? user.active) ? 'status-active' : 'status-inactive']"
                 >
-                  {{ (pendingUserChanges[user.userId]?.active ?? user.active) ? '启用' : '禁用' }}
-                </button>
+                  {{ (pendingUserChanges[user.userId]?.active ?? user.active) ? '正常' : '已禁用' }}
+                </span>
               </td>
               <td>{{ formatDate(user.createdAt) }}</td>
               <td>
                 <button 
-                  @click="handleDeleteUser(user.userId)"
-                  :disabled="user.userGroup === 'superadmin'"
-                  class="delete-btn"
+                  @click="handleToggleUserStatus(user)"
+                  :disabled="user.userGroup === 'superadmin' || getCurrentUser()?.username === user.username"
+                  :class="['action-btn', (pendingUserChanges[user.userId]?.active ?? user.active) ? 'disable-btn' : 'restore-btn']"
                 >
-                  🗑️ 删除
+                  {{ (pendingUserChanges[user.userId]?.active ?? user.active) ? '禁用' : '恢复' }}
                 </button>
               </td>
             </tr>
@@ -84,7 +83,7 @@
 import { onMounted, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAdminUserStore } from '../../../stores/adminUserStore'
-import { type UserResponse, type UserGroup } from '../../../api/user'
+import { type UserResponse, type UserGroup, adminApi } from '../../../api/user'
 import toast from '../../../utils/toast'
 
 const adminUserStore = useAdminUserStore()
@@ -111,6 +110,18 @@ const hasToken = computed(() => !!localStorage.getItem('token'))
 // 计算可用角色（过滤掉superadmin，普通管理员不能分配superadmin权限）
 const availableRoles = computed(() => {
   return roles.value.filter(role => role !== 'superadmin')
+})
+
+// 检查是否有待应用的变更
+const hasPendingChanges = computed(() => {
+  return Object.keys(pendingUserChanges.value).length > 0
+})
+
+// 计算待应用变更的数量
+const pendingChangesCount = computed(() => {
+  return Object.values(pendingUserChanges.value).filter(change => 
+    change.userGroup !== undefined || change.active !== undefined
+  ).length
 })
 
 // 组件挂载时加载数据
@@ -142,19 +153,70 @@ const onUserStatusChange = (user: UserResponse, newStatus: boolean) => {
   pendingUserChanges.value[user.userId].active = newStatus
 }
 
-const handleDeleteUser = async (userId: number) => {
-  if (!confirm('确定要删除该用户吗？此操作不可恢复。')) return
-  try {
-    const response = await deleteUser(userId)
-    if (response.code === 200) {
-      toast.success('用户删除成功')
-      await loadUsers()
-    } else {
-      throw new Error(response.message || '删除用户失败')
+const applyChanges = async () => {
+  const changes = { ...pendingUserChanges.value }
+  let hasError = false
+  let successCount = 0
+  
+  for (const userIdStr in changes) {
+    const userId = Number(userIdStr)
+    const user = users.value.find(u => u.userId === userId)
+    if (!user) continue
+    
+    const change = changes[userId]
+    
+    try {
+      // 处理角色变更
+      if (change.userGroup !== undefined && change.userGroup !== user.userGroup) {
+        await adminApi.updateUserGroup(userId, change.userGroup)
+        successCount++
+      }
+      
+      // 处理状态变更
+      if (change.active !== undefined && change.active !== user.active) {
+        if (change.active) {
+          // 恢复用户
+          await adminApi.restoreUser(userId)
+        } else {
+          // 禁用用户
+          await adminApi.deleteUser(userId)
+        }
+        successCount++
+      }
+    } catch (err: any) {
+      hasError = true
+      toast.error(`用户 ${user.username} 更新失败: ${err.message || '未知错误'}`)
     }
-  } catch (err: any) {
-    toast.error(err.message || '删除用户失败')
   }
+  
+  if (successCount > 0 && !hasError) {
+    toast.success(`成功应用 ${successCount} 项变更`)
+  } else if (successCount > 0 && hasError) {
+    toast.warning(`部分变更已应用，共 ${successCount} 项成功`)
+  }
+  
+  // 清空待变更列表
+  pendingUserChanges.value = {}
+  
+  // 重新加载用户列表
+  await loadUsers()
+}
+
+const handleToggleUserStatus = (user: UserResponse) => {
+  const currentStatus = pendingUserChanges.value[user.userId]?.active ?? user.active
+  const newStatus = !currentStatus
+  
+  // 暂存状态变更，等待用户点击"应用"按钮
+  if (!pendingUserChanges.value[user.userId]) {
+    pendingUserChanges.value[user.userId] = {}
+  }
+  pendingUserChanges.value[user.userId].active = newStatus
+}
+
+// 保留原删除方法但标记为废弃
+const handleDeleteUser = async (userId: number) => {
+  // 已废弃，使用 handleToggleUserStatus 替代
+  console.warn('handleDeleteUser is deprecated, use handleToggleUserStatus instead')
 }
 
 const formatDate = (dateString: string) => {
@@ -201,12 +263,19 @@ const getRoleDisplayName = (role: string) => {
   min-width: 0;
 }
 
-.refresh-btn {
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.apply-btn {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background: #667eea;
+  background: #48bb78;
   color: white;
   border: none;
   border-radius: 8px;
@@ -215,13 +284,47 @@ const getRoleDisplayName = (role: string) => {
   transition: all 0.2s;
   height: 38px;
   line-height: 38px;
-  max-width: 120px;
-  min-width: 80px;
   white-space: nowrap;
 }
 
+.apply-btn:hover:not(:disabled) {
+  background: #38a169;
+}
+
+.apply-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #48bb78;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  height: 38px;
+  min-width: 80px;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(72, 187, 120, 0.2);
+}
+
 .refresh-btn:hover:not(:disabled) {
-  background: #5a67d8;
+  background: #38a169;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(72, 187, 120, 0.3);
+}
+
+.refresh-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(72, 187, 120, 0.2);
 }
 
 .refresh-btn:disabled {
@@ -273,34 +376,25 @@ const getRoleDisplayName = (role: string) => {
   font-size: 0.9rem;
 }
 
-.status-btn {
+.status-indicator {
   padding: 4px 12px;
-  border: none;
   border-radius: 4px;
   font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s;
+  font-weight: 500;
 }
 
-.status-btn.active {
-  background: #48bb78;
-  color: white;
+.status-active {
+  background: #c6f6d5;
+  color: #2f855a;
 }
 
-.status-btn.inactive {
+.status-inactive {
   background: #fed7d7;
   color: #c53030;
 }
 
-.status-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.delete-btn {
+.action-btn {
   padding: 4px 8px;
-  background: #fed7d7;
-  color: #c53030;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -308,23 +402,28 @@ const getRoleDisplayName = (role: string) => {
   transition: all 0.2s;
 }
 
-.delete-btn:hover:not(:disabled) {
+.disable-btn {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.disable-btn:hover:not(:disabled) {
   background: #feb2b2;
 }
 
-.delete-btn:disabled {
+.restore-btn {
+  background: #c6f6d5;
+  color: #2f855a;
+}
+
+.restore-btn:hover:not(:disabled) {
+  background: #9ae6b4;
+}
+
+.action-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
-
-
-
-
-
-
-
-
 
 .loading-spinner {
   display: inline-block;
@@ -336,6 +435,7 @@ const getRoleDisplayName = (role: string) => {
   animation: spin 0.8s linear infinite;
   vertical-align: middle;
 }
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }

@@ -50,9 +50,9 @@ public class AdminService {
     @Autowired
     private UserService userService;
     
-    // 获取所有用户（分页）
+    // 获取所有用户（分页，包括软删除的用户）
     public Page<UserWithRoleDto> getAllUsers(Pageable pageable) {
-        Page<User> userPage = userRepository.findAll(pageable);
+        Page<User> userPage = userRepository.findAllForAdmin(pageable);
         return userPage.map(user -> {
             String roleName = userService.getUserRoleName(user.getUserId().intValue());
             return new UserWithRoleDto(
@@ -69,7 +69,7 @@ public class AdminService {
     
     // 更新用户权限组
     public User updateUserGroup(Long userId, String newUserGroup) {
-        Optional<User> userOpt = userRepository.findById(userId);
+        Optional<User> userOpt = userRepository.findByUserId(userId);
         if (userOpt.isEmpty()) {
             throw new RuntimeException("用户不存在");
         }
@@ -82,7 +82,7 @@ public class AdminService {
     
     // 更新用户状态
     public User updateUserStatus(Long userId, Boolean active) {
-        Optional<User> userOpt = userRepository.findById(userId);
+        Optional<User> userOpt = userRepository.findByUserId(userId);
         if (userOpt.isEmpty()) {
             throw new RuntimeException("用户不存在");
         }
@@ -113,15 +113,27 @@ public class AdminService {
         return stats;
     }
     
-    // 软删除用户
+    // 软删除用户（设置为非激活状态）
     public void deleteUser(Long userId) {
-        Optional<User> userOpt = userRepository.findById(userId);
+        Optional<User> userOpt = userRepository.findByUserId(userId);
         if (userOpt.isEmpty()) {
             throw new RuntimeException("用户不存在");
         }
         
         User user = userOpt.get();
         user.setActive(false);
+        userRepository.save(user);
+    }
+    
+    // 恢复用户（重新激活）
+    public void restoreUser(Long userId) {
+        Optional<User> userOpt = userRepository.findByUserId(userId);
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("用户不存在");
+        }
+        
+        User user = userOpt.get();
+        user.setActive(true);
         userRepository.save(user);
     }
 }

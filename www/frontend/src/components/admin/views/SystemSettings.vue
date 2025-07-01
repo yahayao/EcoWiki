@@ -22,7 +22,7 @@
     <!-- 统计信息 -->
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-icon">👥</div>
+        <div class="stat-icon"></div>
         <div class="stat-info">
           <div class="stat-number">{{ stats.totalUsers || 0 }}</div>
           <div class="stat-label">总用户数</div>
@@ -30,7 +30,7 @@
       </div>
       
       <div class="stat-card">
-        <div class="stat-icon">✅</div>
+        <div class="stat-icon"></div>
         <div class="stat-info">
           <div class="stat-number">{{ stats.activeUsers || 0 }}</div>
           <div class="stat-label">活跃用户</div>
@@ -38,7 +38,7 @@
       </div>
       
       <div class="stat-card">
-        <div class="stat-icon">👑</div>
+        <div class="stat-icon"></div>
         <div class="stat-info">
           <div class="stat-number">{{ stats.adminCount || 0 }}</div>
           <div class="stat-label">管理员</div>
@@ -46,7 +46,7 @@
       </div>
       
       <div class="stat-card">
-        <div class="stat-icon">🔧</div>
+        <div class="stat-icon"></div>
         <div class="stat-info">
           <div class="stat-number">{{ stats.moderatorCount || 0 }}</div>
           <div class="stat-label">版主</div>

@@ -23,6 +23,7 @@ import com.ecowiki.dto.ApiResponse;
 import com.ecowiki.dto.UserWithRoleDto;
 import com.ecowiki.entity.User;
 import com.ecowiki.repository.RoleRepository;
+import com.ecowiki.repository.UserRepository;
 import com.ecowiki.security.JwtUtil;
 import com.ecowiki.service.AdminService;
 import com.ecowiki.service.PermissionService;
@@ -64,6 +65,11 @@ public class AdminController {
      */
     @Autowired
     private PermissionService permissionService;
+    /**
+     * 用户仓库，负责用户数据访问
+     */
+    @Autowired
+    private UserRepository userRepository;
     /**
      * 角色仓库，负责角色数据访问
      */
@@ -445,6 +451,78 @@ public class AdminController {
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("删除角色失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 软删除用户（设置为非激活状态）
+     * @param userId 用户ID
+     * @param request HTTP请求
+     * @return 删除结果，需管理员权限
+     */
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<ApiResponse<?>> deleteUser(
+            @PathVariable Long userId,
+            HttpServletRequest request) {
+        
+        try {
+            User currentUser = getCurrentUser(request);
+            if (!permissionService.isAdmin(currentUser)) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要管理员权限"));
+            }
+            
+            // 防止删除自己
+            if (currentUser.getUserId().equals(userId)) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("不能删除自己的账户"));
+            }
+            
+            // 防止删除超级管理员
+            Optional<User> targetUserOpt = userRepository.findByUserId(userId);
+            if (targetUserOpt.isPresent()) {
+                User targetUser = targetUserOpt.get();
+                if (permissionService.isSuperAdmin(targetUser) && !permissionService.isSuperAdmin(currentUser)) {
+                    return ResponseEntity.status(403)
+                        .body(ApiResponse.error("无法删除超级管理员"));
+                }
+            }
+            
+            // 使用软删除（设置为非激活状态）
+            adminService.deleteUser(userId);
+            
+            return ResponseEntity.ok(ApiResponse.success(null, "用户已禁用"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("禁用用户失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 恢复用户（重新激活）
+     * @param userId 用户ID
+     * @param request HTTP请求
+     * @return 恢复结果，需管理员权限
+     */
+    @PutMapping("/users/{userId}/restore")
+    public ResponseEntity<ApiResponse<?>> restoreUser(
+            @PathVariable Long userId,
+            HttpServletRequest request) {
+        
+        try {
+            User currentUser = getCurrentUser(request);
+            if (!permissionService.isAdmin(currentUser)) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要管理员权限"));
+            }
+            
+            // 恢复用户（重新激活）
+            adminService.restoreUser(userId);
+            
+            return ResponseEntity.ok(ApiResponse.success(null, "用户已恢复"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("恢复用户失败: " + e.getMessage()));
         }
     }
 }

@@ -301,7 +301,7 @@ export const adminApi = {
   },
   
   /**
-   * 删除用户
+   * 删除用户（软删除，设置为非激活状态）
    * @param userId 用户ID
    * @returns 删除结果
    */
@@ -310,8 +310,23 @@ export const adminApi = {
       const response = await api.delete(`/admin/users/${userId}`)
       return response.data
     } catch (error: any) {
-      console.error('删除用户失败:', error)
-      throw new Error(error.response?.data?.message || error.message || '删除用户失败')
+      console.error('禁用用户失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '禁用用户失败')
+    }
+  },
+
+  /**
+   * 恢复用户（重新激活）
+   * @param userId 用户ID
+   * @returns 恢复结果
+   */
+  restoreUser: async (userId: number) => {
+    try {
+      const response = await api.put(`/admin/users/${userId}/restore`)
+      return response.data
+    } catch (error: any) {
+      console.error('恢复用户失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '恢复用户失败')
     }
   }
 }

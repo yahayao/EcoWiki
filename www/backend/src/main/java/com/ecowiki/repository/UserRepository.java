@@ -2,6 +2,8 @@ package com.ecowiki.repository;
 
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -65,4 +67,31 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     @Query("SELECT u FROM User u WHERE u.active = true")
     java.util.List<User> findAllActiveUsers();
+    
+    /**
+     * 根据用户ID查找用户（无active状态过滤）
+     * @param userId 用户ID
+     * @return 用户实体（可能为空）
+     */
+    Optional<User> findByUserId(Long userId);
+    
+    /**
+     * 查找所有激活用户（分页，用于管理界面）
+     * @return 包含激活和非激活用户的分页结果
+     */
+    @Query("SELECT u FROM User u ORDER BY u.userId DESC")
+    Page<User> findAllForAdmin(Pageable pageable);
+    
+    /**
+     * 仅查找激活用户（分页）
+     * @return 仅包含激活用户的分页结果
+     */
+    @Query("SELECT u FROM User u WHERE u.active = true ORDER BY u.userId DESC")
+    Page<User> findAllActiveUsersPage(Pageable pageable);
+    
+    /**
+     * 统计非激活（软删除）用户数量
+     * @return 非激活用户总数
+     */
+    long countByActiveFalse();
 }
