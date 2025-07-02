@@ -13,14 +13,14 @@ import jakarta.persistence.Table;
 @IdClass(RolePermissionId.class)
 public class RolePermission {
     @Id
-    @Column(nullable = false)
+    @Column(name = "role_id", nullable = false)
     private Integer roleId;
 
     @Id
-    @Column(nullable = false)
+    @Column(name = "permission_id", nullable = false)
     private Integer permissionId;
 
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     // Getters and Setters

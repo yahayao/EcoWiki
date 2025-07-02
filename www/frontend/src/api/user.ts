@@ -234,7 +234,12 @@ export const adminApi = {
   getRoles: async () => {
     try {
       const response = await api.get('/admin/roles')
-      return response.data
+      // 后端返回的是 ApiResponse<List<Role>> 格式
+      if (response.data && response.data.code === 200 && response.data.data) {
+        return response.data.data
+      } else {
+        throw new Error(response.data?.message || '获取角色列表失败')
+      }
     } catch (error: any) {
       console.error('获取角色列表失败:', error)
       throw new Error(error.response?.data?.message || error.message || '获取角色列表失败')
@@ -248,7 +253,12 @@ export const adminApi = {
   getRolesDetails: async () => {
     try {
       const response = await api.get('/admin/roles/details')
-      return response.data
+      // 后端返回的是 ApiResponse<List<Role>> 格式
+      if (response.data && response.data.code === 200 && response.data.data) {
+        return response.data.data
+      } else {
+        throw new Error(response.data?.message || '获取角色详情失败')
+      }
     } catch (error: any) {
       console.error('获取角色详情失败:', error)
       throw new Error(error.response?.data?.message || error.message || '获取角色详情失败')
@@ -263,7 +273,12 @@ export const adminApi = {
   createRole: async (roleData: { roleName: string; description?: string }) => {
     try {
       const response = await api.post('/admin/roles', roleData)
-      return response.data
+      // 后端返回的是 ApiResponse<Role> 格式
+      if (response.data && response.data.code === 200) {
+        return response.data.data
+      } else {
+        throw new Error(response.data?.message || '创建角色失败')
+      }
     } catch (error: any) {
       console.error('创建角色失败:', error)
       throw new Error(error.response?.data?.message || error.message || '创建角色失败')
@@ -279,7 +294,12 @@ export const adminApi = {
   updateRole: async (roleId: number, roleData: { roleName?: string; description?: string }) => {
     try {
       const response = await api.put(`/admin/roles/${roleId}`, roleData)
-      return response.data
+      // 后端返回的是 ApiResponse<Role> 格式
+      if (response.data && response.data.code === 200) {
+        return response.data.data
+      } else {
+        throw new Error(response.data?.message || '更新角色失败')
+      }
     } catch (error: any) {
       console.error('更新角色失败:', error)
       throw new Error(error.response?.data?.message || error.message || '更新角色失败')
@@ -294,7 +314,12 @@ export const adminApi = {
   deleteRole: async (roleId: number) => {
     try {
       const response = await api.delete(`/admin/roles/${roleId}`)
-      return response.data
+      // 后端返回的是 ApiResponse<String> 格式
+      if (response.data && response.data.code === 200) {
+        return response.data
+      } else {
+        throw new Error(response.data?.message || '删除角色失败')
+      }
     } catch (error: any) {
       console.error('删除角色失败:', error)
       throw new Error(error.response?.data?.message || error.message || '删除角色失败')
@@ -338,7 +363,12 @@ export const adminApi = {
   getAllPermissions: async () => {
     try {
       const response = await api.get('/admin/permissions')
-      return response.data
+      // 后端返回的是 ApiResponse<List<Permission>> 格式
+      if (response.data && response.data.code === 200 && response.data.data) {
+        return response.data.data
+      } else {
+        throw new Error(response.data?.message || '获取权限列表失败')
+      }
     } catch (error: any) {
       console.error('获取权限列表失败:', error)
       throw new Error(error.response?.data?.message || error.message || '获取权限列表失败')
@@ -353,7 +383,12 @@ export const adminApi = {
   createPermission: async (permissionData: { permissionName: string; description?: string }) => {
     try {
       const response = await api.post('/admin/permissions', permissionData)
-      return response.data
+      // 后端返回的是 ApiResponse<Permission> 格式
+      if (response.data && response.data.code === 200) {
+        return response.data.data
+      } else {
+        throw new Error(response.data?.message || '创建权限失败')
+      }
     } catch (error: any) {
       console.error('创建权限失败:', error)
       throw new Error(error.response?.data?.message || error.message || '创建权限失败')
@@ -369,7 +404,12 @@ export const adminApi = {
   updatePermission: async (permissionId: number, permissionData: { permissionName?: string; description?: string }) => {
     try {
       const response = await api.put(`/admin/permissions/${permissionId}`, permissionData)
-      return response.data
+      // 后端返回的是 ApiResponse<Permission> 格式
+      if (response.data && response.data.code === 200) {
+        return response.data.data
+      } else {
+        throw new Error(response.data?.message || '更新权限失败')
+      }
     } catch (error: any) {
       console.error('更新权限失败:', error)
       throw new Error(error.response?.data?.message || error.message || '更新权限失败')
@@ -384,7 +424,12 @@ export const adminApi = {
   deletePermission: async (permissionId: number) => {
     try {
       const response = await api.delete(`/admin/permissions/${permissionId}`)
-      return response.data
+      // 后端返回的是 ApiResponse<String> 格式
+      if (response.data && response.data.code === 200) {
+        return response.data
+      } else {
+        throw new Error(response.data?.message || '删除权限失败')
+      }
     } catch (error: any) {
       console.error('删除权限失败:', error)
       throw new Error(error.response?.data?.message || error.message || '删除权限失败')

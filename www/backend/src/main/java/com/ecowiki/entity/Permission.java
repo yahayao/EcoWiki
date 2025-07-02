@@ -14,16 +14,19 @@ import jakarta.persistence.Table;
 public class Permission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "permission_id")
     private Integer permissionId;
 
-    @Column(nullable = false)
+    @Column(name = "permission_name", nullable = false)
     private String permissionName;
 
+    @Column(name = "description")
     private String description;
 
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     // Getters and Setters

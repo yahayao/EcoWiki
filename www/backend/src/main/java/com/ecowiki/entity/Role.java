@@ -15,6 +15,7 @@ package com.ecowiki.entity;
  * @since 2024-04
  */
 import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -36,23 +37,25 @@ public class Role {
     /**
      * 角色名称（如user、admin等），不可为空
      */
-    @Column(nullable = false)
+    @Column(name = "role_name", nullable = false)
     private String roleName;
 
     /**
      * 角色描述信息
      */
+    @Column(name = "description")
     private String description;
 
     /**
      * 创建时间（只写）
      */
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     /**
      * 最后更新时间
      */
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     // Getters and Setters
