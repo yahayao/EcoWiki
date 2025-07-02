@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -483,6 +484,142 @@ public class AdminController {
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("获取权限列表失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 创建权限
+     * @param permissionData 权限数据
+     * @param request HTTP请求
+     * @return 创建的权限信息
+     */
+    @PostMapping("/permissions")
+    public ResponseEntity<ApiResponse<Permission>> createPermission(
+            @RequestBody Map<String, String> permissionData,
+            HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            if (!permissionService.isAdmin(currentUser)) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要管理员权限"));
+            }
+            
+            String permissionName = permissionData.get("permissionName");
+            String description = permissionData.get("description");
+            
+            if (permissionName == null || permissionName.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("权限名称不能为空"));
+            }
+            
+            // 检查权限名称是否已存在
+            Optional<Permission> existingPermission = permissionRepository.findByPermissionName(permissionName);
+            if (existingPermission.isPresent()) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("权限名称已存在"));
+            }
+            
+            Permission permission = new Permission();
+            permission.setPermissionName(permissionName);
+            permission.setDescription(description);
+            permission.setCreatedAt(java.time.LocalDateTime.now());
+            permission.setUpdatedAt(java.time.LocalDateTime.now());
+            
+            Permission savedPermission = permissionRepository.save(permission);
+            return ResponseEntity.ok(ApiResponse.success(savedPermission, "权限创建成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("创建权限失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 更新权限
+     * @param permissionId 权限ID
+     * @param permissionData 权限数据
+     * @param request HTTP请求
+     * @return 更新的权限信息
+     */
+    @PutMapping("/permissions/{permissionId}")
+    public ResponseEntity<ApiResponse<Permission>> updatePermission(
+            @PathVariable Integer permissionId,
+            @RequestBody Map<String, String> permissionData,
+            HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            if (!permissionService.isAdmin(currentUser)) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要管理员权限"));
+            }
+            
+            Optional<Permission> optionalPermission = permissionRepository.findById(permissionId);
+            if (!optionalPermission.isPresent()) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("权限不存在"));
+            }
+            
+            Permission permission = optionalPermission.get();
+            String permissionName = permissionData.get("permissionName");
+            String description = permissionData.get("description");
+            
+            if (permissionName != null && !permissionName.trim().isEmpty()) {
+                // 检查权限名称是否与其他权限重复
+                Optional<Permission> existingPermission = permissionRepository.findByPermissionName(permissionName);
+                if (existingPermission.isPresent() && !existingPermission.get().getPermissionId().equals(permissionId)) {
+                    return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("权限名称已存在"));
+                }
+                permission.setPermissionName(permissionName);
+            }
+            
+            if (description != null) {
+                permission.setDescription(description);
+            }
+            
+            permission.setUpdatedAt(java.time.LocalDateTime.now());
+            Permission savedPermission = permissionRepository.save(permission);
+            return ResponseEntity.ok(ApiResponse.success(savedPermission, "权限更新成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("更新权限失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 删除权限
+     * @param permissionId 权限ID
+     * @param request HTTP请求
+     * @return 删除结果
+     */
+    @DeleteMapping("/permissions/{permissionId}")
+    public ResponseEntity<ApiResponse<String>> deletePermission(
+            @PathVariable Integer permissionId,
+            HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            if (!permissionService.isAdmin(currentUser)) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要管理员权限"));
+            }
+            
+            Optional<Permission> optionalPermission = permissionRepository.findById(permissionId);
+            if (!optionalPermission.isPresent()) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("权限不存在"));
+            }
+            
+            // 检查是否有角色在使用此权限
+            long rolePermissionCount = rolePermissionRepository.countByPermissionId(permissionId);
+            if (rolePermissionCount > 0) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("无法删除权限，有角色正在使用此权限"));
+            }
+            
+            permissionRepository.deleteById(permissionId);
+            return ResponseEntity.ok(ApiResponse.success("权限删除成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("删除权限失败: " + e.getMessage()));
         }
     }
 

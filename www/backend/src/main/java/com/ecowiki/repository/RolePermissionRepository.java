@@ -10,9 +10,10 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ecowiki.entity.RolePermission;
+import com.ecowiki.entity.RolePermissionId;
 
 @Repository
-public interface RolePermissionRepository extends JpaRepository<RolePermission, Long> {
+public interface RolePermissionRepository extends JpaRepository<RolePermission, RolePermissionId> {
     
     /**
      * 根据角色ID查找权限关联

@@ -1,27 +1,21 @@
 package com.ecowiki.dto;
 
+import java.time.LocalDateTime;
+
 public class PermissionDto {
     private Integer permissionId;
     private String permissionName;
     private String description;
-    private String permissionKey;
-    private Integer groupId;
-    private String groupName;  // 方便前端显示
-    private Boolean isSystem;
-    private Integer sortOrder;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     // Constructors
     public PermissionDto() {}
 
-    public PermissionDto(Integer permissionId, String permissionName, String description, 
-                        String permissionKey, Integer groupId, Boolean isSystem, Integer sortOrder) {
+    public PermissionDto(Integer permissionId, String permissionName, String description) {
         this.permissionId = permissionId;
         this.permissionName = permissionName;
         this.description = description;
-        this.permissionKey = permissionKey;
-        this.groupId = groupId;
-        this.isSystem = isSystem;
-        this.sortOrder = sortOrder;
     }
 
     // Getters and Setters
@@ -49,43 +43,19 @@ public class PermissionDto {
         this.description = description;
     }
 
-    public String getPermissionKey() {
-        return permissionKey;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setPermissionKey(String permissionKey) {
-        this.permissionKey = permissionKey;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public Integer getGroupId() {
-        return groupId;
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
-    public void setGroupId(Integer groupId) {
-        this.groupId = groupId;
-    }
-
-    public String getGroupName() {
-        return groupName;
-    }
-
-    public void setGroupName(String groupName) {
-        this.groupName = groupName;
-    }
-
-    public Boolean getIsSystem() {
-        return isSystem;
-    }
-
-    public void setIsSystem(Boolean isSystem) {
-        this.isSystem = isSystem;
-    }
-
-    public Integer getSortOrder() {
-        return sortOrder;
-    }
-
-    public void setSortOrder(Integer sortOrder) {
-        this.sortOrder = sortOrder;
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }
