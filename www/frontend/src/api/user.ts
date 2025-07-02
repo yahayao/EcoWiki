@@ -690,8 +690,8 @@ export const rolePermissionApi = {
    * 获取所有角色
    */
   async getRoles(): Promise<{ data: Role[] }> {
-    const response = await apiClient.get('/admin/roles')
-    return { data: response.data }
+    const response = await apiClient.get('/admin/roles/details')
+    return { data: response.data.data || [] }
   },
 
   /**
@@ -699,7 +699,7 @@ export const rolePermissionApi = {
    */
   async createRole(roleForm: RoleForm): Promise<Role> {
     const response = await apiClient.post('/admin/roles', roleForm)
-    return response.data
+    return response.data.data
   },
 
   /**
@@ -707,7 +707,7 @@ export const rolePermissionApi = {
    */
   async updateRole(roleId: number, roleForm: RoleForm): Promise<Role> {
     const response = await apiClient.put(`/admin/roles/${roleId}`, roleForm)
-    return response.data
+    return response.data.data
   },
 
   /**
@@ -722,7 +722,7 @@ export const rolePermissionApi = {
    */
   async getRolePermissions(roleId: number): Promise<Permission[]> {
     const response = await apiClient.get(`/admin/roles/${roleId}/permissions`)
-    return response.data
+    return response.data.data || []
   },
 
   /**
@@ -751,7 +751,7 @@ export const rolePermissionApi = {
    */
   async getAllRolePermissions(): Promise<{ data: RolePermission[] }> {
     const response = await apiClient.get('/admin/role-permissions')
-    return { data: response.data }
+    return { data: response.data.data || [] }
   },
 
   /**
