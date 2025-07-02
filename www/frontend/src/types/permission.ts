@@ -1,4 +1,41 @@
-// 权限分组类型定义
+// 权限类型定义（基于实际数据库表结构）
+export interface Permission {
+  permissionId: number;
+  permissionName: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// 角色类型定义（基于实际数据库表结构）
+export interface Role {
+  roleId: number;
+  roleName: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// 角色权限关联类型定义
+export interface RolePermission {
+  roleId: number; // 对应role_permissions表中的roleId字段
+  permissionId: number;
+  createdAt?: string;
+}
+
+// 角色权限分配接口（用于前端展示）
+export interface RolePermissionAssignment {
+  roleId: number;
+  roleName: string;
+  permissions: {
+    permissionId: number;
+    permissionName: string;
+    description?: string;
+    assigned: boolean;
+  }[];
+}
+
+// 权限分组类型定义（如果将来需要分组功能）
 export interface PermissionGroup {
   groupId?: number;
   groupKey: string;
@@ -8,34 +45,6 @@ export interface PermissionGroup {
   sortOrder: number;
   isActive: boolean;
   permissions?: Permission[];
-}
-
-// 权限类型定义
-export interface Permission {
-  permissionId?: number;
-  permissionName: string;
-  description?: string;
-  permissionKey: string;
-  groupId?: number;
-  groupName?: string;
-  isSystem?: boolean;
-  sortOrder: number;
-}
-
-// 角色权限分配接口
-export interface RolePermissionAssignment {
-  roleId: number;
-  permissionGroups: {
-    groupId: number;
-    groupKey: string;
-    groupName: string;
-    permissions: {
-      permissionId: number;
-      permissionKey: string;
-      permissionName: string;
-      assigned: boolean;
-    }[];
-  }[];
 }
 
 // API请求响应类型
@@ -52,6 +61,17 @@ export interface PermissionResponse {
 }
 
 // 权限管理表单类型
+export interface PermissionForm {
+  permissionName: string;
+  description?: string;
+}
+
+export interface RoleForm {
+  roleName: string;
+  description?: string;
+}
+
+// 权限分组表单类型（如果将来需要分组功能）
 export interface PermissionGroupForm {
   groupKey: string;
   groupName: string;
@@ -59,14 +79,6 @@ export interface PermissionGroupForm {
   icon: string;
   sortOrder: number;
   isActive: boolean;
-}
-
-export interface PermissionForm {
-  permissionName: string;
-  description: string;
-  permissionKey: string;
-  groupId: number;
-  sortOrder: number;
 }
 
 // 批量操作类型

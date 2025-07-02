@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { api } from './index'
-import type { PermissionGroup, Permission, PermissionGroupForm, PermissionForm } from '@/types/permission'
+import type { PermissionGroup, Permission, PermissionGroupForm, PermissionForm, Role, RoleForm, RolePermission } from '@/types/permission'
 
 /**
  * 用户相关API模块
@@ -329,6 +329,66 @@ export const adminApi = {
       console.error('恢复用户失败:', error)
       throw new Error(error.response?.data?.message || error.message || '恢复用户失败')
     }
+  },
+
+  /**
+   * 获取所有权限
+   * @returns 权限列表
+   */
+  getAllPermissions: async () => {
+    try {
+      const response = await api.get('/admin/permissions')
+      return response.data
+    } catch (error: any) {
+      console.error('获取权限列表失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '获取权限列表失败')
+    }
+  },
+
+  /**
+   * 创建权限
+   * @param permissionData 权限数据
+   * @returns 创建的权限信息
+   */
+  createPermission: async (permissionData: { permissionName: string; description?: string }) => {
+    try {
+      const response = await api.post('/admin/permissions', permissionData)
+      return response.data
+    } catch (error: any) {
+      console.error('创建权限失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '创建权限失败')
+    }
+  },
+
+  /**
+   * 更新权限
+   * @param permissionId 权限ID
+   * @param permissionData 更新数据
+   * @returns 更新后的权限信息
+   */
+  updatePermission: async (permissionId: number, permissionData: { permissionName?: string; description?: string }) => {
+    try {
+      const response = await api.put(`/admin/permissions/${permissionId}`, permissionData)
+      return response.data
+    } catch (error: any) {
+      console.error('更新权限失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '更新权限失败')
+    }
+  },
+
+  /**
+   * 删除权限
+   * @param permissionId 权限ID
+   * @returns 删除结果
+   */
+  deletePermission: async (permissionId: number) => {
+    try {
+      const response = await api.delete(`/admin/permissions/${permissionId}`)
+      return response.data
+    } catch (error: any) {
+      console.error('删除权限失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '删除权限失败')
+    }
   }
 }
 
@@ -627,6 +687,37 @@ export const permissionGroupApi = {
  */
 export const rolePermissionApi = {
   /**
+   * 获取所有角色
+   */
+  async getRoles(): Promise<{ data: Role[] }> {
+    const response = await apiClient.get('/admin/roles')
+    return { data: response.data }
+  },
+
+  /**
+   * 创建角色
+   */
+  async createRole(roleForm: RoleForm): Promise<Role> {
+    const response = await apiClient.post('/admin/roles', roleForm)
+    return response.data
+  },
+
+  /**
+   * 更新角色
+   */
+  async updateRole(roleId: number, roleForm: RoleForm): Promise<Role> {
+    const response = await apiClient.put(`/admin/roles/${roleId}`, roleForm)
+    return response.data
+  },
+
+  /**
+   * 删除角色
+   */
+  async deleteRole(roleId: number): Promise<void> {
+    await apiClient.delete(`/admin/roles/${roleId}`)
+  },
+
+  /**
    * 获取角色的权限列表
    */
   async getRolePermissions(roleId: number): Promise<Permission[]> {
@@ -642,10 +733,25 @@ export const rolePermissionApi = {
   },
 
   /**
+   * 分配权限给角色
+   */
+  async assignPermissions(roleId: number, permissionIds: number[]): Promise<void> {
+    await this.updateRolePermissions(roleId, permissionIds)
+  },
+
+  /**
    * 批量分配权限给多个角色
    */
   async batchAssignPermissions(assignments: { roleId: number, permissionIds: number[] }[]): Promise<void> {
     await apiClient.post('/admin/roles/batch-assign-permissions', { assignments })
+  },
+
+  /**
+   * 获取所有角色权限关联
+   */
+  async getAllRolePermissions(): Promise<{ data: RolePermission[] }> {
+    const response = await apiClient.get('/admin/role-permissions')
+    return { data: response.data }
   },
 
   /**

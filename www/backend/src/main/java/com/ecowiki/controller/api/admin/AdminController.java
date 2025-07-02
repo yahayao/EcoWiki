@@ -21,7 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ecowiki.dto.ApiResponse;
 import com.ecowiki.dto.UserWithRoleDto;
+import com.ecowiki.entity.Permission;
+import com.ecowiki.entity.RolePermission;
 import com.ecowiki.entity.User;
+import com.ecowiki.repository.PermissionRepository;
+import com.ecowiki.repository.RolePermissionRepository;
 import com.ecowiki.repository.RoleRepository;
 import com.ecowiki.repository.UserRepository;
 import com.ecowiki.security.JwtUtil;
@@ -80,6 +84,12 @@ public class AdminController {
      */
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private PermissionRepository permissionRepository;
+
+    @Autowired 
+    private RolePermissionRepository rolePermissionRepository;
 
     /**
      * 获取当前请求用户实体
@@ -451,6 +461,118 @@ public class AdminController {
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("删除角色失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 获取所有权限列表
+     * @param request HTTP请求
+     * @return 权限列表，需管理员权限
+     */
+    @GetMapping("/permissions")
+    public ResponseEntity<ApiResponse<java.util.List<Permission>>> getAllPermissions(HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            if (!permissionService.isAdmin(currentUser)) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要管理员权限"));
+            }
+            
+            java.util.List<Permission> permissions = permissionRepository.findAll();
+            return ResponseEntity.ok(ApiResponse.success(permissions, "获取权限列表成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("获取权限列表失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 获取角色的权限列表
+     * @param roleId 角色ID
+     * @param request HTTP请求
+     * @return 权限列表，需管理员权限
+     */
+    @GetMapping("/roles/{roleId}/permissions")
+    public ResponseEntity<ApiResponse<java.util.List<Permission>>> getRolePermissions(
+            @PathVariable Integer roleId,
+            HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            if (!permissionService.isAdmin(currentUser)) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要管理员权限"));
+            }
+            
+            java.util.List<Permission> permissions = rolePermissionRepository.findPermissionsByRoleId(roleId);
+            return ResponseEntity.ok(ApiResponse.success(permissions, "获取角色权限成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("获取角色权限失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 更新角色的权限配置
+     * @param roleId 角色ID
+     * @param permissionData 包含permissionIds数组的Map
+     * @param request HTTP请求
+     * @return 更新结果，需管理员权限
+     */
+    @PutMapping("/roles/{roleId}/permissions")
+    public ResponseEntity<ApiResponse<String>> updateRolePermissions(
+            @PathVariable Integer roleId,
+            @RequestBody Map<String, java.util.List<Integer>> permissionData,
+            HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            if (!permissionService.isAdmin(currentUser)) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要管理员权限"));
+            }
+            
+            java.util.List<Integer> permissionIds = permissionData.get("permissionIds");
+            if (permissionIds == null) {
+                permissionIds = new java.util.ArrayList<>();
+            }
+            
+            // 先删除角色的所有权限
+            rolePermissionRepository.deleteByRoleId(roleId);
+            
+            // 重新分配权限
+            for (Integer permissionId : permissionIds) {
+                RolePermission rolePermission = new RolePermission();
+                rolePermission.setRoleId(roleId);
+                rolePermission.setPermissionId(permissionId);
+                rolePermission.setCreatedAt(java.time.LocalDateTime.now());
+                rolePermissionRepository.save(rolePermission);
+            }
+            
+            return ResponseEntity.ok(ApiResponse.success("角色权限更新成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("更新角色权限失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 获取所有角色权限关联
+     * @param request HTTP请求
+     * @return 角色权限关联列表，需管理员权限
+     */
+    @GetMapping("/role-permissions")
+    public ResponseEntity<ApiResponse<java.util.List<RolePermission>>> getAllRolePermissions(HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            if (!permissionService.isAdmin(currentUser)) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要管理员权限"));
+            }
+            
+            java.util.List<RolePermission> rolePermissions = rolePermissionRepository.findAll();
+            return ResponseEntity.ok(ApiResponse.success(rolePermissions, "获取角色权限关联成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("获取角色权限关联失败: " + e.getMessage()));
         }
     }
 
