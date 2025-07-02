@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { api } from './index'
+import type { PermissionGroup, Permission, PermissionGroupForm, PermissionForm } from '@/types/permission'
 
 /**
  * 用户相关API模块
@@ -551,5 +552,107 @@ export const userApi = {
   isSuperAdmin: (user: UserResponse | null): boolean => {
     if (!user) return false
     return user.userGroup === USER_GROUPS.SUPER_ADMIN
+  }
+}
+
+/**
+ * 权限分组管理API
+ */
+export const permissionGroupApi = {
+  /**
+   * 获取所有权限分组及其权限
+   */
+  async getAllPermissionGroups(): Promise<PermissionGroup[]> {
+    const response = await apiClient.get('/admin/permission-groups')
+    return response.data
+  },
+
+  /**
+   * 根据ID获取权限分组
+   */
+  async getPermissionGroupById(groupId: number): Promise<PermissionGroup> {
+    const response = await apiClient.get(`/admin/permission-groups/${groupId}`)
+    return response.data
+  },
+
+  /**
+   * 创建权限分组
+   */
+  async createPermissionGroup(data: PermissionGroupForm): Promise<PermissionGroup> {
+    const response = await apiClient.post('/admin/permission-groups', data)
+    return response.data
+  },
+
+  /**
+   * 更新权限分组
+   */
+  async updatePermissionGroup(groupId: number, data: PermissionGroupForm): Promise<PermissionGroup> {
+    const response = await apiClient.put(`/admin/permission-groups/${groupId}`, data)
+    return response.data
+  },
+
+  /**
+   * 删除权限分组
+   */
+  async deletePermissionGroup(groupId: number): Promise<void> {
+    await apiClient.delete(`/admin/permission-groups/${groupId}`)
+  },
+
+  /**
+   * 获取分组下的所有权限
+   */
+  async getPermissionsByGroupId(groupId: number): Promise<Permission[]> {
+    const response = await apiClient.get(`/admin/permission-groups/${groupId}/permissions`)
+    return response.data
+  },
+
+  /**
+   * 为分组添加权限
+   */
+  async addPermissionToGroup(groupId: number, data: PermissionForm): Promise<Permission> {
+    const response = await apiClient.post(`/admin/permission-groups/${groupId}/permissions`, data)
+    return response.data
+  },
+
+  /**
+   * 批量更新分组内权限的排序
+   */
+  async updatePermissionsOrder(groupId: number, permissionIds: number[]): Promise<void> {
+    await apiClient.put(`/admin/permission-groups/${groupId}/permissions/order`, permissionIds)
+  }
+}
+
+/**
+ * 角色权限分配API
+ */
+export const rolePermissionApi = {
+  /**
+   * 获取角色的权限列表
+   */
+  async getRolePermissions(roleId: number): Promise<Permission[]> {
+    const response = await apiClient.get(`/admin/roles/${roleId}/permissions`)
+    return response.data
+  },
+
+  /**
+   * 更新角色的权限配置
+   */
+  async updateRolePermissions(roleId: number, permissionIds: number[]): Promise<void> {
+    await apiClient.put(`/admin/roles/${roleId}/permissions`, { permissionIds })
+  },
+
+  /**
+   * 批量分配权限给多个角色
+   */
+  async batchAssignPermissions(assignments: { roleId: number, permissionIds: number[] }[]): Promise<void> {
+    await apiClient.post('/admin/roles/batch-assign-permissions', { assignments })
+  },
+
+  /**
+   * 获取权限的分配统计
+   */
+  async getPermissionAssignmentStats(): Promise<any> {
+    const response = await apiClient.get('/admin/permissions/assignment-stats')
+    return response.data
   }
 }

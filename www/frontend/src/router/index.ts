@@ -42,6 +42,7 @@ import AdminLayout from '../components/admin/AdminLayout.vue'
 import SystemSettings from '../components/admin/views/SystemSettings.vue'
 import UserList from '../components/admin/views/UserList.vue'
 import RoleManagement from '../components/admin/views/RoleManagement.vue'
+import PermissionGroupsManagement from '../components/admin/views/PermissionGroupsManagement.vue'
 import ForgotPassword from '../components/auth/ForgotPassword.vue'
 /**
  * 路由配置数组
@@ -82,6 +83,12 @@ const routes = [
         path: 'roles', 
         name: 'AdminRoles', 
         component: RoleManagement 
+      },
+      // 权限分组管理页面
+      { 
+        path: 'permission-groups', 
+        name: 'AdminPermissionGroups', 
+        component: PermissionGroupsManagement 
       }
     ]
   },

@@ -75,6 +75,14 @@
               权限管理
             </router-link>
           </li>
+          
+          <!-- 权限分组管理菜单项 -->
+          <li :class="{active: $route.name==='AdminPermissionGroups'}">
+            <router-link to="/admin/permission-groups">
+              <span class="nav-icon">🛡️</span>
+              权限分组
+            </router-link>
+          </li>
         </ul>
       </nav>
     </aside>
@@ -88,6 +96,7 @@
           <h2 v-if="$route.name === 'AdminSettings'">系统设置</h2>
           <h2 v-else-if="$route.name === 'AdminUsers'">用户管理</h2>
           <h2 v-else-if="$route.name === 'AdminRoles'">权限管理</h2>
+          <h2 v-else-if="$route.name === 'AdminPermissionGroups'">权限分组管理</h2>
           <p class="header-subtitle">管理用户权限和系统配置</p>
         </div>
         
