@@ -105,6 +105,9 @@
                 <button @click="insertText('{{', '}}', '模板名称')" title="模板" class="toolbar-btn">
                   模板
                 </button>
+                <button @click="insertText('[[分类:', ']]', '环保')" title="添加分类标签" class="toolbar-btn">
+                   分类
+                </button>
                 <button @click="insertText('<nowiki>', '</nowiki>', '原始文字')" title="原始文字" class="toolbar-btn">
                   原始
                 </button>
@@ -126,7 +129,7 @@
                 ref="editorTextarea"
                 v-model="articleForm.content"
                 class="wiki-editor"
-                placeholder="请输入文章内容，支持Wiki语法..."
+                placeholder="请输入文章内容..."
                 @keydown="handleKeydown"
                 @input="handleInput"
                 rows="20"
@@ -176,27 +179,12 @@
                 </select>
               </div>
               
-              <div class="meta-group">
-                <label for="tags">标签：</label>
-                <input
-                  id="tags"
-                  v-model="articleForm.tags"
-                  type="text"
-                  placeholder="用逗号分隔，如：环保,技术,教育"
-                  class="form-input"
-                />
-              </div>
-              
-              <div class="meta-group" v-if="!isEditMode">
-                <label for="author">作者：</label>
-                <input
-                  id="author"
-                  v-model="articleForm.author"
-                  type="text"
-                  placeholder="请输入作者姓名"
-                  class="form-input"
-                  required
-                />
+              <div class="meta-group tags-display" v-if="articleForm.tags">
+                <label>自动生成的标签：</label>
+                <div class="tags-container">
+                  <span v-for="tag in displayTags" :key="tag" class="tag-badge">{{ tag }}</span>
+                </div>
+                <small class="help-text">💡 通过[[分类:xxx]]语法自动生成</small>
               </div>
             </div>
           </div>
@@ -236,7 +224,6 @@
           <div class="preview-meta">
             <h1>{{ articleForm.title || '未命名文章' }}</h1>
             <div class="meta-info">
-              <span>作者：{{ articleForm.author || '未知' }}</span>
               <span>分类：{{ articleForm.category || '未分类' }}</span>
               <span v-if="articleForm.tags">标签：{{ articleForm.tags }}</span>
             </div>
@@ -255,9 +242,11 @@ import WikiEditor from '../components/WikiEditor.vue'
 import { articleApi, type Article, type ArticleCreateRequest, type ArticleUpdateRequest } from '../api/article'
 import { wikiParser } from '../utils/wikiParser'
 import toast from '../utils/toast'
+import { useAuth } from '../composables/useAuth'
 
 const route = useRoute()
 const router = useRouter()
+const { userDisplayName, isAuthenticated, user } = useAuth()
 
 // 响应式数据
 const loading = ref(true)
@@ -292,7 +281,15 @@ const isEditMode = computed(() => {
 const canSave = computed(() => {
   return articleForm.value.title.trim() && 
          articleForm.value.content.trim() && 
-         articleForm.value.author.trim()
+         isAuthenticated.value
+})
+
+const displayTags = computed(() => {
+  if (!articleForm.value.tags) return []
+  return articleForm.value.tags
+    .split(',')
+    .map(tag => tag.trim())
+    .filter(tag => tag.length > 0)
 })
 
 // 方法
@@ -302,6 +299,8 @@ const loadArticle = async () => {
   // 如果ID无效，直接进入创建模式
   if (!articleId || isNaN(Number(articleId))) {
     articleExists.value = false
+    // 在创建模式下，设置当前登录用户为作者
+    articleForm.value.author = user.value?.username || userDisplayName.value || '未知用户'
     loading.value = false
     return
   }
@@ -325,13 +324,13 @@ const loadArticle = async () => {
     articleExists.value = false
     originalArticle.value = null
     
-    // 设置默认值
+    // 设置默认值，作者使用当前登录用户
     articleForm.value = {
       title: '',
       content: '',
       category: '',
       tags: '',
-      author: ''
+      author: user.value?.username || userDisplayName.value || '未知用户'
     }
   } finally {
     loading.value = false
@@ -343,6 +342,14 @@ const handleSave = async () => {
     toast.warning('请填写所有必填字段')
     return
   }
+
+  // 在保存前提取分类作为标签
+  wikiParser.clearExtractedCategories()
+  wikiParser.parseToHtml(articleForm.value.content)
+  const extractedCategories = wikiParser.getExtractedCategories()
+  
+  // 直接使用提取的分类作为标签
+  articleForm.value.tags = extractedCategories.join(', ')
 
   try {
     saving.value = true
@@ -380,13 +387,14 @@ const handleSave = async () => {
         router.push(`/article/${updated.articleId}`)
       }, 100)
     } else {
-      // 创建文章
+      // 创建文章，确保使用当前登录用户作为作者
+      const currentAuthor = user.value?.username || userDisplayName.value || '未知用户'
       const createData: ArticleCreateRequest = {
         title: articleForm.value.title.trim(),
         content: articleForm.value.content.trim(),
         category: articleForm.value.category.trim(),
         tags: articleForm.value.tags.trim(),
-        author: articleForm.value.author.trim()
+        author: currentAuthor
       }
       
       const created = await articleApi.createArticle(createData)
@@ -444,7 +452,7 @@ const goBack = () => {
 // 检查是否有未保存的更改
 const hasUnsavedChanges = computed(() => {
   if (!isEditMode.value) {
-    return articleForm.value.title || articleForm.value.content || articleForm.value.author
+    return articleForm.value.title || articleForm.value.content
   }
   
   if (!originalArticle.value) return false
@@ -453,8 +461,7 @@ const hasUnsavedChanges = computed(() => {
     articleForm.value.title !== originalArticle.value.title ||
     articleForm.value.content !== (originalArticle.value.content || '') ||
     articleForm.value.category !== (originalArticle.value.category || '') ||
-    articleForm.value.tags !== (originalArticle.value.tags || '') ||
-    articleForm.value.author !== originalArticle.value.author
+    articleForm.value.tags !== (originalArticle.value.tags || '')
   )
 })
 
@@ -480,6 +487,13 @@ onBeforeRouteLeave((to, from, next) => {
 
 // 生命周期
 onMounted(() => {
+  // 检查用户是否已登录
+  if (!isAuthenticated.value) {
+    toast.warning('请先登录后再创建或编辑文章')
+    router.push('/')
+    return
+  }
+  
   loadArticle()
   // 记录来源页面
   try {
@@ -606,8 +620,17 @@ const handleInput = () => {
 }
 
 const updatePreview = () => {
-  // 这里应该调用wiki解析器
+  // 清除之前提取的分类
+  wikiParser.clearExtractedCategories()
+  
+  // 解析Wiki内容并生成预览
   previewHtml.value = wikiParser.parseToHtml(articleForm.value.content)
+  
+  // 提取分类作为标签
+  const extractedCategories = wikiParser.getExtractedCategories()
+  
+  // 直接使用提取的分类作为标签，不再合并现有标签
+  articleForm.value.tags = extractedCategories.join(', ')
 }
 
 // 创建防抖版本的 updatePreview
@@ -1034,6 +1057,35 @@ const insertTable = () => {
     outline: none;
     border-color: #3b82f6;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.help-text {
+    color: #6b7280;
+    font-size: 12px;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.tags-display {
+    flex-direction: column;
+    align-items: flex-start !important;
+}
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0;
+}
+
+.tag-badge {
+    display: inline-block;
+    background: #007bff;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
 }
 
 .save-section {

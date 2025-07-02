@@ -51,6 +51,9 @@
         <button @click="insertText('{{', '}}', '模板名称')" title="模板" class="toolbar-btn">
           <span class="icon">📄</span>
         </button>
+        <button @click="insertText('[[分类:', ']]', '环保')" title="分类标签" class="toolbar-btn">
+          <span class="icon">🏷</span>
+        </button>
       </div>
       
       <div class="toolbar-divider"></div>
@@ -206,6 +209,21 @@
             </div>
             <div class="help-item">
               <code v-html="'{{note|注意内容}}'"></code> - 注意框
+            </div>
+          </div>
+        </div>
+
+        <div class="help-section">
+          <h5>分类和标签</h5>
+          <div class="help-items">
+            <div class="help-item">
+              <code>[[分类:环保]]</code> - 添加分类标签
+            </div>
+            <div class="help-item">
+              <code>[[Category:技术]]</code> - 英文分类语法
+            </div>
+            <div class="help-item">
+              <span class="help-note">分类会自动转换为文章标签</span>
             </div>
           </div>
         </div>

@@ -3,6 +3,8 @@ import DOMPurify from 'dompurify'
 // Wiki语法解析器
 export class WikiParser {
   private static instance: WikiParser
+  // 存储提取的分类
+  private extractedCategories: string[] = []
   
   private constructor() {}
   
@@ -23,31 +25,34 @@ export class WikiParser {
     
     let html = wikiText
     
-    // 1. 处理标题
+    // 1. 处理分类语法（在其他处理之前，避免干扰）
+    html = this.parseCategories(html)
+    
+    // 2. 处理标题
     html = this.parseHeadings(html)
     
-    // 2. 处理文本格式化
+    // 3. 处理文本格式化
     html = this.parseTextFormatting(html)
     
-    // 3. 处理列表
+    // 4. 处理列表
     html = this.parseLists(html)
     
-    // 4. 处理链接
+    // 5. 处理链接
     html = this.parseLinks(html)
     
-    // 5. 处理表格
+    // 6. 处理表格
     html = this.parseTables(html)
     
-    // 6. 处理模板
+    // 7. 处理模板
     html = this.parseTemplates(html)
     
-    // 7. 处理代码块
+    // 8. 处理代码块
     html = this.parseCodeBlocks(html)
     
-    // 8. 处理换行
+    // 9. 处理换行
     html = this.parseLineBreaks(html)
     
-    // 9. 清理并返回安全的HTML
+    // 10. 清理并返回安全的HTML
     return DOMPurify.sanitize(html, {
       ALLOWED_TAGS: [
         'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -67,6 +72,51 @@ export class WikiParser {
         'target', 'rel'
       ]
     })
+  }
+
+  /**
+   * 解析分类语法
+   * 支持的格式：
+   * - [[Category:环保]] 或 [[分类:环保]]
+   * - [[Category:技术|排序关键字]] (带排序关键字的分类)
+   * 
+   * @param text 输入文本
+   * @returns 处理后的文本（移除分类语法）
+   */
+  private parseCategories(text: string): string {
+    // 匹配分类语法：[[Category:xxx]] 或 [[分类:xxx]]
+    const categoryRegex = /\[\[(Category|分类):([^|\]]+)(\|[^\]]+)?\]\]/gi
+    
+    // 提取所有分类并存储
+    const categories: string[] = []
+    text = text.replace(categoryRegex, (match, prefix, categoryName, sortKey) => {
+      const cleanCategoryName = categoryName.trim()
+      if (cleanCategoryName && !categories.includes(cleanCategoryName)) {
+        categories.push(cleanCategoryName)
+      }
+      // 返回空字符串，从显示内容中移除分类语法
+      return ''
+    })
+    
+    // 将分类信息存储到解析器实例中，供外部获取
+    this.extractedCategories = categories
+    
+    return text
+  }
+
+  /**
+   * 获取从Wiki文本中提取的分类
+   * @returns 分类数组
+   */
+  getExtractedCategories(): string[] {
+    return this.extractedCategories || []
+  }
+
+  /**
+   * 清除提取的分类
+   */
+  clearExtractedCategories(): void {
+    this.extractedCategories = []
   }
 
   /**

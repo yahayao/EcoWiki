@@ -26,7 +26,12 @@
 
     <!-- 目录 -->
     <div class="table-of-contents" v-if="tableOfContents.length > 0">
-      <h3>� 目录</h3>
+      <h3>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="toc-icon">
+          <path d="M8 6H21M8 12H21M8 18H21M3 6H3.01M3 12H3.01M3 18H3.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        目录
+      </h3>
       <ul class="toc-list">
         <li 
           v-for="item in tableOfContents" 
@@ -305,6 +310,14 @@ onMounted(() => {
   margin-bottom: 12px;
   font-size: 1.1rem;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toc-icon {
+  flex-shrink: 0;
+  color: #4299e1;
 }
 
 .toc-list {

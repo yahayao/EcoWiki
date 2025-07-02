@@ -1,46 +1,109 @@
 <template>
   <div class="recent-updates">
     <h2 class="section-title">📝 最近更新</h2>
-    <div class="updates-list">
-      <div class="update-item">
-        <div class="update-icon">🆕</div>
+    <div v-if="loading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <span>加载中...</span>
+    </div>
+    <div v-else-if="error" class="error-container">
+      <span>❌ 加载失败: {{ error }}</span>
+    </div>
+    <div v-else class="updates-list">
+      <div 
+        v-for="article in recentArticles" 
+        :key="article.articleId"
+        class="update-item"
+        @click="navigateToArticle(article.articleId.toString())"
+      >
+        <div class="update-icon">{{ getCategoryIcon(article.category) }}</div>
         <div class="update-content">
-          <span class="update-time">2025-01-15 14:30</span>
-          <span class="update-title">新增机器学习算法详解章节</span>
-          <span class="update-author">算法工程师</span>
+          <span class="update-time">{{ formatDateTime(article.updateTime || article.publishDate) }}</span>
+          <span class="update-title">{{ article.title }}</span>
+          <span class="update-author">{{ article.author }}</span>
+          <span v-if="article.category" class="update-category">{{ article.category }}</span>
+        </div>
+        <div class="update-stats">
+          <span class="stat-item">👁 {{ article.views }}</span>
+          <span class="stat-item">👍 {{ article.likes }}</span>
         </div>
       </div>
-      <div class="update-item">
-        <div class="update-icon">📊</div>
-        <div class="update-content">
-          <span class="update-time">2025-01-14 09:15</span>
-          <span class="update-title">更新全球经济数据图表</span>
-          <span class="update-author">经济分析师</span>
-        </div>
-      </div>
-      <div class="update-item">
-        <div class="update-icon">🔬</div>
-        <div class="update-content">
-          <span class="update-time">2025-01-13 16:45</span>
-          <span class="update-title">完善化学元素周期表介绍</span>
-          <span class="update-author">化学专家</span>
-        </div>
-      </div>
-      <div class="update-item">
-        <div class="update-icon">🎭</div>
-        <div class="update-content">
-          <span class="update-time">2025-01-12 11:20</span>
-          <span class="update-title">添加世界文学经典作品赏析</span>
-          <span class="update-author">文学评论家</span>
-        </div>
-      </div>
+    </div>
+    <div v-if="!loading && !error && recentArticles.length === 0" class="empty-container">
+      <span>📝 暂无最近更新</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// 最近更新相关逻辑
-// 可以在这里定义更新数据、刷新逻辑等
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { articleApi, type Article } from '../api/article'
+
+const router = useRouter()
+const recentArticles = ref<Article[]>([])
+const loading = ref(true)
+const error = ref('')
+
+const navigateToArticle = (articleId: string) => {
+  router.push(`/article/${articleId}`)
+}
+
+const getCategoryIcon = (category: string): string => {
+  const iconMap: Record<string, string> = {
+    '技术': '💻',
+    '环保': '🌱',
+    '教育': '📚',
+    '健康': '🏥',
+    '学术研究': '🔬',
+    '文化历史': '🏛️',
+    '艺术人文': '🎭',
+    '科技创新': '🚀',
+    '其他': '📄'
+  }
+  return iconMap[category] || '📝'
+}
+
+const formatDateTime = (dateString: string): string => {
+  try {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    
+    if (diffDays === 0) {
+      return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    } else if (diffDays === 1) {
+      return '昨天 ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    } else if (diffDays < 7) {
+      return `${diffDays}天前`
+    } else {
+      return date.toLocaleDateString('zh-CN')
+    }
+  } catch {
+    return '未知时间'
+  }
+}
+
+const loadRecentArticles = async () => {
+  try {
+    loading.value = true
+    error.value = ''
+    
+    // 获取最新文章（按更新时间排序）
+    const response = await articleApi.getLatestArticles(8)
+    recentArticles.value = response || []
+  } catch (err) {
+    console.error('加载最新文章失败:', err)
+    error.value = '无法加载文章数据'
+    recentArticles.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadRecentArticles()
+})
 </script>
 
 <style scoped>
@@ -75,6 +138,7 @@
   align-items: center;
   gap: 16px;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .update-item:hover {
@@ -83,6 +147,55 @@
 
 .update-item:last-child {
   border-bottom: none;
+}
+
+.loading-container, .error-container, .empty-container {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.update-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.update-category {
+  font-size: 0.75rem;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  align-self: flex-start;
+}
+
+.update-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+}
+
+.stat-item {
+  font-size: 0.75rem;
+  color: #6b7280;
 }
 
 .update-icon {

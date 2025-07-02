@@ -1,83 +1,102 @@
 <template>
   <div class="featured-articles">
     <h2 class="section-title">🔥 热门内容</h2>
-    <div class="article-grid">
-      <!-- 示例文章卡片 -->
-      <div class="article-card" @click="navigateToArticle('1')">
+    <div v-if="loading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <span>加载中...</span>
+    </div>
+    <div v-else-if="error" class="error-container">
+      <span>❌ 加载失败: {{ error }}</span>
+    </div>
+    <div v-else class="article-grid">
+      <div 
+        v-for="article in articles" 
+        :key="article.articleId"
+        class="article-card" 
+        @click="navigateToArticle(article.articleId.toString())"
+      >
         <div class="article-header">
-          <span class="article-category">学术研究</span>
-          <span class="article-rating">⭐ 4.8</span>
+          <span class="article-category">{{ article.category || '未分类' }}</span>
+          <span class="article-stats">👁 {{ article.views }} | 👍 {{ article.likes }}</span>
         </div>
-        <h3 class="article-title">人工智能发展史与未来展望</h3>
-        <p class="article-excerpt">从图灵测试到ChatGPT，探索人工智能技术的发展历程及其对未来社会的深远影响...</p>
+        <h3 class="article-title">{{ article.title }}</h3>
+        <p class="article-excerpt">{{ getArticleExcerpt(article.content) }}</p>
         <div class="article-meta">
           <span class="article-author">
             <span class="author-icon">👤</span>
-            科技研究员
+            {{ article.author }}
           </span>
-          <span class="article-date">2025-01-15</span>
+          <span class="article-date">{{ formatDate(article.publishDate) }}</span>
+        </div>
+        <div v-if="article.tags" class="article-tags">
+          <span v-for="tag in getTagArray(article.tags)" :key="tag" class="tag">{{ tag }}</span>
         </div>
       </div>
-      
-      <div class="article-card" @click="navigateToArticle('2')">
-        <div class="article-header">
-          <span class="article-category">文化历史</span>
-          <span class="article-rating">⭐ 4.9</span>
-        </div>
-        <h3 class="article-title">古代丝绸之路的文化交流</h3>
-        <p class="article-excerpt">追溯古代丝绸之路上的商贸往来与文化交融，了解东西方文明的碰撞与交流...</p>
-        <div class="article-meta">
-          <span class="article-author">
-            <span class="author-icon">👤</span>
-            历史学者
-          </span>
-          <span class="article-date">2025-01-12</span>
-        </div>
-      </div>
-      
-      <div class="article-card" @click="navigateToArticle('3')">
-        <div class="article-header">
-          <span class="article-category">科技创新</span>
-          <span class="article-rating">⭐ 4.7</span>
-        </div>
-        <h3 class="article-title">量子计算原理与应用前景</h3>
-        <p class="article-excerpt">深入浅出地解释量子计算的基本原理，探讨其在密码学、药物研发等领域的应用...</p>
-        <div class="article-meta">
-          <span class="article-author">
-            <span class="author-icon">👤</span>
-            物理学家
-          </span>
-          <span class="article-date">2025-01-10</span>
-        </div>
-      </div>
-      
-      <div class="article-card" @click="navigateToArticle('4')">
-        <div class="article-header">
-          <span class="article-category">艺术人文</span>
-          <span class="article-rating">⭐ 4.6</span>
-        </div>
-        <h3 class="article-title">文艺复兴时期的艺术革新</h3>
-        <p class="article-excerpt">从达芬奇到米开朗基罗，探索文艺复兴时期艺术家们如何改变世界对美的认知...</p>
-        <div class="article-meta">
-          <span class="article-author">
-            <span class="author-icon">👤</span>
-            艺术史家
-          </span>
-          <span class="article-date">2025-01-08</span>
-        </div>
-      </div>
+    </div>
+    <div v-if="!loading && !error && articles.length === 0" class="empty-container">
+      <span>� 暂无文章</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { articleApi, type Article } from '../api/article'
+import { wikiParser } from '../utils/wikiParser'
 
 const router = useRouter()
+const articles = ref<Article[]>([])
+const loading = ref(true)
+const error = ref('')
 
 const navigateToArticle = (articleId: string) => {
   router.push(`/article/${articleId}`)
 }
+
+const getArticleExcerpt = (content: string): string => {
+  if (!content) return '暂无内容...'
+  
+  // 使用wikiParser提取纯文本摘要
+  const htmlContent = wikiParser.parseToHtml(content)
+  const excerpt = wikiParser.extractSummary(htmlContent, 120)
+  return excerpt || '暂无内容...'
+}
+
+const formatDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('zh-CN')
+  } catch {
+    return '未知日期'
+  }
+}
+
+const getTagArray = (tags: string): string[] => {
+  if (!tags) return []
+  return tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+}
+
+const loadPopularArticles = async () => {
+  try {
+    loading.value = true
+    error.value = ''
+    
+    // 获取热门文章（按点赞数或浏览量排序）
+    const response = await articleApi.getPopularArticles(6)
+    articles.value = response || []
+  } catch (err) {
+    console.error('加载热门文章失败:', err)
+    error.value = '无法加载文章数据'
+    articles.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadPopularArticles()
+})
 </script>
 
 <style scoped>
@@ -97,6 +116,48 @@ const navigateToArticle = (articleId: string) => {
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 24px;
   margin-bottom: 50px;
+}
+
+.loading-container, .error-container, .empty-container {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.article-stats {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.article-tags {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tag {
+  background: #e5e7eb;
+  color: #374151;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 500;
 }
 
 .article-card {
