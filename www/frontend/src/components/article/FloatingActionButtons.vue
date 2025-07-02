@@ -123,7 +123,6 @@ const handleView = () => {
 const handleEdit = () => {
   if (props.canEdit) {
     emit('edit')
-    router.push(`/edit/${props.articleId}`)
   }
 }
 

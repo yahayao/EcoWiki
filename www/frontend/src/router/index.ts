@@ -51,16 +51,12 @@ import ForgotPassword from '../components/auth/ForgotPassword.vue'
 const routes = [
   { path: '/', name: 'Home', component: DynamicHome },
   { path: '/article/:id', name: 'ArticleDetail', component: ArticleDetail },
+  { path: '/edit/:id', name: 'ArticleEdit', component: ArticleEdit },
   {
-    path: '/:pathMatch(.*)*',
-    name: 'NotFound',
-    redirect: '/'
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: ForgotPassword
   },
-  {
-  path: '/forgot-password',
-  name: 'ForgotPassword',
-  component: ForgotPassword
-},
   {
     path: '/admin',
     component: AdminLayout,

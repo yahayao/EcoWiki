@@ -122,10 +122,11 @@ public class PermissionGroupService {
         
         for (int i = 0; i < permissionIds.size(); i++) {
             Integer permissionId = permissionIds.get(i);
+            final int sortOrder = i + 1;
             permissions.stream()
                     .filter(p -> p.getPermissionId().equals(permissionId))
                     .findFirst()
-                    .ifPresent(p -> p.setSortOrder(i + 1));
+                    .ifPresent(p -> p.setSortOrder(sortOrder));
         }
         
         permissionRepository.saveAll(permissions);
