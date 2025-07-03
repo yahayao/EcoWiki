@@ -801,6 +801,24 @@ export const rolePermissionApi = {
   },
 
   /**
+   * 获取所有权限
+   * @returns 权限列表
+   */
+  async getAllPermissions(): Promise<Permission[]> {
+    try {
+      const response = await apiClient.get('/admin/permissions')
+      if (response.data && response.data.code === 200 && response.data.data) {
+        return response.data.data
+      } else {
+        throw new Error(response.data?.message || '获取权限列表失败')
+      }
+    } catch (error: any) {
+      console.error('获取权限列表失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '获取权限列表失败')
+    }
+  },
+
+  /**
    * 批量分配权限给多个角色
    */
   async batchAssignPermissions(assignments: { roleId: number, permissionIds: number[] }[]): Promise<void> {

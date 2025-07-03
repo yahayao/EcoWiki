@@ -191,7 +191,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { adminApi, rolePermissionApi } from '@/api/user'
+import { rolePermissionApi } from '@/api/user'
 import Toast from '@/components/Toast.vue'
 import type { Role, Permission, RolePermission, RoleForm } from '@/types/permission'
 
@@ -434,8 +434,8 @@ async function loadRoles() {
 
 async function loadPermissions() {
   try {
-    const response = await adminApi.getAllPermissions()
-    permissions.value = response.data || []
+    const response = await rolePermissionApi.getAllPermissions()
+    permissions.value = response || []
   } catch (error) {
     console.error('加载权限失败:', error)
     showToast('加载权限失败', 'error')
