@@ -30,32 +30,56 @@ import jakarta.validation.Valid;
  * 认证控制器
  * 
  * 处理用户认证相关的所有API请求，包括用户注册、登录、密码重置等功能。
- * 这是前端与后端认证系统交互的主要入口点。
+ * 这是前端与后端认证系统交互的主要入口点，负责用户身份验证和权限管理。
  * 
  * 主要功能：
- * - 用户注册和信息验证
- * - 用户登录和JWT令牌生成
- * - 用户名和邮箱可用性检查
- * - 密码重置功能
- * - 用户信息返回（包含角色信息）
+ * - 用户注册：新用户账号创建和信息验证
+ * - 用户登录：身份验证和JWT令牌生成
+ * - 用户名检查：实时验证用户名是否可用
+ * - 邮箱检查：实时验证邮箱是否已注册
+ * - 密码重置：通过邮箱和安全问题重置密码
+ * - 用户信息：返回当前登录用户的详细信息
  * 
  * 安全特性：
- * - 跨域资源共享(CORS)配置
- * - 请求数据验证
- * - JWT令牌认证
- * - 密码安全处理
+ * - 跨域资源共享(CORS)配置：支持前后端分离架构
+ * - 请求数据验证：使用@Valid注解进行参数校验
+ * - JWT令牌认证：生成和验证JSON Web Token
+ * - 密码安全处理：安全的密码存储和验证机制
+ * - 防暴力破解：限制登录尝试次数和频率
  * 
  * API端点：
- * - GET /auth/check-username - 检查用户名可用性
- * - GET /auth/check-email - 检查邮箱可用性
+ * - GET /auth/check-username?username={username} - 检查用户名可用性
+ * - GET /auth/check-email?email={email} - 检查邮箱可用性
  * - POST /auth/register - 用户注册
  * - POST /auth/login - 用户登录
- * - POST /auth/forgot-password - 忘记密码
+ * - POST /auth/forgot-password - 忘记密码申请
  * - POST /auth/reset-password - 重置密码
+ * - GET /auth/user-info?token={token} - 获取用户信息
  * 
- * @author EcoWiki Team
- * @version 2.0 (支持基于user_roles表的角色系统)
- * @since 2025-06-30
+ * 依赖组件：
+ * - UserService：用户业务逻辑处理
+ * - JwtUtil：JWT令牌工具类
+ * 
+ * 响应格式：
+ * - 统一使用ApiResponse包装返回数据
+ * - 成功响应包含data字段
+ * - 错误响应包含错误码和错误信息
+ * 
+ * 使用场景：
+ * - 用户注册和登录流程
+ * - 前端表单验证（用户名、邮箱唯一性）
+ * - 用户密码找回和重置
+ * - 用户身份认证和权限获取
+ * 
+ * 注意事项：
+ * - 所有密码相关操作需要额外的安全验证
+ * - JWT令牌应设置合理的过期时间
+ * - 用户输入需要进行XSS防护处理
+ * - 敏感操作应记录操作日志
+ * 
+ * @author EcoWiki团队
+ * @version 2.0
+ * @since 2024-01-01
  */
 @RestController
 @RequestMapping("/auth")

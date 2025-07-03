@@ -1,9 +1,68 @@
 package com.ecowiki.dto;
 
+/**
+ * 忘记密码请求数据传输对象
+ * 
+ * 该DTO用于处理用户忘记密码时的请求数据，包含用户邮箱信息。
+ * 作为忘记密码功能的第一步，用于验证用户身份和发送重置密码的验证信息。
+ * 
+ * 主要用途：
+ * - 用户身份验证：通过邮箱确认用户身份
+ * - 密码重置流程：启动密码重置流程的入口
+ * - 安全验证：确保只有合法用户可以重置密码
+ * - 邮件发送：为发送重置密码邮件提供目标地址
+ * 
+ * 业务流程：
+ * 1. 用户输入注册邮箱地址
+ * 2. 系统验证邮箱是否存在且有效
+ * 3. 发送密码重置链接或验证码到邮箱
+ * 4. 用户通过邮件中的链接继续重置流程
+ * 
+ * 数据验证：
+ * - 邮箱格式验证：确保邮箱格式正确
+ * - 邮箱存在性验证：确保邮箱在系统中已注册
+ * - 账户状态验证：确保对应账户处于可用状态
+ * 
+ * 安全考虑：
+ * - 防止邮箱枚举：即使邮箱不存在也返回成功响应
+ * - 频率限制：限制同一邮箱的重置请求频率
+ * - 时效性控制：重置链接或验证码具有时效性
+ * 
+ * 使用场景：
+ * - 用户忘记登录密码
+ * - 账户安全保护
+ * - 密码重置服务
+ * - 用户自助服务
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2024-01-01
+ * @see ResetPasswordRequest 密码重置请求DTO
+ */
 public class ForgotPasswordRequest {
+    
+    /**
+     * 用户邮箱地址
+     * 用于接收密码重置邮件的邮箱地址
+     * 必须是系统中已注册的有效邮箱
+     */
     private String email;
 
-    // Getters and Setters
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    // ==================== Getter和Setter方法 ====================
+    
+    /**
+     * 获取邮箱地址
+     * @return 用户邮箱地址
+     */
+    public String getEmail() { 
+        return email; 
+    }
+    
+    /**
+     * 设置邮箱地址
+     * @param email 用户邮箱地址，必须为有效的邮箱格式
+     */
+    public void setEmail(String email) { 
+        this.email = email; 
+    }
 }
