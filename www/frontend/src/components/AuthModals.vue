@@ -66,7 +66,22 @@
         <button class="close-button" @click="$emit('closeModals')">×</button>
       </div>
     </div>
-
+    <!-- 忘记密码模态框 -->
+    <div 
+      v-if="showForgotPassword" 
+      class="auth-modal-overlay" 
+      @click.self="$emit('closeModals')"
+    >
+      <div class="auth-modal">
+        <!-- 忘记密码表单组件 -->
+        <Forgotpannel 
+          @switchToRegister="$emit('switchToLogin')" 
+          @loginSuccess="$emit('closeModals')"
+        />
+        <!-- 模态框关闭按钮 -->
+        <button class="close-button" @click="$emit('closeModals')">×</button>
+      </div>
+    </div>
     <!-- 注册模态框 -->
     <div 
       v-if="showRegisterForm" 
@@ -106,6 +121,7 @@ import { computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import LoginPanel from './LoginPanel.vue'
 import RegisterPanel from './RegisterPanel.vue'
+import Forgotpannel from './Forgotpanel.vue'
 
 // 路由实例，用于管理员界面导航
 const router = useRouter()
@@ -121,6 +137,8 @@ const props = defineProps<{
   showRegisterForm: boolean
   /** 是否显示管理员设置界面 */
   showAdminSettings: boolean
+  /** 是否显示忘记密码表单 */
+  showForgotPassword: boolean
 }>()
 
 /**
@@ -134,6 +152,8 @@ const emit = defineEmits<{
   switchToRegister: []
   /** 切换到登录表单事件 */
   switchToLogin: []
+  /** 切换到忘记密码表单事件 */
+  switchToForgot: []
 }>()
 
 /**
@@ -145,7 +165,7 @@ const emit = defineEmits<{
  * @returns {boolean} 是否有模态框需要显示
  */
 const showAnyModal = computed(() => {
-  return props.showLoginForm || props.showRegisterForm || props.showAdminSettings
+  return props.showLoginForm || props.showRegisterForm || props.showAdminSettings || props.showForgotPassword
 })
 
 /**
