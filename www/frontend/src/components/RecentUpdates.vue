@@ -54,7 +54,7 @@
     </div>
     <!-- 错误状态 -->
     <div v-else-if="error" class="error-container">
-      <span>❌ 加载失败: {{ error }}</span>
+      <span><IconCross color="red"></IconCross> 加载失败: {{ error }}</span>
     </div>
     
     <!-- 文章列表 -->
@@ -103,6 +103,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { articleApi, type Article } from '../api/article'
+import { IconCross } from './icons'
 
 // 路由实例
 const router = useRouter()
