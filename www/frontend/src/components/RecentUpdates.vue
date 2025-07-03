@@ -1,33 +1,91 @@
+<!--
+  最近更新组件
+  
+  该组件展示Wiki系统中最近更新的文章列表，为用户提供快速了解最新内容的入口。
+  支持实时数据获取、分类展示、状态管理和用户交互等功能。
+  
+  主要功能：
+  - 最新文章列表展示：按更新时间排序显示最近修改的文章
+  - 分类图标展示：根据文章分类显示相应的表情符号图标
+  - 文章统计信息：展示浏览量、点赞数等互动数据
+  - 响应式交互：支持点击跳转到文章详情页面
+  - 状态管理：包含加载状态、错误处理和空数据提示
+  
+  数据展示：
+  - 更新时间：显示文章最后更新或发布时间
+  - 文章标题：可点击跳转到详情页
+  - 作者信息：显示文章作者
+  - 分类标签：展示文章所属分类
+  - 互动统计：浏览量和点赞数实时更新
+  
+  视觉设计：
+  - 卡片式布局：每个更新项独立展示
+  - 图标化表示：使用表情符号增强视觉识别
+  - 状态反馈：加载动画和错误提示
+  - 悬浮效果：鼠标悬停时的视觉反馈
+  
+  技术实现：
+  - Vue 3 Composition API
+  - 异步数据加载和状态管理
+  - 路由导航集成
+  - 响应式设计和CSS动画
+  - 时间格式化和国际化支持
+  
+  使用场景：
+  - Wiki首页内容展示
+  - 侧边栏快速导航
+  - 动态内容更新提醒
+  - 用户活跃度展示
+  
+  @author EcoWiki Team
+  @version 1.0.0
+  @since 2024-01-01
+-->
 <template>
+  <!-- 最近更新容器 -->
   <div class="recent-updates">
+    <!-- 区域标题 -->
     <h2 class="section-title">📝 最近更新</h2>
+    
+    <!-- 加载状态 -->
     <div v-if="loading" class="loading-container">
       <div class="loading-spinner"></div>
       <span>加载中...</span>
     </div>
+    <!-- 错误状态 -->
     <div v-else-if="error" class="error-container">
       <span>❌ 加载失败: {{ error }}</span>
     </div>
+    
+    <!-- 文章列表 -->
     <div v-else class="updates-list">
+      <!-- 单个文章更新项 -->
       <div 
         v-for="article in recentArticles" 
         :key="article.articleId"
         class="update-item"
         @click="navigateToArticle(article.articleId.toString())"
       >
+        <!-- 分类图标 -->
         <div class="update-icon">{{ getCategoryIcon(article.category) }}</div>
+        
+        <!-- 文章内容信息 -->
         <div class="update-content">
           <span class="update-time">{{ formatDateTime(article.updateTime || article.publishDate) }}</span>
           <span class="update-title">{{ article.title }}</span>
           <span class="update-author">{{ article.author }}</span>
           <span v-if="article.category" class="update-category">{{ article.category }}</span>
         </div>
+        
+        <!-- 文章统计数据 -->
         <div class="update-stats">
           <span class="stat-item">👁 {{ article.views }}</span>
           <span class="stat-item">👍 {{ article.likes }}</span>
         </div>
       </div>
     </div>
+    
+    <!-- 空数据状态 -->
     <div v-if="!loading && !error && recentArticles.length === 0" class="empty-container">
       <span>📝 暂无最近更新</span>
     </div>
@@ -35,19 +93,38 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * 最近更新组件脚本
+ * 
+ * 该脚本处理最近更新文章的数据获取、状态管理和用户交互。
+ * 使用 Composition API 管理组件状态，提供响应式的数据更新体验。
+ */
+
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { articleApi, type Article } from '../api/article'
 
+// 路由实例
 const router = useRouter()
-const recentArticles = ref<Article[]>([])
-const loading = ref(true)
-const error = ref('')
 
+// 响应式数据定义
+const recentArticles = ref<Article[]>([]) // 最近文章列表
+const loading = ref(true)                 // 加载状态标识
+const error = ref('')                     // 错误信息
+
+/**
+ * 导航到文章详情页
+ * @param articleId 文章ID
+ */
 const navigateToArticle = (articleId: string) => {
   router.push(`/article/${articleId}`)
 }
 
+/**
+ * 根据文章分类获取对应的图标
+ * @param category 文章分类名称
+ * @returns 对应的表情符号图标
+ */
 const getCategoryIcon = (category: string): string => {
   const iconMap: Record<string, string> = {
     '技术': '💻',
@@ -63,6 +140,12 @@ const getCategoryIcon = (category: string): string => {
   return iconMap[category] || '📝'
 }
 
+/**
+ * 格式化日期时间显示
+ * 根据时间差显示相对时间或绝对时间
+ * @param dateString 日期字符串
+ * @returns 格式化后的时间显示文本
+ */
 const formatDateTime = (dateString: string): string => {
   try {
     const date = new Date(dateString)
@@ -70,13 +153,20 @@ const formatDateTime = (dateString: string): string => {
     const diffMs = now.getTime() - date.getTime()
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
     
+    // 今天：显示具体时间
     if (diffDays === 0) {
       return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-    } else if (diffDays === 1) {
+    } 
+    // 昨天：显示"昨天 + 时间"
+    else if (diffDays === 1) {
       return '昨天 ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-    } else if (diffDays < 7) {
+    } 
+    // 一周内：显示"X天前"
+    else if (diffDays < 7) {
       return `${diffDays}天前`
-    } else {
+    } 
+    // 一周以上：显示具体日期
+    else {
       return date.toLocaleDateString('zh-CN')
     }
   } catch {
@@ -84,12 +174,16 @@ const formatDateTime = (dateString: string): string => {
   }
 }
 
+/**
+ * 加载最近更新的文章列表
+ * 从API获取最新文章数据并更新组件状态
+ */
 const loadRecentArticles = async () => {
   try {
     loading.value = true
     error.value = ''
     
-    // 获取最新文章（按更新时间排序）
+    // 获取最新文章（按更新时间排序，限制8条）
     const response = await articleApi.getLatestArticles(8)
     recentArticles.value = response || []
   } catch (err) {
@@ -101,6 +195,7 @@ const loadRecentArticles = async () => {
   }
 }
 
+// 组件挂载时加载数据
 onMounted(() => {
   loadRecentArticles()
 })

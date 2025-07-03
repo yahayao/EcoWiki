@@ -1,3 +1,53 @@
+<!--
+  文章编辑页面组件
+  
+  这是EcoWiki的文章编辑功能页面，支持创建新文章和编辑现有文章。
+  提供完整的Wiki编辑体验，包括实时预览、语法提示、自动保存等功能。
+  
+  主要功能：
+  - 双模式支持：新建文章模式和编辑现有文章模式
+  - 富文本编辑：集成Wiki语法编辑器，支持实时预览
+  - 自动保存：定时保存草稿，防止意外丢失
+  - 表单验证：完整的输入验证和错误提示
+  - 分类管理：支持文章分类和标签设置
+  - 作者信息：自动设置作者信息，支持手动修改
+  
+  编辑功能：
+  - Wiki语法支持：标题、列表、链接、表格等
+  - 实时预览：边编辑边预览最终效果
+  - 语法高亮：编辑器语法着色和提示
+  - 快捷工具：常用格式化按钮和快捷键
+  - 插入助手：图片、链接、表格等插入工具
+  
+  数据管理：
+  - 表单状态管理：响应式数据绑定
+  - 自动保存机制：定时保存和离开页面提醒
+  - 版本控制：编辑历史和变更追踪
+  - 错误处理：网络错误重试和本地缓存
+  
+  用户体验：
+  - 响应式设计：适配桌面和移动设备
+  - 加载状态：明确的加载和保存反馈
+  - 操作确认：重要操作的二次确认
+  - 快捷操作：键盘快捷键和右键菜单
+  
+  技术特性：
+  - Vue 3 Composition API架构
+  - TypeScript类型安全
+  - Pinia状态管理集成
+  - 路由参数处理和导航守卫
+  - API错误处理和重试机制
+  
+  @author EcoWiki Team
+  @version 2.0.0
+  @since 2024-01-01
+  
+  @example
+  <!-- 在路由中使用 -->
+  <!-- 新建文章：/edit/new -->
+  <!-- 编辑文章：/edit/123 --
+  <ArticleEdit />
+-->
 <template>
   <div class="article-edit-page">
     <div class="container">
@@ -236,54 +286,169 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * 文章编辑页面组件脚本
+ * 
+ * 实现文章编辑页面的所有逻辑功能，包括数据管理、编辑操作、表单验证等。
+ * 使用Vue 3 Composition API进行状态管理和生命周期控制。
+ */
+
+// Vue核心功能导入
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
-import WikiEditor from '../components/WikiEditor.vue'
-import { articleApi, type Article, type ArticleCreateRequest, type ArticleUpdateRequest } from '../api/article'
-import { wikiParser } from '../utils/wikiParser'
-import toast from '../utils/toast'
-import { useAuth } from '../composables/useAuth'
 
+// 组件和工具导入
+import WikiEditor from '../components/WikiEditor.vue'                    // Wiki编辑器组件
+import { articleApi, type Article, type ArticleCreateRequest, type ArticleUpdateRequest } from '../api/article'  // 文章API
+import { wikiParser } from '../utils/wikiParser'                        // Wiki语法解析器
+import toast from '../utils/toast'                                      // 消息提示工具
+import { useAuth } from '../composables/useAuth'                        // 认证状态管理
+
+// ======================== 路由和认证 ========================
+
+/**
+ * 路由实例，用于获取当前路由参数和导航
+ */
 const route = useRoute()
+
+/**
+ * 路由器实例，用于编程式导航
+ */
 const router = useRouter()
+
+/**
+ * 认证状态，获取用户信息和登录状态
+ */
 const { userDisplayName, isAuthenticated, user } = useAuth()
 
-// 响应式数据
-const loading = ref(true)
-const saving = ref(false)
-const showPreview = ref(false)
-const showEditor = ref(true)
-const previewModalVisible = ref(false)
-const previewHtml = ref('')
-const editSummary = ref('')
-const articleExists = ref(true) // 用于判断文章是否存在
-const editorTextarea = ref<HTMLTextAreaElement | null>(null)
-const showHelpPanel = ref(false)
-const referrerPath = ref('/')
-const saveSuccessful = ref(false) // 标记保存是否成功
+// ======================== 响应式状态管理 ========================
 
-// 文章表单数据
+/**
+ * 页面加载状态
+ * 控制初始数据加载时的loading显示
+ */
+const loading = ref(true)
+
+/**
+ * 保存状态
+ * 控制保存操作时的loading状态和按钮禁用
+ */
+const saving = ref(false)
+
+/**
+ * 预览模式开关
+ * 控制是否显示实时预览面板
+ */
+const showPreview = ref(false)
+
+/**
+ * 编辑器显示开关
+ * 控制编辑器的显示状态，与预览模式配合使用
+ */
+const showEditor = ref(true)
+
+/**
+ * 预览模态框显示状态
+ * 控制全屏预览模态框的显示
+ */
+const previewModalVisible = ref(false)
+
+/**
+ * 预览HTML内容
+ * 存储解析后的HTML内容，用于预览显示
+ */
+const previewHtml = ref('')
+
+/**
+ * 编辑摘要
+ * 用户输入的本次编辑摘要，记录变更原因
+ */
+const editSummary = ref('')
+
+/**
+ * 文章存在状态
+ * 判断当前是编辑现有文章还是创建新文章
+ */
+const articleExists = ref(true)
+
+/**
+ * 编辑器文本区域引用
+ * 用于直接操作编辑器DOM元素（插入文本、光标控制等）
+ */
+const editorTextarea = ref<HTMLTextAreaElement | null>(null)
+
+/**
+ * 帮助面板显示状态
+ * 控制Wiki语法帮助面板的显示
+ */
+const showHelpPanel = ref(false)
+
+/**
+ * 来源页面路径
+ * 记录用户进入编辑页面前的路径，用于返回导航
+ */
+const referrerPath = ref('/')
+
+/**
+ * 保存成功标记
+ * 标记最近一次保存操作是否成功，用于离开页面提醒
+ */
+const saveSuccessful = ref(false)
+
+// ======================== 表单数据管理 ========================
+
+/**
+ * 文章表单数据
+ * 包含文章的所有可编辑字段
+ */
 const articleForm = ref({
-  title: '',
-  content: '',
-  category: '',
-  tags: '',
-  author: ''
+  title: '',        // 文章标题
+  content: '',      // 文章内容（Wiki语法）
+  category: '',     // 文章分类
+  tags: '',         // 文章标签（逗号分隔）
+  author: ''        // 文章作者
 })
 
+/**
+ * 原始文章数据
+ * 存储从服务器加载的原始文章数据，用于对比变更
+ */
 const originalArticle = ref<Article | null>(null)
 
-// 计算属性
+// ======================== 计算属性 ========================
+
+/**
+ * 是否为编辑模式
+ * 
+ * 根据文章存在状态和原始数据判断当前是编辑现有文章还是创建新文章。
+ * 
+ * @returns {boolean} true表示编辑现有文章，false表示创建新文章
+ */
 const isEditMode = computed(() => {
   return articleExists.value && originalArticle.value !== null
 })
 
+/**
+ * 是否可以保存
+ * 
+ * 检查保存条件：标题、内容非空且用户已登录。
+ * 
+ * @returns {boolean} true表示可以保存，false表示不满足保存条件
+ */
 const canSave = computed(() => {
   return articleForm.value.title.trim() && 
          articleForm.value.content.trim() && 
          isAuthenticated.value
 })
 
+/**
+ * 显示用的标签数组
+ * 
+ * 将逗号分隔的标签字符串转换为数组，用于UI显示。
+ * 自动过滤空字符串和去除首尾空格。
+ * 
+ * @returns {string[]} 标签名称数组
+ */
 const displayTags = computed(() => {
   if (!articleForm.value.tags) return []
   return articleForm.value.tags
@@ -292,7 +457,14 @@ const displayTags = computed(() => {
     .filter(tag => tag.length > 0)
 })
 
-// 方法
+// ======================== 核心方法 ========================
+
+/**
+ * 加载文章数据
+ * 
+ * 根据路由参数加载现有文章数据，或初始化新文章创建模式。
+ * 处理无效ID、文章不存在等各种情况。
+ */
 const loadArticle = async () => {
   const articleId = route.params.id as string
   
