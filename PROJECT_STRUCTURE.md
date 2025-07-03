@@ -10,9 +10,22 @@ EcoWiki-3/
 ├── LICENSE                                    # 项目许可证文件
 ├── README.md                                  # 项目说明文档
 ├── PROJECT_STRUCTURE.md                       # 项目文件结构文档（本文件）
+├── CODE_DOCUMENTATION_STATUS.md               # 代码注释完成状态文档
+├── AUTHOR_DISPLAY_REMOVAL.md                  # 作者显示移除功能文档
+├── AUTO_AUTHOR_FEATURE.md                     # 自动作者设置功能文档
+├── CATEGORY_TAG_FEATURE.md                    # 分类标签功能文档
+├── DATABASE_UPGRADE_GUIDE.md                  # 数据库升级指南文档
+├── HOMEPAGE_DYNAMIC_CONTENT_FIX.md            # 首页动态内容修复文档
+├── PERMISSION_GROUPS_INIT.sql                 # 权限分组初始化SQL脚本
+├── PERMISSION_ROLE_INIT.sql                   # 权限角色初始化SQL脚本
+├── SIMPLE_PERMISSION_UPGRADE.sql              # 简单权限升级SQL脚本
+├── UPGRADE_PERMISSION_HIERARCHY.sql           # 权限层次升级SQL脚本
 ├── describe/                                  # 项目文档目录
 │   └── SRS.docx                              # 软件需求规格说明书
 └── www/                                       # 主要代码目录
+    ├── IMPLEMENTATION_GUIDE.md                # 实现指南文档
+    ├── MANUAL_PERMISSION_HIERARCHY_SETUP.sql  # 手动权限层次设置SQL脚本
+    ├── PERMISSION_GROUPS_IMPLEMENTATION_GUIDE.md # 权限分组实现指南
     ├── backend/                               # 后端Spring Boot项目
     ├── frontend/                              # 前端Vue3项目
     └── EcoWiki/                              # 其他资源文件
@@ -25,6 +38,8 @@ www/backend/
 ├── pom.xml                                    # Maven项目配置文件，定义依赖和构建配置
 ├── API_TEST_GUIDE.md                          # API测试指南文档
 ├── ARTICLE_API_README.md                      # 文章API说明文档
+├── temp_login.json                            # 临时登录测试数据
+├── temp_token.json                            # 临时令牌测试数据
 ├── config/                                    # 配置文件目录
 ├── routes/                                    # 路由配置目录
 ├── src/                                       # 源代码目录
@@ -33,29 +48,42 @@ www/backend/
 │   │   │   ├── EcoWikiApplication.java       # Spring Boot主启动类
 │   │   │   ├── config/                       # 配置类目录
 │   │   │   │   ├── CorsConfig.java          # 跨域配置类
-│   │   │   │   ├── SecurityConfig.java      # Spring Security安全配置
-│   │   │   │   └── WebConfig.java           # Web MVC配置类
+│   │   │   │   ├── DataInitializer.java     # 数据初始化配置类（创建默认管理员账户）
+│   │   │   │   └── SecurityConfig.java      # Spring Security安全配置
 │   │   │   ├── controller/                   # 控制器层
 │   │   │   │   └── api/                     # API控制器
 │   │   │   │       ├── admin/               # 管理员相关API
-│   │   │   │       │   └── AdminController.java  # 管理员功能控制器（用户管理、角色管理、系统统计）
+│   │   │   │       │   └── AdminController.java  # 管理员功能控制器（用户管理、角色管理、权限管理、系统统计）
 │   │   │   │       ├── auth/                # 认证相关API
 │   │   │   │       │   └── AuthController.java   # 认证控制器（登录、注册、token验证）
-│   │   │   │       └── user/                # 用户相关API
-│   │   │   │           └── UserController.java   # 用户控制器（用户信息管理）
+│   │   │   │       ├── ApiController.java   # API信息控制器（API文档和元信息）
+│   │   │   │       └── ArticleController.java     # 文章控制器（文章CRUD、搜索、分类）
 │   │   │   ├── dto/                         # 数据传输对象
 │   │   │   │   ├── ApiResponse.java         # 统一API响应格式
+│   │   │   │   ├── ArticleCreateRequest.java # 文章创建请求DTO
+│   │   │   │   ├── ArticleDto.java          # 文章数据传输对象
+│   │   │   │   ├── ArticleStatisticsDto.java # 文章统计数据DTO
+│   │   │   │   ├── ArticleUpdateRequest.java # 文章更新请求DTO
+│   │   │   │   ├── ForgotPasswordRequest.java # 忘记密码请求DTO
 │   │   │   │   ├── LoginRequest.java        # 登录请求DTO
+│   │   │   │   ├── PermissionDto.java       # 权限数据传输对象
+│   │   │   │   ├── ResetPasswordRequest.java # 重置密码请求DTO
 │   │   │   │   ├── UserRegistrationDto.java # 用户注册DTO
 │   │   │   │   └── UserWithRoleDto.java     # 带角色信息的用户DTO
 │   │   │   ├── entity/                      # 实体类
+│   │   │   │   ├── Article.java            # 文章实体类
+│   │   │   │   ├── Articles.java           # 文章辅助实体类
+│   │   │   │   ├── Permission.java         # 权限实体类
 │   │   │   │   ├── Role.java               # 角色实体类
+│   │   │   │   ├── RolePermission.java     # 角色权限关联实体类
+│   │   │   │   ├── RolePermissionId.java   # 角色权限复合主键类
 │   │   │   │   ├── User.java               # 用户实体类
 │   │   │   │   ├── UserRole.java           # 用户角色关联实体类
 │   │   │   │   └── UserRoleId.java         # 用户角色复合主键类
-│   │   │   ├── exception/                   # 异常处理
-│   │   │   │   └── GlobalExceptionHandler.java  # 全局异常处理器
 │   │   │   ├── repository/                  # 数据访问层
+│   │   │   │   ├── ArticleRepository.java   # 文章数据访问接口
+│   │   │   │   ├── PermissionRepository.java # 权限数据访问接口
+│   │   │   │   ├── RolePermissionRepository.java # 角色权限关联数据访问接口
 │   │   │   │   ├── RoleRepository.java      # 角色数据访问接口
 │   │   │   │   ├── UserRepository.java      # 用户数据访问接口
 │   │   │   │   └── UserRoleRepository.java  # 用户角色关联数据访问接口
@@ -63,18 +91,18 @@ www/backend/
 │   │   │   │   ├── JwtAuthenticationFilter.java  # JWT认证过滤器
 │   │   │   │   ├── JwtUtil.java            # JWT工具类
 │   │   │   │   └── UserDetailsServiceImpl.java   # 用户详情服务实现
-│   │   │   └── service/                     # 业务逻辑层
-│   │   │       ├── AdminService.java       # 管理员服务（系统统计、用户管理）
-│   │   │       ├── PermissionService.java  # 权限服务（权限检查、角色验证）
-│   │   │       └── UserService.java        # 用户服务（用户CRUD、角色管理）
+│   │   │   ├── service/                     # 业务逻辑层
+│   │   │   │   ├── AdminService.java       # 管理员服务（系统统计、用户管理）
+│   │   │   │   ├── ArticleService.java     # 文章服务（文章业务逻辑）
+│   │   │   │   ├── PermissionService.java  # 权限服务（权限检查、角色验证）
+│   │   │   │   └── UserService.java        # 用户服务（用户CRUD、角色管理）
+│   │   │   └── util/                        # 工具类目录
 │   │   └── resources/                       # 资源文件
 │   │       ├── application.properties       # Spring Boot配置文件
-│   │       └── META-INF/                   # 元信息目录
+│   │       └── db/                         # 数据库相关文件
 │   └── test/                               # 测试代码目录
 │       └── java/                           # 测试Java代码
 └── target/                                 # Maven构建输出目录
-    ├── ecowiki-backend-0.0.1-SNAPSHOT.jar  # 打包后的JAR文件
-    ├── ecowiki-backend-0.0.1-SNAPSHOT.jar.original  # 原始JAR文件
     ├── classes/                            # 编译后的class文件
     │   ├── application.properties          # 编译后的配置文件
     │   └── com/ecowiki/                   # 编译后的Java类
@@ -82,8 +110,6 @@ www/backend/
     │   └── annotations/                    # 注解生成的代码
     ├── generated-test-sources/             # 生成的测试源代码
     │   └── test-annotations/               # 测试注解生成的代码
-    ├── maven-archiver/                     # Maven归档信息
-    │   └── pom.properties                 # Maven属性文件
     ├── maven-status/                       # Maven状态信息
     │   └── maven-compiler-plugin/          # 编译插件状态
     │       ├── compile/                    # 编译状态
@@ -140,11 +166,13 @@ www/frontend/
     │   ├── admin/                         # 管理后台组件
     │   │   ├── AdminLayout.vue            # 管理后台布局组件，包含侧边栏和统一按钮
     │   │   └── views/                     # 管理后台页面组件
+    │   │       ├── PermissionManagement.vue # 权限管理页面
+    │   │       ├── RoleManagement.vue    # 角色管理页面
+    │   │       ├── RolePermissionAssignment.vue # 角色权限分配页面
     │   │       ├── SystemSettings.vue    # 系统设置页面（首页风格、统计信息）
-    │   │       ├── UserList.vue          # 用户列表管理页面
-    │   │       └── RoleManagement.vue    # 角色权限管理页面
+    │   │       └── UserList.vue          # 用户列表管理页面
     │   ├── article/                       # 文章相关组件
-    │   │   └── ArticleComments.vue        # 文章评论组件
+    │   ├── auth/                          # 认证相关组件目录
     │   ├── common/                        # 通用组件目录
     │   ├── edit/                          # 编辑相关组件目录
     │   ├── forms/                         # 表单组件目录
@@ -165,6 +193,7 @@ www/frontend/
     ├── styles/                            # 样式文件
     │   └── themes/                        # 主题样式目录
     ├── types/                             # TypeScript类型定义目录
+    │   └── permission.ts                  # 权限相关类型定义
     ├── utils/                             # 工具函数
     │   ├── toast.ts                       # 消息提示工具
     │   ├── validation.ts                  # 表单验证工具
@@ -181,8 +210,11 @@ www/frontend/
 
 ### 核心表结构
 - **users** - 用户表（存储用户基本信息，不包含角色字段）
-- **roles** - 角色表（定义系统角色：user、admin、superadmin等）
+- **roles** - 角色表（定义系统角色：user、moderator、admin、superadmin等）
 - **user_roles** - 用户角色关联表（多对多关系，支持用户拥有多个角色）
+- **permissions** - 权限表（定义系统权限：article:read、user:manage等）
+- **role_permissions** - 角色权限关联表（多对多关系，支持角色拥有多个权限）
+- **articles** - 文章表（存储wiki文章内容、分类、标签等信息）
 
 ### 数据表字段说明
 ```sql
@@ -215,6 +247,38 @@ user_roles (
     created_at TIMESTAMP,                       -- 分配时间
     PRIMARY KEY (user_id, role_id)              -- 复合主键
 )
+
+-- 权限表
+permissions (
+    permission_id INT PRIMARY KEY AUTO_INCREMENT, -- 权限ID
+    permission_name VARCHAR(100) UNIQUE NOT NULL, -- 权限名称
+    description TEXT,                           -- 权限描述
+    created_at TIMESTAMP,                       -- 创建时间
+    updated_at TIMESTAMP                        -- 更新时间
+)
+
+-- 角色权限关联表
+role_permissions (
+    role_id INT,                                -- 角色ID（外键）
+    permission_id INT,                          -- 权限ID（外键）
+    created_at TIMESTAMP,                       -- 分配时间
+    PRIMARY KEY (role_id, permission_id)        -- 复合主键
+)
+
+-- 文章表
+articles (
+    article_id BIGINT PRIMARY KEY AUTO_INCREMENT, -- 文章ID
+    title VARCHAR(255) NOT NULL,               -- 文章标题
+    content TEXT,                               -- 文章内容
+    category VARCHAR(100),                      -- 文章分类
+    tags TEXT,                                  -- 文章标签
+    author VARCHAR(100),                        -- 作者
+    views INT DEFAULT 0,                        -- 浏览量
+    likes INT DEFAULT 0,                        -- 点赞数
+    published BOOLEAN DEFAULT TRUE,             -- 是否发布
+    created_at TIMESTAMP,                       -- 创建时间
+    updated_at TIMESTAMP                        -- 更新时间
+)
 ```
 
 ## 架构特点
@@ -234,11 +298,13 @@ user_roles (
 - **构建工具**: Vite + TypeScript
 
 ### 核心功能模块
-1. **用户认证系统**: 注册、登录、JWT认证
-2. **权限管理系统**: 用户角色管理、权限检查
-3. **管理后台系统**: 用户管理、角色管理、系统设置
+1. **用户认证系统**: 注册、登录、JWT认证、忘记密码
+2. **权限管理系统**: 用户角色管理、权限检查、细粒度权限控制
+3. **管理后台系统**: 用户管理、角色管理、权限管理、系统设置
 4. **首页风格系统**: 经典/简约/动态三种首页风格
-5. **文章管理系统**: 文章创建、编辑、查看（待完善）
+5. **文章管理系统**: 文章创建、编辑、查看、分类、搜索
+6. **自动化功能**: 作者自动设置、分类标签自动转换
+7. **数据初始化**: 默认管理员账户、基础角色权限初始化
 
 ## 开发和部署
 
@@ -258,6 +324,13 @@ pnpm install
 pnpm dev
 ```
 
+### 默认管理员账户
+系统首次启动时会自动创建默认管理员账户：
+- **用户名**: superadmin
+- **密码**: EcoWiki@2025
+- **邮箱**: admin@ecowiki.com
+- **权限**: 超级管理员权限
+
 ### 构建部署
 ```bash
 # 后端打包
@@ -276,8 +349,12 @@ pnpm build
 3. **前后端分离**: 通过JWT进行无状态认证
 4. **响应式设计**: 支持桌面端和移动端自适应
 5. **模块化设计**: 前后端均采用模块化架构，便于维护和扩展
+6. **数据初始化**: 系统首次启动自动创建默认账户和基础数据
+7. **权限体系**: 支持细粒度权限控制，角色-权限分离设计
+8. **自动化优化**: 解决了设置子页面进入时的自动刷新问题
+9. **用户体验**: 添加了应用按钮的加载动画和反馈效果
 
 ---
 
-*文档最后更新时间: 2025年6月30日*
-*项目版本: EcoWiki v1.0*
+*文档最后更新时间: 2025年7月3日*
+*项目版本: EcoWiki v1.1*

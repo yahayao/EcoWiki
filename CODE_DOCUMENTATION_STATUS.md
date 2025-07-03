@@ -31,6 +31,12 @@
 - 说明了角色体系、字段含义、扩展性与适用场景
 - 适用于权限分级、后台角色管理、权限校验等
 
+- [ ] **Article.java** - 文章实体类
+- [ ] **Articles.java** - 文章辅助实体类
+- [ ] **Permission.java** - 权限实体类
+- [ ] **RolePermission.java** - 角色权限关联实体类
+- [ ] **RolePermissionId.java** - 角色权限复合主键类
+
 #### 控制器类 (Controller)
 ✅ **AuthController.java** - 认证控制器
 - API端点详细说明
@@ -94,6 +100,12 @@
 ✅ **ArticleRepository.java** - 文章数据访问接口
 - 添加了详细的接口、方法注释，说明文章检索、分页查询、统计分析、互动操作等功能
 
+✅ **PermissionRepository.java** - 权限数据访问接口
+- 添加了详细的接口、方法注释，说明权限查询、管理等功能
+
+✅ **RolePermissionRepository.java** - 角色权限关联数据访问接口
+- 添加了详细的接口、方法注释，说明角色权限多对多关系管理等功能
+
 #### DTO类
 ✅ **UserWithRoleDto.java** - 用户角色DTO
 - 添加了详细的类、字段注释，说明用户信息传输对象的设计与用途
@@ -122,6 +134,15 @@
 - 添加了详细的类、字段注释，说明注册数据验证与传输
 - 发现部分字段未使用警告，属于正常的DTO结构
 
+✅ **PermissionDto.java** - 权限数据传输对象
+- 添加了详细的类、字段注释，说明权限信息传输对象的设计与用途
+
+✅ **ForgotPasswordRequest.java** - 忘记密码请求DTO
+- 添加了详细的类、字段注释，说明忘记密码功能的数据传输
+
+✅ **ResetPasswordRequest.java** - 重置密码请求DTO
+- 添加了详细的类、字段注释，说明重置密码功能的数据传输
+
 #### 配置类
 ✅ **SecurityConfig.java** - Spring Security配置
 - 添加了详细的类、字段、方法注释，说明安全策略配置
@@ -130,6 +151,10 @@
 ✅ **CorsConfig.java** - 跨域配置
 - 添加了详细的类、方法注释，说明跨域资源共享策略
 - 发现Spring相关注解依赖问题，建议检查项目配置
+
+✅ **DataInitializer.java** - 数据初始化配置
+- 添加了详细的类、方法注释，说明系统启动时的数据初始化逻辑
+- 包含默认管理员账户创建和基础角色设置
 
 #### 安全相关
 ✅ **JwtUtil.java** - JWT工具类
@@ -171,6 +196,7 @@
 - 已添加详细注释
 - 组件结构和功能说明完整
 - 状态管理和动画效果说明清晰
+- 包含应用按钮加载动画和子页面自动刷新优化
 
 #### API接口
 ✅ **api/index.ts** - API基础配置
@@ -218,26 +244,26 @@
 ## 注释进度统计
 
 ### 已完成注释统计
-- **后端文件**: 24个文件已完成注释
+- **后端文件**: 29个文件已完成注释
   - 实体类: 4个 (User.java, UserRole.java, UserRoleId.java, Role.java)
   - 控制器: 4个 (AuthController.java, AdminController.java, ApiController.java, ArticleController.java)
   - 服务类: 4个 (UserService.java, AdminService.java, PermissionService.java, ArticleService.java)
-  - 数据访问: 4个 (UserRepository.java, RoleRepository.java, UserRoleRepository.java, ArticleRepository.java)
-  - DTO类: 6个 (各种请求和响应对象)
-  - 配置类: 2个 (SecurityConfig.java, CorsConfig.java, JwtUtil.java, JwtAuthenticationFilter.java)
+  - 数据访问: 6个 (UserRepository.java, RoleRepository.java, UserRoleRepository.java, ArticleRepository.java, PermissionRepository.java, RolePermissionRepository.java)
+  - DTO类: 8个 (各种请求和响应对象)
+  - 配置类: 3个 (SecurityConfig.java, CorsConfig.java, DataInitializer.java)
+  - 安全相关: 2个 (JwtUtil.java, JwtAuthenticationFilter.java)
 
 - **前端文件**: 13个文件已完成注释
   - 核心文件: 3个 (main.ts, App.vue, router/index.ts)
   - 组合函数: 1个 (composables/useAuth.ts)
   - API接口: 3个 (api/index.ts, api/user.ts, api/article.ts)
-  - 组件文件: 6个 (AppHeader.vue, Toast.vue, AuthModals.vue, LoginPanel.vue, RegisterPanel.vue, HeaderUserArea.vue)
-  - 页面组件: 1个 (views/ArticleDetail.vue)
+  - 组件文件: 7个 (AdminLayout.vue, Toast.vue, AuthModals.vue, LoginPanel.vue, RegisterPanel.vue, HeaderUserArea.vue, ArticleDetail.vue)
   - 工具函数: 2个 (utils/toast.ts, utils/validation.ts)
 
 ### 注释完成度
-- **总体进度**: 约70%已完成
-- **后端代码**: 约85%已完成注释
-- **前端代码**: 约55%已完成注释
+- **总体进度**: 约75%已完成
+- **后端代码**: 约90%已完成注释
+- **前端代码**: 约60%已完成注释
 
 ## 注释质量标准
 
@@ -262,28 +288,29 @@
 
 #### 实体类
 - [ ] **Article.java** - 文章实体类
-
-#### 控制器类
-- [ ] **UserController.java** - 用户控制器（未找到该文件）
+- [ ] **Articles.java** - 文章辅助实体类
+- [ ] **Permission.java** - 权限实体类
+- [ ] **RolePermission.java** - 角色权限关联实体类
+- [ ] **RolePermissionId.java** - 角色权限复合主键类
 
 #### 服务类
 - [ ] **UserDetailsServiceImpl.java** - 用户详情服务实现
 
-#### 配置类
-- [ ] **WebConfig.java** - Web MVC配置（未找到该文件）
-
 ### 前端文件
 
 #### 组件文件
-- [ ] **components/RegisterPanel.vue** - 注册面板
-- [ ] **components/HeaderUserArea.vue** - 头部用户区域
-- [ ] **components/AppHeader.vue** - 应用头部
-- [ ] **components/Toast.vue** - 消息提示组件
+- [ ] **components/FeaturedArticles.vue** - 精选文章组件
+- [ ] **components/RecentUpdates.vue** - 最近更新组件
+- [ ] **components/AppFooter.vue** - 网站底部组件
+- [ ] **components/AppSidebar.vue** - 侧边栏组件
+- [ ] **components/WikiEditor.vue** - Wiki编辑器组件
 
 #### 管理后台组件
 - [ ] **components/admin/views/SystemSettings.vue** - 系统设置页面
 - [ ] **components/admin/views/UserList.vue** - 用户列表管理
-- [ ] **components/admin/views/RoleManagement.vue** - 角色权限管理
+- [ ] **components/admin/views/RoleManagement.vue** - 角色管理页面
+- [ ] **components/admin/views/PermissionManagement.vue** - 权限管理页面
+- [ ] **components/admin/views/RolePermissionAssignment.vue** - 角色权限分配页面
 
 #### 页面组件
 - [ ] **views/DynamicHome.vue** - 动态首页
@@ -295,13 +322,11 @@
 #### 状态管理
 - [ ] **stores/adminUserStore.ts** - 管理后台用户状态管理
 
-#### 工具函数
-- [ ] **utils/toast.ts** - 消息提示工具
-- [ ] **utils/validation.ts** - 表单验证工具
-- [ ] **utils/wikiParser.ts** - Wiki解析工具
-
 #### 类型定义
-- [ ] TypeScript类型定义文件
+- [ ] **types/permission.ts** - 权限相关TypeScript类型定义文件
+
+#### 工具函数
+- [ ] **utils/wikiParser.ts** - Wiki解析工具
 
 ## 注释标准和规范
 
@@ -368,30 +393,31 @@
 
 ## 注释完成统计
 
-- **已完成**: 32 个文件
-- **待完成**: 约 20+ 个文件
-- **完成度**: 约 62%
+- **已完成**: 42 个文件
+- **待完成**: 约 15+ 个文件
+- **完成度**: 约 75%
 
 ### 后端完成度
-- **实体类**: 4/5 完成 (80%)
-- **控制器类**: 3/3 完成 (100%)
-- **服务类**: 4/4 完成 (100%) 
-- **数据访问层**: 4/4 完成 (100%)
-- **DTO类**: 8/8 完成 (100%)
-- **配置类**: 2/2 完成 (100%)
-- **安全相关**: 2/2 完成 (100%)
+- **实体类**: 4/9 完成 (45%)
+- **控制器类**: 4/4 完成 (100%)
+- **服务类**: 4/5 完成 (80%) 
+- **数据访问层**: 6/6 完成 (100%)
+- **DTO类**: 11/11 完成 (100%)
+- **配置类**: 3/3 完成 (100%)
+- **安全相关**: 2/3 完成 (67%)
 
 ### 前端完成度
-- **核心应用文件**: 2/2 完成 (100%)
+- **核心应用文件**: 3/3 完成 (100%)
 - **路由配置**: 1/1 完成 (100%)
 - **组合式函数**: 1/1 完成 (100%)
-- **组件文件**: 1/20+ 完成 (约5%)
-- **状态管理**: 0/1 完成 (0%)
-- **工具函数**: 0/3 完成 (0%)
-- **页面组件**: 0/5 完成 (0%)
-- **API接口**: 0/3 完成 (0%)
+- **组件文件**: 7/25+ 完成 (约30%)
+- **状态管理**: 1/1 完成 (100%)
+- **工具函数**: 2/3 完成 (67%)
+- **页面组件**: 1/5 完成 (20%)
+- **API接口**: 3/3 完成 (100%)
+- **类型定义**: 0/1 完成 (0%)
 
 ---
 
-*最后更新时间: 2025年6月30日*
+*最后更新时间: 2025年7月3日*
 *文档维护者: EcoWiki Team*
