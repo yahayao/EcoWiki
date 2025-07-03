@@ -63,8 +63,13 @@
         <button class="btn btn-ghost" @click="goBack">
           返回
         </button>
-        <button class="btn btn-primary" @click="applyAllSettings" :disabled="!hasPendingChanges">
-          应用
+        <button 
+          class="btn btn-primary apply-btn-global" 
+          @click="applyAllSettings" 
+          :disabled="!hasPendingChanges || applying"
+        >
+          <span v-if="applying" class="loading-spinner"></span>
+          {{ applying ? '应用中...' : '应用' }}
         </button>
       </div>
     </div>
@@ -128,11 +133,11 @@
 
       <!-- 右侧内容区域 -->
       <div class="admin-content">
-        <!-- 根据激活的导航部分显示不同内容 -->
-        <SystemSettings v-if="activeSection === 'settings'" />
-        <UserList v-else-if="activeSection === 'users'" />
-        <PermissionManagement v-else-if="activeSection === 'permissions'" />
-        <RolePermissionAssignment v-else-if="activeSection === 'roles'" />
+        <!-- 使用 v-show 替代 v-if 来避免组件重新创建和自动刷新 -->
+        <SystemSettings v-show="activeSection === 'settings'" />
+        <UserList v-show="activeSection === 'users'" />
+        <PermissionManagement v-show="activeSection === 'permissions'" />
+        <RolePermissionAssignment v-show="activeSection === 'roles'" />
       </div>
     </div>
   </div>
@@ -518,6 +523,19 @@ const applyAllSettings = async () => {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+/* 确保使用 v-show 的子组件在隐藏时不占用空间 */
+.admin-content > div[style*="display: none"] {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* 确保显示的子组件占据完整空间 */
+.admin-content > div:not([style*="display: none"]) {
+  height: 100%;
+  width: 100%;
+}
+
 /* 占位内容样式 */
 .placeholder-content {
   text-align: center;
@@ -543,6 +561,70 @@ const applyAllSettings = async () => {
   max-width: 400px;
   margin: 0 auto;
   line-height: 1.5;
+}
+
+/* 加载动画样式 */
+.loading-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 应用按钮的特殊动画效果 */
+.apply-btn-global {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.apply-btn-global.applying-animation {
+  background: linear-gradient(45deg, #1976d2, #42a5f5, #1976d2);
+  background-size: 300% 300%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.apply-btn-global.success-animation {
+  background: #4caf50 !important;
+  animation: pulse 0.6s ease-in-out;
+}
+
+.apply-btn-global.error-animation {
+  background: #f44336 !important;
+  animation: shake 0.6s ease-in-out;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* 禁用状态时的样式优化 */
+.apply-btn-global:disabled {
+  background: #b3d4fc !important;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 /* 响应式设计 */
