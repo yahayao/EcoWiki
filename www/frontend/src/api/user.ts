@@ -161,6 +161,12 @@ export interface ApiResponse<T> {
 
 /**
  * 管理员API接口集合
+ * 
+ * API端点使用说明：
+ * - getRoles(): 调用 /admin/roles，返回角色名称数组 string[]
+ *   用途：用户管理页面的角色下拉选择
+ * - getRolesDetails(): 调用 /admin/roles/details，返回完整角色对象 Role[]
+ *   用途：角色管理页面的详细信息展示
  */
 export const adminApi = {
   /**
@@ -229,17 +235,13 @@ export const adminApi = {
   
   /**
    * 获取所有角色列表
-   * @returns 角色信息数组
+   * @returns 角色名称数组
    */
   getRoles: async () => {
     try {
       const response = await api.get('/admin/roles')
-      // 后端返回的是 ApiResponse<List<Role>> 格式
-      if (response.data && response.data.code === 200 && response.data.data) {
-        return response.data.data
-      } else {
-        throw new Error(response.data?.message || '获取角色列表失败')
-      }
+      // 后端返回的是 ApiResponse<List<String>> 格式
+      return response.data
     } catch (error: any) {
       console.error('获取角色列表失败:', error)
       throw new Error(error.response?.data?.message || error.message || '获取角色列表失败')
@@ -729,14 +731,28 @@ export const permissionGroupApi = {
 
 /**
  * 角色权限分配API
+ * 
+ * 专门用于角色权限管理页面的API集合
+ * - getRoles(): 返回完整角色对象 Role[]，包含roleId用于权限分配
+ * - 其他方法用于角色的CRUD操作和权限分配管理
  */
 export const rolePermissionApi = {
   /**
-   * 获取所有角色
+   * 获取所有角色（用于角色权限管理）
+   * @returns 包装格式的完整角色对象数组
    */
   async getRoles(): Promise<{ data: Role[] }> {
-    const response = await apiClient.get('/admin/roles/details')
-    return { data: response.data.data || [] }
+    try {
+      const response = await apiClient.get('/admin/roles/details')
+      if (response.data && response.data.code === 200 && response.data.data) {
+        return { data: response.data.data }
+      } else {
+        throw new Error(response.data?.message || '获取角色列表失败')
+      }
+    } catch (error: any) {
+      console.error('获取角色列表失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '获取角色列表失败')
+    }
   },
 
   /**
