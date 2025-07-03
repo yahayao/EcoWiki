@@ -53,30 +53,6 @@
       </div>
       <span class="button-text">{{ isFavorited ? '已收藏' : '收藏' }}</span>
     </div>
-    
-    <div class="action-button" @click="handleShare" title="分享文章">
-      <div class="button-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="18" cy="5" r="3"/>
-          <circle cx="6" cy="12" r="3"/>
-          <circle cx="18" cy="19" r="3"/>
-          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-        </svg>
-      </div>
-      <span class="button-text">分享</span>
-    </div>
-    
-    <div class="action-button" @click="handlePrint" title="打印文章">
-      <div class="button-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="6,9 6,2 18,2 18,9"/>
-          <path d="M6,18H4a2,2,0,0,1-2-2V11a2,2,0,0,1,2-2H20a2,2,0,0,1,2,2v5a2,2,0,0,1-2,2H18"/>
-          <polyline points="6,14 18,14 18,22 6,22 6,14"/>
-        </svg>
-      </div>
-      <span class="button-text">打印</span>
-    </div>
   </div>
 </template>
 
@@ -103,8 +79,6 @@ const emit = defineEmits<{
   edit: []
   history: []
   favorite: [favorited: boolean]
-  share: []
-  print: []
 }>()
 
 const router = useRouter()
@@ -137,25 +111,6 @@ const handleFavorite = () => {
     return
   }
   emit('favorite', !props.isFavorited)
-}
-
-const handleShare = () => {
-  emit('share')
-  // 实现分享功能
-  if (navigator.share) {
-    navigator.share({
-      title: '分享文章',
-      url: window.location.href
-    })
-  } else {
-    // 复制链接到剪贴板
-    navigator.clipboard.writeText(window.location.href)
-  }
-}
-
-const handlePrint = () => {
-  emit('print')
-  window.print()
 }
 </script>
 

@@ -27,9 +27,7 @@
     <!-- 目录 -->
     <div class="table-of-contents" v-if="tableOfContents.length > 0">
       <h3>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="toc-icon">
-          <path d="M8 6H21M8 12H21M8 18H21M3 6H3.01M3 12H3.01M3 18H3.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <IconArticleTOC class="toc-icon" />
         目录
       </h3>
       <ul class="toc-list">
@@ -52,7 +50,10 @@
 
     <!-- 文章标签 -->
     <div class="article-tags" v-if="articleTags.length > 0">
-      <h4>🏷️ 相关标签</h4>
+      <h4>
+        <IconTag class="tag-icon" />
+        相关标签
+      </h4>
       <div class="tags-list">
         <span 
           v-for="tag in articleTags" 
@@ -92,6 +93,7 @@ import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { wikiParser } from '../../utils/wikiParser'
 import { articleApi, type Article } from '../../api/article'
+import { IconArticleTOC, IconTag } from '../icons'
 
 const props = defineProps<{
   article: Article
@@ -573,6 +575,14 @@ onMounted(() => {
   margin-bottom: 12px;
   font-size: 1.1rem;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tag-icon {
+  flex-shrink: 0;
+  color: #667eea;
 }
 
 .tags-list {

@@ -53,7 +53,7 @@
   <!-- 精选文章容器 -->
   <div class="featured-articles">
     <!-- 区域标题 -->
-    <h2 class="section-title">🔥 热门内容</h2>
+    <h2 class="section-title"><icon-fire></icon-fire> 热门内容</h2>
     
     <!-- 加载状态 -->
     <div v-if="loading" class="loading-container">
@@ -122,6 +122,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { articleApi, type Article } from '../api/article'
 import { wikiParser } from '../utils/wikiParser'
+import { IconFire } from './icons'
 
 // 路由实例
 const router = useRouter()
@@ -136,7 +137,7 @@ const error = ref('')                // 错误信息
  * @param articleId 文章ID
  */
 const navigateToArticle = (articleId: string) => {
-  router.push(`/article/${articleId}`)
+  router.push(`/wiki/${articleId}`)
 }
 
 /**
