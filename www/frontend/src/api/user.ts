@@ -1,42 +1,67 @@
-import axios from 'axios'
-import { api } from './index'
-import type { PermissionGroup, Permission, PermissionGroupForm, PermissionForm, Role, RoleForm, RolePermission } from '@/types/permission'
-
 /**
- * 用户相关API模块
- * <p>
- * 提供用户认证、管理、权限相关的API接口封装。
- * 包含登录、注册、用户管理、角色管理等功能的前端API调用。
- * <p>
- * <b>功能模块：</b>
- * - 用户认证（登录、注册、检查）
- * - 管理员用户管理（列表、权限、状态）
- * - 角色管理（查询、创建、更新、删除）
- * - 系统统计信息
+ * 用户与权限管理API模块
  * 
- * @author EcoWiki
- * @version 1.0
- * @since 2024-04
+ * 这个模块提供了EcoWiki系统中所有与用户、角色、权限相关的API接口封装。
+ * 包含完整的用户生命周期管理、角色权限体系和系统统计功能。
+ * 
+ * 主要功能模块：
+ * 1. 用户认证系统 - 登录、注册、令牌验证
+ * 2. 管理员用户管理 - 用户列表、权限分配、状态管理
+ * 3. 角色权限系统 - 角色CRUD、权限分配、关联管理
+ * 4. 系统统计信息 - 用户数量、活跃度等数据
+ * 
+ * API设计特点：
+ * - 统一的错误处理和响应格式
+ * - 自动令牌注入和刷新
+ * - 类型安全的TypeScript接口
+ * - 模块化的API组织结构
+ * 
+ * @author EcoWiki开发团队
+ * @version 2.0.0 - 添加角色权限分离功能
+ * @since 2024-04-01
+ * @lastModified 2025-07-03 - 分离角色权限API逻辑
  */
 
-// 后端API基础地址
+// === 依赖导入 ===
+import axios from 'axios'  // HTTP客户端
+import { api } from './index'  // 通用API实例
+import type { 
+  PermissionGroup, 
+  Permission, 
+  PermissionGroupForm, 
+  PermissionForm, 
+  Role, 
+  RoleForm, 
+  RolePermission 
+} from '@/types/permission'  // 权限相关类型定义
+
+// === API配置 ===
+
+/** 后端API服务的基础地址 */
 const API_BASE_URL = 'http://localhost:8080/api'
 
 /**
  * 独立的API客户端实例
- * 用于需要特殊配置的请求
+ * 专门用于用户权限相关的API调用，提供独立的配置和拦截器
  */
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 10000,  // 10秒超时
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
   }
 })
 
-// 请求拦截器 - 自动添加认证头
+// === HTTP拦截器配置 ===
+
+/**
+ * 请求拦截器
+ * 自动为所有请求添加JWT认证头
+ */
 apiClient.interceptors.request.use(
   (config) => {
+    // 从本地存储获取JWT令牌
     const token = localStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
@@ -44,81 +69,142 @@ apiClient.interceptors.request.use(
     return config
   },
   (error) => {
+    console.error('请求拦截器错误:', error)
     return Promise.reject(error)
   }
 )
 
 /**
- * 用户组类型定义（支持动态角色扩展）
+ * 响应拦截器
+ * 统一处理API响应和错误状态
+ */
+apiClient.interceptors.response.use(
+  (response) => {
+    // 成功响应直接返回
+    return response
+  },
+  (error) => {
+    // 统一错误处理
+    if (error.response) {
+      // 服务器返回错误状态码
+      const { status, data } = error.response
+      
+      switch (status) {
+        case 401:
+          // 未授权，清除本地令牌并跳转到登录页
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+          // 可以在这里触发全局事件或路由跳转
+          break
+        case 403:
+          console.error('权限不足:', data.message || '无权限访问')
+          break
+        case 404:
+          console.error('资源不存在:', data.message || '请求的资源未找到')
+          break
+        case 500:
+          console.error('服务器内部错误:', data.message || '服务器发生错误')
+          break
+        default:
+          console.error('API错误:', data.message || `请求失败 (${status})`)
+      }
+    } else if (error.request) {
+      // 网络错误
+      console.error('网络连接错误:', error.message)
+    } else {
+      // 其他错误
+      console.error('请求配置错误:', error.message)
+    }
+    
+    return Promise.reject(error)
+  }
+)
+
+// === 类型定义 ===
+
+/**
+ * 用户组类型定义
+ * 支持动态角色扩展，允许添加新的用户角色
  */
 export type UserGroup = string
 
 /**
  * 预定义的用户角色常量
+ * 系统内置的标准用户角色定义
  */
 export const USER_GROUPS = {
+  /** 普通用户 - 基础权限 */
   USER: 'user',
+  /** 版主 - 内容管理权限 */
   MODERATOR: 'moderator', 
+  /** 管理员 - 系统管理权限 */
   ADMIN: 'admin',
+  /** 超级管理员 - 所有权限 */
   SUPER_ADMIN: 'superadmin'
 } as const
 
+// === 请求/响应接口定义 ===
+
 /**
- * 登录请求接口
+ * 用户登录请求接口
+ * 支持用户名或邮箱登录
  */
 export interface LoginRequest {
-  /** 用户名（可选） */
+  /** 用户名（与邮箱二选一） */
   username?: string
-  /** 邮箱（可选） */
+  /** 邮箱（与用户名二选一） */
   email?: string
-  /** 密码 */
+  /** 用户密码 */
   password: string
-  /** 是否记住我 */
+  /** 是否记住登录状态 */
   rememberMe?: boolean
 }
 
 /**
- * 注册请求接口
+ * 用户注册请求接口
+ * 创建新用户账户所需的信息
  */
 export interface RegisterRequest {
-  /** 用户名 */
+  /** 用户名（唯一） */
   username: string
-  /** 邮箱 */
+  /** 邮箱地址（唯一） */
   email: string
-  /** 密码 */
+  /** 登录密码 */
   password: string
-  /** 确认密码（前端验证用） */
+  /** 确认密码（前端验证用，后端可忽略） */
   confirmPassword?: string
-  /** 全名（可选） */
+  /** 用户全名（显示名称） */
   fullName?: string
 }
 
 /**
- * 用户响应接口
+ * 用户信息响应接口
+ * 从后端获取的用户详细信息
  */
 export interface UserResponse {
-  /** 用户ID */
+  /** 用户唯一标识符 */
   userId: number
   /** 用户名 */
   username: string
-  /** 邮箱 */
+  /** 邮箱地址 */
   email: string
-  /** 全名 */
+  /** 用户全名 */
   fullName?: string
-  /** 用户组/角色 */
+  /** 用户角色/权限组 */
   userGroup: UserGroup
-  /** 是否激活 */
+  /** 账户是否激活 */
   active: boolean
-  /** 头像 */
+  /** 用户头像URL */
   avatar?: string
-  /** 创建时间 */
+  /** 账户创建时间 */
   createdAt: string
-  /** 更新时间 */
+  /** 最后更新时间 */
   updatedAt: string
 }
 
 /**
- * 角色信息接口
+ * 角色信息响应接口
+ * 系统角色的详细信息
  */
 export interface RoleResponse {
   /** 角色ID */
@@ -159,23 +245,47 @@ export interface ApiResponse<T> {
   timestamp: number
 }
 
+// === 核心API接口定义 ===
+
 /**
  * 管理员API接口集合
  * 
- * API端点使用说明：
+ * 提供完整的后台管理功能API，包含用户管理、角色管理、系统统计等核心功能。
+ * 所有接口都要求管理员权限，会自动携带JWT令牌进行身份验证。
+ * 
+ * API端点说明：
+ * - 用户管理：/admin/users - 获取、更新用户信息和状态
+ * - 角色管理：/admin/roles - 获取角色列表和详情
+ * - 系统统计：/admin/stats - 获取系统运行统计数据
+ * 
+ * 特殊说明：
  * - getRoles(): 调用 /admin/roles，返回角色名称数组 string[]
- *   用途：用户管理页面的角色下拉选择
+ *   主要用于：用户管理页面的角色下拉选择器
  * - getRolesDetails(): 调用 /admin/roles/details，返回完整角色对象 Role[]
- *   用途：角色管理页面的详细信息展示
+ *   主要用于：角色管理页面的详细信息展示和编辑
+ * 
+ * @since 2024-04-01
+ * @version 1.2.0
  */
 export const adminApi = {
   /**
-   * 获取用户列表（分页）
-   * @param page 页码（默认0）
-   * @param size 每页数量（默认10）
-   * @param sortBy 排序字段（默认userId）
-   * @param sortDir 排序方向（默认desc）
-   * @returns 用户分页数据
+   * 获取用户列表（支持分页和排序）
+   * 
+   * 获取系统中所有用户的分页列表，支持多种排序方式。
+   * 主要用于管理后台的用户管理页面。
+   * 
+   * @param page 页码，从0开始（默认0）
+   * @param size 每页显示数量（默认10）
+   * @param sortBy 排序字段（默认'userId'，可选：username, email, createdAt等）
+   * @param sortDir 排序方向（默认'desc'，可选：asc/desc）
+   * @returns Promise<ApiResponse<PagedUsers>> 分页用户数据
+   * @throws Error 当网络错误或权限不足时抛出异常
+   * 
+   * @example
+   * ```typescript
+   * // 获取第一页用户列表
+   * const users = await adminApi.getUsers(0, 20, 'createdAt', 'desc')
+   * ```
    */
   getUsers: async (page = 0, size = 10, sortBy = 'userId', sortDir = 'desc') => {
     try {
@@ -189,9 +299,20 @@ export const adminApi = {
   
   /**
    * 更新用户权限组
-   * @param userId 用户ID
-   * @param userGroup 新的用户组
-   * @returns 更新结果
+   * 
+   * 修改指定用户的角色权限组，这是用户权限管理的核心功能。
+   * 支持将用户提升为管理员或降级为普通用户。
+   * 
+   * @param userId 目标用户的唯一标识符
+   * @param userGroup 新的用户组角色（user/moderator/admin/superadmin）
+   * @returns Promise<ApiResponse<UserResponse>> 更新后的用户信息
+   * @throws Error 当权限不足或用户不存在时抛出异常
+   * 
+   * @example
+   * ```typescript
+   * // 将用户提升为管理员
+   * await adminApi.updateUserGroup(123, 'admin')
+   * ```
    */
   updateUserGroup: async (userId: number, userGroup: UserGroup) => {
     try {
@@ -205,9 +326,20 @@ export const adminApi = {
   
   /**
    * 更新用户激活状态
-   * @param userId 用户ID
-   * @param active 是否激活
-   * @returns 更新结果
+   * 
+   * 启用或禁用用户账户，禁用的用户将无法登录系统。
+   * 这是用户账户管理的重要安全功能。
+   * 
+   * @param userId 目标用户的唯一标识符
+   * @param active 账户状态（true=激活，false=禁用）
+   * @returns Promise<ApiResponse<UserResponse>> 更新后的用户信息
+   * @throws Error 当权限不足或用户不存在时抛出异常
+   * 
+   * @example
+   * ```typescript
+   * // 禁用用户账户
+   * await adminApi.updateUserStatus(123, false)
+   * ```
    */
   updateUserStatus: async (userId: number, active: boolean) => {
     try {
@@ -221,7 +353,18 @@ export const adminApi = {
   
   /**
    * 获取系统统计信息
-   * @returns 系统统计数据
+   * 
+   * 获取系统运行的各项统计数据，用于管理后台的仪表盘展示。
+   * 包含用户数量、活跃度、增长趋势等关键指标。
+   * 
+   * @returns Promise<ApiResponse<SystemStats>> 系统统计数据
+   * @throws Error 当权限不足或服务器错误时抛出异常
+   * 
+   * @example
+   * ```typescript
+   * const stats = await adminApi.getSystemStats()
+   * console.log('总用户数:', stats.data.totalUsers)
+   * ```
    */
   getSystemStats: async () => {
     try {
@@ -234,8 +377,19 @@ export const adminApi = {
   },
   
   /**
-   * 获取所有角色列表
-   * @returns 角色名称数组
+   * 获取所有角色列表（简化版）
+   * 
+   * 获取系统中所有角色的名称列表，返回字符串数组。
+   * 主要用于用户管理页面的角色下拉选择器。
+   * 
+   * @returns Promise<ApiResponse<string[]>> 角色名称数组
+   * @throws Error 当权限不足或服务器错误时抛出异常
+   * 
+   * @example
+   * ```typescript
+   * const roles = await adminApi.getRoles()
+   * // 返回: { code: 200, data: ['user', 'admin', 'moderator'] }
+   * ```
    */
   getRoles: async () => {
     try {
@@ -249,8 +403,19 @@ export const adminApi = {
   },
   
   /**
-   * 获取角色详细信息
-   * @returns 角色详细信息数组
+   * 获取角色详细信息（完整版）
+   * 
+   * 获取系统中所有角色的完整信息，包含角色ID、名称、描述、时间戳等。
+   * 主要用于角色管理页面的详细信息展示和编辑功能。
+   * 
+   * @returns Promise<Role[]> 角色详细信息数组
+   * @throws Error 当权限不足或服务器错误时抛出异常
+   * 
+   * @example
+   * ```typescript
+   * const roleDetails = await adminApi.getRolesDetails()
+   * // 返回: [{ roleId: 1, roleName: 'admin', description: '管理员', ... }]
+   * ```
    */
   getRolesDetails: async () => {
     try {
@@ -729,17 +894,37 @@ export const permissionGroupApi = {
   }
 }
 
+// === 角色权限管理API ===
+
 /**
- * 角色权限分配API
+ * 角色权限分配API接口集合
  * 
- * 专门用于角色权限管理页面的API集合
- * - getRoles(): 返回完整角色对象 Role[]，包含roleId用于权限分配
- * - 其他方法用于角色的CRUD操作和权限分配管理
+ * 专门为角色权限分配页面设计的API集合，与adminApi相区别：
+ * - adminApi.getRoles(): 返回角色名称数组，用于用户管理页面的下拉选择
+ * - rolePermissionApi.getRoles(): 返回完整角色对象，包含roleId等详细信息
+ * 
+ * 主要功能：
+ * 1. 角色生命周期管理 - 创建、查询、更新、删除角色
+ * 2. 权限分配管理 - 为角色分配权限、查询角色权限
+ * 3. 权限系统查询 - 获取所有可用权限、权限分组
+ * 
+ * API设计原则：
+ * - 职责单一：专注于角色权限管理功能
+ * - 类型安全：所有方法都有明确的TypeScript类型
+ * - 错误处理：统一的异常处理和错误提示
+ * 
+ * @since 2025-07-03 - 从adminApi中分离出来
+ * @version 1.0.0
  */
 export const rolePermissionApi = {
   /**
-   * 获取所有角色（用于角色权限管理）
-   * @returns 包装格式的完整角色对象数组
+   * 获取所有角色（角色权限管理专用）
+   * 
+   * 获取系统中所有角色的完整信息，包含roleId、roleName、description等。
+   * 与adminApi.getRoles()不同，此方法返回完整的角色对象，主要用于角色权限分配页面。
+   * 
+   * @returns Promise<{data: Role[]}> 包装格式的完整角色对象数组
+   * @throws Error 当权限不足或服务器错误时抛出异常
    */
   async getRoles(): Promise<{ data: Role[] }> {
     try {
@@ -756,7 +941,14 @@ export const rolePermissionApi = {
   },
 
   /**
-   * 创建角色
+   * 创建新角色
+   * 
+   * 在系统中创建一个新的角色，管理员可以定义角色名称和描述。
+   * 创建后的角色可以被分配给用户，也可以配置相应的权限。
+   * 
+   * @param roleForm 角色表单数据，包含roleName和description
+   * @returns Promise<Role> 创建成功的角色对象
+   * @throws Error 当角色名重复、权限不足或服务器错误时抛出异常
    */
   async createRole(roleForm: RoleForm): Promise<Role> {
     const response = await apiClient.post('/admin/roles', roleForm)
@@ -764,7 +956,15 @@ export const rolePermissionApi = {
   },
 
   /**
-   * 更新角色
+   * 更新现有角色
+   * 
+   * 修改指定角色的名称和描述信息。
+   * 注意：系统内置角色（如admin、user）可能不允许修改某些属性。
+   * 
+   * @param roleId 要更新的角色ID
+   * @param roleForm 新的角色信息
+   * @returns Promise<Role> 更新后的角色对象
+   * @throws Error 当角色不存在、权限不足或服务器错误时抛出异常
    */
   async updateRole(roleId: number, roleForm: RoleForm): Promise<Role> {
     const response = await apiClient.put(`/admin/roles/${roleId}`, roleForm)
@@ -773,6 +973,13 @@ export const rolePermissionApi = {
 
   /**
    * 删除角色
+   * 
+   * 从系统中永久删除指定的角色。
+   * 注意：系统内置角色（admin、user等）不能删除，已分配给用户的角色删除前需要先解除关联。
+   * 
+   * @param roleId 要删除的角色ID
+   * @returns Promise<void> 删除成功时无返回值
+   * @throws Error 当角色不存在、仍有用户使用或权限不足时抛出异常
    */
   async deleteRole(roleId: number): Promise<void> {
     await apiClient.delete(`/admin/roles/${roleId}`)
@@ -780,6 +987,13 @@ export const rolePermissionApi = {
 
   /**
    * 获取角色的权限列表
+   * 
+   * 查询指定角色当前拥有的所有权限。
+   * 返回的权限列表可用于权限分配页面的初始状态显示。
+   * 
+   * @param roleId 角色ID
+   * @returns Promise<Permission[]> 角色拥有的权限列表
+   * @throws Error 当角色不存在或权限不足时抛出异常
    */
   async getRolePermissions(roleId: number): Promise<Permission[]> {
     const response = await apiClient.get(`/admin/roles/${roleId}/permissions`)

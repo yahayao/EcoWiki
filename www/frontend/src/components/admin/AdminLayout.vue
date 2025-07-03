@@ -144,66 +144,115 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * 管理后台布局组件的脚本部分
+ * 
+ * 主要功能：
+ * - 导航菜单的切换和状态管理
+ * - 用户变更和系统设置的监听
+ * - 全局应用按钮的状态控制
+ * - 返回功能的智能处理
+ * - 未保存变更的提醒机制
+ */
+
+// === Vue 3 组合式API导入 ===
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
-import { useAdminUserStore } from '../../stores/adminUserStore'
-import toast from '../../utils/toast'
+import { storeToRefs } from 'pinia'  // Pinia状态管理
+import { useRouter } from 'vue-router'  // Vue Router路由管理
 
-// 导入组件
-import SystemSettings from './views/SystemSettings.vue'
-import UserList from './views/UserList.vue'
-import PermissionManagement from './views/PermissionManagement.vue'
-import RolePermissionAssignment from './views/RolePermissionAssignment.vue'
+// === 业务逻辑导入 ===
+import { useAdminUserStore } from '../../stores/adminUserStore'  // 管理用户状态
+import toast from '../../utils/toast'  // 消息提示工具
 
+// === 子组件导入 ===
+import SystemSettings from './views/SystemSettings.vue'  // 系统设置页面
+import UserList from './views/UserList.vue'  // 用户列表页面
+import PermissionManagement from './views/PermissionManagement.vue'  // 权限管理页面
+import RolePermissionAssignment from './views/RolePermissionAssignment.vue'  // 角色权限分配页面
+
+// === 实例化依赖 ===
 const router = useRouter()
 const adminUserStore = useAdminUserStore()
-const { pendingUserChanges } = storeToRefs(adminUserStore)
+const { pendingUserChanges } = storeToRefs(adminUserStore)  // 获取待处理的用户变更
 
-const applying = ref(false)
-const pendingChangesKey = ref(0) // 用于强制重新计算
-const activeSection = ref('settings') // 当前激活的导航部分
+// === 组件状态管理 ===
+const applying = ref(false)  // 全局应用按钮的加载状态
+const pendingChangesKey = ref(0)  // 用于强制重新计算待处理变更的响应式键
+const activeSection = ref('settings')  // 当前激活的导航部分，默认为系统设置
 
-// 设置激活的导航部分
+// === 导航切换函数 ===
+/**
+ * 设置当前激活的导航部分
+ * @param section 导航部分标识符 ('settings' | 'users' | 'permissions' | 'roles')
+ */
 const setActiveSection = (section: string) => {
   activeSection.value = section
 }
 
-// 刷新设置
+// === 页面刷新函数 ===
+/**
+ * 刷新整个管理后台页面
+ * 用于解决某些状态不同步的问题
+ */
 const refreshSettings = () => {
   window.location.reload()
 }
 
-// 保存进入管理后台时的原始首页风格
+// === 生命周期钩子 ===
+
+/**
+ * 组件挂载时的初始化操作
+ * 主要用于设置原始状态和监听器
+ */
 onMounted(() => {
+  // 保存进入管理后台时的原始首页风格，用于取消操作时恢复
   const currentHomeStyle = localStorage.getItem('homeStyle') || 'classic'
   if (!localStorage.getItem('original-homeStyle')) {
     localStorage.setItem('original-homeStyle', currentHomeStyle)
   }
   
-  // 监听系统设置变更事件
+  // 监听系统设置变更事件，用于更新待处理变更状态
   window.addEventListener('ecowiki-admin-pending-changes', handlePendingChanges)
 })
 
-// 清理函数
+/**
+ * 组件卸载时的清理操作
+ * 移除事件监听器，防止内存泄漏
+ */
 onUnmounted(() => {
   window.removeEventListener('ecowiki-admin-pending-changes', handlePendingChanges)
 })
 
-// 处理待处理变更
+// === 事件处理函数 ===
+
+/**
+ * 处理待处理变更事件
+ * 强制重新计算待处理变更状态
+ */
 const handlePendingChanges = () => {
-  pendingChangesKey.value++
+  pendingChangesKey.value++  // 增加键值，触发计算属性重新计算
 }
 
-// 计算是否有待处理的变更（始终显示按钮，但根据此状态禁用/启用）
+// === 计算属性 ===
+
+/**
+ * 计算是否有待处理的变更
+ * 用于控制全局应用按钮的启用/禁用状态
+ * 
+ * 检查的变更类型：
+ * 1. 用户角色变更（来自adminUserStore）
+ * 2. 系统设置变更（首页风格配置）
+ * 
+ * @returns {boolean} 是否存在待处理的变更
+ */
 const hasPendingChanges = computed(() => {
-  // 强制重新计算
+  // 通过访问pendingChangesKey来强制重新计算
   pendingChangesKey.value
   
-  // 检查用户角色变更
+  // 检查用户角色变更：如果pendingUserChanges对象有键，说明有待处理的用户变更
   const hasUserChanges = Object.keys(pendingUserChanges.value).length > 0
   
-  // 检查系统设置变更（首页风格）
+  // 检查系统设置变更：比较当前首页风格与原始风格
   const currentHomeStyle = localStorage.getItem('homeStyle') || 'classic'
   const originalHomeStyle = localStorage.getItem('original-homeStyle') || 'classic'
   const hasStyleChanges = currentHomeStyle !== originalHomeStyle
@@ -211,7 +260,12 @@ const hasPendingChanges = computed(() => {
   return hasUserChanges || hasStyleChanges
 })
 
-// 返回到管理后台之外的最近界面
+// === 核心业务函数 ===
+
+/**
+ * 返回到管理后台之外的最近界面
+ * 智能处理未保存变更的提醒和路由跳转
+ */
 const goBack = () => {
   // 检查是否有未应用的变更
   const hasUserChanges = Object.keys(pendingUserChanges.value).length > 0
@@ -219,27 +273,29 @@ const goBack = () => {
   const originalHomeStyle = localStorage.getItem('original-homeStyle') || 'classic'
   const hasStyleChanges = currentHomeStyle !== originalHomeStyle
   
+  // 如果有未保存的变更，询问用户是否要丢弃
   if (hasUserChanges || hasStyleChanges) {
     if (confirm('您有未应用的变更，是否要丢弃这些变更并返回？')) {
-      // 恢复原始设置
+      // 用户确认丢弃变更，恢复原始设置
       if (hasStyleChanges) {
         localStorage.setItem('homeStyle', originalHomeStyle)
+        // 触发首页风格变更事件，通知其他组件更新
         window.dispatchEvent(new Event('ecowiki-home-style-change'))
       }
       // 清除用户变更
       adminUserStore.clearPendingChanges()
     } else {
-      return // 用户取消返回
+      return // 用户取消返回操作
     }
   }
   
-  // 清除原始设置标记
+  // 清除原始设置标记，避免下次进入时冲突
   localStorage.removeItem('original-homeStyle')
   
-  // 检查localStorage中是否保存了进入管理后台前的路由
+  // 智能路由跳转：优先返回进入管理后台前的页面
   const previousRoute = localStorage.getItem('previous-route-before-admin')
   
-  // 清除保存的路由（无论是否使用）
+  // 清除保存的路由记录
   localStorage.removeItem('previous-route-before-admin')
   
   if (previousRoute && previousRoute !== '/admin' && !previousRoute.startsWith('/admin/')) {
@@ -251,9 +307,21 @@ const goBack = () => {
   }
 }
 
-// 应用所有设置
+/**
+ * 应用所有待处理的设置变更
+ * 统一处理用户管理和系统设置的变更，提供良好的用户体验
+ * 
+ * 应用流程：
+ * 1. 防重复点击检查
+ * 2. 显示加载动画
+ * 3. 应用用户管理变更
+ * 4. 应用系统设置变更
+ * 5. 显示成功/失败反馈
+ * 6. 清理状态
+ */
 const applyAllSettings = async () => {
-  if (applying.value) return // 防止重复点击
+  // 防止用户快速重复点击
+  if (applying.value) return
   
   applying.value = true
   
@@ -264,23 +332,25 @@ const applyAllSettings = async () => {
       applyBtn.classList.add('applying-animation')
     }
     
-    // 延迟2.5秒，让用户看到漂亮的加载动画
+    // 延迟2.5秒，让用户看到漂亮的加载动画，提升用户体验
     await new Promise(resolve => setTimeout(resolve, 2500))
     
-    // 应用用户管理的变更
+    // 应用用户管理的变更（角色分配等）
     if (Object.keys(pendingUserChanges.value).length > 0) {
       await adminUserStore.applyAllUserChanges()
     }
     
-    // 应用系统设置变更（首页风格）
+    // 应用系统设置变更（首页风格配置等）
     const currentHomeStyle = localStorage.getItem('homeStyle') || 'classic'
     localStorage.setItem('original-homeStyle', currentHomeStyle)
+    // 通知其他组件首页风格已变更
     window.dispatchEvent(new Event('ecowiki-home-style-change'))
     
-    // 成功动画
+    // 显示成功动画
     if (applyBtn) {
       applyBtn.classList.remove('applying-animation')
       applyBtn.classList.add('success-animation')
+      // 1秒后移除成功动画
       setTimeout(() => {
         applyBtn.classList.remove('success-animation')
       }, 1000)
