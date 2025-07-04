@@ -682,7 +682,6 @@ export const userApi = {
         username: data.username,
         email: data.email,
         newPassword: data.newPassword,
-        newPassword: data.newPassword,
         confirmPassword: data.confirmPassword,
         answer: data.answer
       })
