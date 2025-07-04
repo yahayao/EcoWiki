@@ -159,7 +159,22 @@ export interface LoginRequest {
   /** 是否记住登录状态 */
   rememberMe?: boolean
 }
-
+/**
+ * 用户密码重置请求接口
+ * 用于忘记密码时的重置流程
+ */
+export interface ResetPasswordRequest {
+  /** 用户名（与邮箱二选一） */
+  username?: string
+  /** 邮箱（与用户名二选一） */
+  email?: string
+  /** 新密码 */
+  password: string
+  /** 确认新密码（前端验证用，后端可忽略） */
+  confirmPassword?: string
+  /** 安全问题答案（如果有） */
+  securityAnswer?: string
+}
 /**
  * 用户注册请求接口
  * 创建新用户账户所需的信息
@@ -650,7 +665,48 @@ export const userApi = {
       }
     }
   },
-
+  /**
+   * 用户密码重置
+   * @param data 密码重置请求数据
+   * @returns 认证响应数据
+   */
+  resetPassword: async (data: ResetPasswordRequest): Promise<AuthResponse> => {
+    try {
+      console.log('发送密码重置请求:', { 
+        email: data.email, 
+        password: data.password,
+        confirmPassword: data.confirmPassword 
+      })
+      const response = await api.post('/auth/reset-password', {
+        username: data.username,
+        email: data.email,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+        securityAnswer: data.securityAnswer
+      })
+      
+      if (response.data.code === 200 && response.data.data) {
+        const authData = response.data.data
+        return {
+          user: authData.user,
+          token: authData.token,
+          refreshToken: authData.refreshToken
+        }
+      }
+      
+      throw new Error(response.data.message || '密码重置失败')
+    } catch (error: any) {
+      console.error('密码重置失败:', error)
+      
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message)
+      } else if (error.message) {
+        throw new Error(error.message)
+      } else {
+        throw new Error('密码重置失败，请检查网络连接')
+      }
+    }
+  },
   /**
    * 用户注册
    * @param data 注册请求数据

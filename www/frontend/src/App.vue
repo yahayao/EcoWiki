@@ -87,6 +87,9 @@ const showRegisterForm = ref(false)
  * 控制管理员设置的显示状态
  */
 const showAdminSettings = ref(false)
+/**
+ * 控制忘记密码表单的显示状态
+ */
 const showForgotPassword = ref(false)
 
 // ======================== 模态框控制方法 ========================

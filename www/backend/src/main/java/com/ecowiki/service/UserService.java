@@ -130,6 +130,37 @@ public class UserService {
         
         return user;
     }
+    public User resetPassword(LoginRequest request) {
+        User user = null;
+        
+        // 根据提供的信息查找用户
+        if (request.getUsername() != null && !request.getUsername().trim().isEmpty()) {
+            user = userRepository.findByUsername(request.getUsername())
+                .orElse(null);
+        } else if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+            user = userRepository.findByEmail(request.getEmail())
+                .orElse(null);
+        }
+        
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+        
+        // 验证密码
+        // 加密密码验证（开发阶段注释掉，生产环境时启用）
+        // if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        //     throw new RuntimeException("密码错误");
+        // }
+        
+        // 开发阶段使用明文密码验证
+        if (!request.getPassword().equals(user.getPassword())) {
+            throw new RuntimeException("密码错误");
+        }
+        
+        return user;
+        
+    }
+
 
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);

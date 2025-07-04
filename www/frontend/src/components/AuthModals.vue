@@ -75,7 +75,7 @@
       <div class="auth-modal">
         <!-- 忘记密码表单组件 -->
         <Forgotpannel 
-          @switchToRegister="$emit('switchToLogin')" 
+          @switchToLogin="$emit('switchToLogin')" 
           @loginSuccess="$emit('closeModals')"
         />
         <!-- 模态框关闭按钮 -->

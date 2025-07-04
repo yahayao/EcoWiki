@@ -1,5 +1,6 @@
 package com.ecowiki.dto;
-
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 /**
  * 密码重置请求数据传输对象
  * 
@@ -44,25 +45,27 @@ package com.ecowiki.dto;
  */
 public class ResetPasswordRequest {
     
-    /**
-     * 用户邮箱地址
-     * 用于确认重置密码的用户身份
-     * 必须与初始忘记密码请求中的邮箱一致
-     */
+    /** 用户名（可选，与邮箱二选一） */
+    private String username;
+    /** 邮箱（可选，与用户名二选一） */
     private String email;
     
-    /**
-     * 验证答案
-     * 安全问题的答案或邮件中的验证码
-     * 用于二次验证用户身份的安全措施
-     */
+    /** 验证答案 */
+    @NotBlank(message = "验证答案不能为空")
     private String answer;
-    
     /**
-     * 新密码
-     * 用户要设置的新密码
-     * 必须符合系统的密码强度要求
+     * 用户设置的新密码
+     * 
+     * 该字段用于接收用户在密码重置流程中输入的新密码。
+     * 必须满足密码强度要求，且长度至少为6位。
+     * 
+     * @see jakarta.validation.constraints.NotBlank
+     * @see jakarta.validation.constraints.Size
      */
+    
+    /** 新密码 */
+    @NotBlank(message = "密码不能为空")
+    @Size(min = 6, message = "密码长度至少为6位")
     private String newPassword;
 
     // ==================== Getter和Setter方法 ====================
@@ -114,4 +117,8 @@ public class ResetPasswordRequest {
     public void setNewPassword(String newPassword) { 
         this.newPassword = newPassword; 
     }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    
+    // ==================== 其他方法 ==========
 }
