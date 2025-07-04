@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.ResponseEntity.BodyBuilder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -189,7 +188,7 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(ApiResponse.error("用户不存在"));
             }
             
-            if (!resetPasswordRequest.getAnswer().equals(user.getSecurityAnswer())) {
+            if (!resetPasswordRequest.getSecurityAnswer().equals(user.getSecurityAnswer())) {
                 return ResponseEntity.badRequest().body(ApiResponse.error("安全问题答案错误"));
             }
             
