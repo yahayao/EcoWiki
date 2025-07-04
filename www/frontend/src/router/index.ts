@@ -44,7 +44,7 @@ import UserList from '../components/admin/views/UserList.vue'
 import RoleManagement from '../components/admin/views/RoleManagement.vue'
 import PermissionManagement from '../components/admin/views/PermissionManagement.vue'
 import RolePermissionAssignment from '../components/admin/views/RolePermissionAssignment.vue'
-import ForgotPassword from '../components/auth/Forgotpanel.vue'
+//import ForgotPassword from '../components/auth/Forgotpanel.vue'
 /**
  * 路由配置数组
  * 定义了应用程序的所有路由规则
@@ -53,11 +53,7 @@ const routes = [
   { path: '/', name: 'Home', component: DynamicHome },
   { path: '/wiki/:id', name: 'ArticleDetail', component: ArticleDetail },
   { path: '/edit/:id', name: 'ArticleEdit', component: ArticleEdit },
-  {
-    path: '/forgot-password',
-    name: 'ForgotPassword',
-    component: ForgotPassword
-  },
+  // { path: '/forgot-password', name: 'ForgotPassword', component: ForgotPassword},
   {
     path: '/admin',
     component: AdminLayout,

@@ -110,6 +110,35 @@
                 required
               />
             </div>
+            <!-- 新密码输入框（支持显示/隐藏切换） -->
+            <div class="form-group password-group">
+              <input
+                id="password"
+                v-model="formData.password"
+                :type="showPassword ? 'text' : 'password'"
+                class="form-input"
+                placeholder="密码"
+                required
+              />
+              <!-- 密码显示/隐藏切换按钮 -->
+              <button
+                type="button"
+                class="password-toggle"
+                @click="togglePasswordVisibility"
+                :title="showPassword ? '隐藏密码' : '显示密码'"
+              >
+                <!-- 眼睛图标 - 显示状态 -->
+                <svg v-if="showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <!-- 眼睛图标 - 隐藏状态 -->
+                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
             <!-- 验证问题输入字段（可选） -->
             <div class="form-group">
               <input
@@ -130,14 +159,10 @@
               <span v-if="isLoading" class="loading-spinner"></span>
               {{ isLoading ? '安全问题匹配中...' : '验证' }}
             </button>
-            <div>
-            <!-- 其他忘记密码表单内容 -->
-            <button @click="goToForgotPassword">忘记密码</button>
-            </div>
             <!-- 底部链接 -->
             <div class="form-footer">
-              <span class="register-prompt">还没有账户？</span>
-              <a href="#" @click="$emit('switchToRegister')" class="register-link">注册</a>
+              <span class="login-prompt">直接登录？</span>
+              <a href="#" @click="$emit('switchToLogin')" class="login-link">返回登录</a>
             </div>
           </form>
         </div>
@@ -164,7 +189,7 @@ import toast from '../utils/toast'
  * 组件事件定义
  * 定义了组件向父组件发送的事件
  */
-const emit = defineEmits(['switchToRegister', 'loginSuccess'])
+const emit = defineEmits(['switchToLogin', 'resetSuccess'])
 
 /**
  * 认证状态管理
@@ -179,7 +204,6 @@ const { setUser } = useAuth()
 const isLoading = ref(false)
 // 密码显示状态
 const showPassword = ref(false)
-
 /**
  * 登录表单数据
  * 使用 reactive 创建响应式对象，自动追踪表单字段变化
@@ -187,11 +211,10 @@ const showPassword = ref(false)
 const formData = reactive({
   /** 登录字段 - 支持邮箱或用户名 */
   username: '', 
-  /** 用户密码 */
+  /** 新密码字段 */
   password: '',
-  /** 是否记住用户登录状态 */
-  rememberMe: false,
-  securityAnswer: '' // 安全问题答案
+  /** 安全问题答案 */
+  securityAnswer: '' 
 })
 
 /**
@@ -260,47 +283,43 @@ const handleForgot = async () => {
 /**忘记密码保存点！！！！！！！！！！！！！！！！！！！！！ */
   try {
     // 3. 根据输入内容判断登录方式并构建请求数据
-    const loginData = isEmail(formData.username) 
+    const resetData = isEmail(formData.username) 
       ? {
           email: formData.username,
           password: formData.password,
-          rememberMe: formData.rememberMe
+          securityAnswer: formData.securityAnswer
         }
       : {
           username: formData.username,
           password: formData.password,
-          rememberMe: formData.rememberMe
+          securityAnswer: formData.securityAnswer
         }
     
-    // 4. 调用登录API
-    const response = await userApi.login(loginData)
+    // 4. 调用重置API
+    const response = await userApi.resetPassword(resetData)
     
     // 5. 登录成功，保存用户信息和token
     setUser(response.user, response.token, response.refreshToken)
     
     // 6. 显示成功提示
-    toast.success(`欢迎回来，${response.user.username}！`, '登录成功')
+    toast.success(`欢迎回来，${response.user.username}！`, '密码重置成功')
     
     // 7. 通知父组件登录成功，关闭模态框
-    emit('loginSuccess')
+    emit('resetSuccess')
     
     // 调试信息
-    console.log('登录成功，用户信息:', response.user)
+    console.log('密码重置成功，用户信息:', response.user)
     
   } catch (error: any) {
     // 8. 错误处理
-    console.error('登录失败:', error)
-    toast.error(error.message || '登录失败，请检查登录信息和密码', '登录失败')
+    console.error('验证失败:', error)
+    toast.error(error.message || '验证失败，请检查用户名或安全问题答案', '验证失败')
   } finally {
     // 重置加载状态
     isLoading.value = false
   }
 }
 const router = useRouter()
-
-const goToForgotPassword = () => {
-  router.push('/forgot-password')
-}
 </script>
 <style scoped>
 /**
@@ -626,18 +645,18 @@ const goToForgotPassword = () => {
   font-size: 0.9rem;
 }
 
-.register-prompt {
+.login-prompt {
   color: #718096;
 }
 
-.register-link {
+.login-link {
   color: #667eea;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.3s ease;
 }
 
-.register-link:hover {
+.login-link:hover {
   color: #764ba2;
 }
 
