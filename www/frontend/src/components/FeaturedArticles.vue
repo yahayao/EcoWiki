@@ -73,7 +73,7 @@
         v-for="article in articles" 
         :key="article.articleId"
         class="article-card" 
-        @click="navigateToArticle(article.articleId.toString())"
+        @click="navigateToArticle(article.title.toString())"
       >
         <!-- 文章头部信息 -->
         <div class="article-header">
@@ -134,10 +134,10 @@ const error = ref('')                // 错误信息
 
 /**
  * 导航到文章详情页
- * @param articleId 文章ID
+ * @param articleTitle 文章ID
  */
-const navigateToArticle = (articleId: string) => {
-  router.push(`/wiki/${articleId}`)
+const navigateToArticle = (articleTitle: string) => {
+  router.push(`/wiki/${articleTitle}`)
 }
 
 /**

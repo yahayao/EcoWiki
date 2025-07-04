@@ -97,7 +97,6 @@
         :current-tags="article.tags.split(',')"
         :max-results="6"
         :show-refresh-button="true"
-        @article-click="onRelatedArticleClick"
         class="related-section"
       />
 
@@ -114,6 +113,7 @@
     <FloatingActionButtons
       v-if="article"
       :article-id="article.articleId"
+      :article-title="article.title"
       @view="handleView"
       @edit="handleEdit"
       @history="handleHistory"
@@ -156,18 +156,18 @@ const error = ref<string | null>(null)
 /**
  * 加载文章数据
  * 
- * 从API获取指定ID的文章详情数据，处理加载状态和错误情况。
+ * 先通过文章标题获取文章ID，然后通过ID获取文章详情数据，处理加载状态和错误情况。
  * 支持重试机制，提供良好的用户体验。
  * 
  * @async
  * @returns {Promise<void>} 异步加载文章数据
  */
 const loadArticle = async () => {
-  const articleId = route.params.id as string
+  const articleTitle = route.params.title as string
   
-  // 验证文章ID的有效性
-  if (!articleId || isNaN(Number(articleId))) {
-    error.value = '无效的文章ID'
+  // 验证文章标题的有效性
+  if (!articleTitle) {
+    error.value = '无效的文章标题'
     loading.value = false
     return
   }
@@ -175,7 +175,12 @@ const loadArticle = async () => {
   try {
     loading.value = true
     error.value = null
-    article.value = await articleApi.getArticleById(Number(articleId))
+    
+    // 先通过标题获取文章ID
+    const articleId = await articleApi.getArticleIdByTitle(articleTitle)
+    
+    // 再通过ID获取文章详情
+    article.value = await articleApi.getArticleById(articleId)
   } catch (err) {
     console.error('加载文章失败:', err)
     error.value = err instanceof Error ? err.message : '加载文章失败'
@@ -186,10 +191,6 @@ const loadArticle = async () => {
 
 const goBack = () => {
   router.push('/')
-}
-
-const onRelatedArticleClick = (articleId: number) => {
-  router.push(`/article/${articleId}`)
 }
 
 const showLoginModal = () => {
@@ -205,7 +206,7 @@ const handleView = () => {
 
 const handleEdit = () => {
   if (article.value) {
-    router.push(`/edit/${article.value.articleId}`)
+    router.push(`/edit/${article.value.title}`)
   }
 }
 

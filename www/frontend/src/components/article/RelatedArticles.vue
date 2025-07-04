@@ -22,7 +22,7 @@
         v-for="article in articles" 
         :key="article.id"
         class="related-card"
-        @click="navigateToArticle(article.id)"
+        @click="navigateToArticle(article.title)"
       >
         <div class="related-header">
           <span class="related-category">{{ article.category }}</span>
@@ -206,9 +206,9 @@ const refreshRecommendations = () => {
   loadRelatedArticles()
 }
 
-const navigateToArticle = (articleId: number) => {
-  emit('articleClick', articleId)
-  router.push(`/article/${articleId}`)
+const navigateToArticle = (articleTitle: string) => {
+  // 我们不再需要emit articleId，因为我们现在使用标题
+  router.push(`/wiki/${articleTitle}`)
 }
 
 const formatDate = (dateString: string) => {

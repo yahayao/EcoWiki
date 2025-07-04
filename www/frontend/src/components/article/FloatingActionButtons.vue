@@ -63,6 +63,7 @@ import { useAuth } from '@/composables/useAuth'
 
 interface Props {
   articleId: number
+  articleTitle?: string
   mode?: 'view' | 'edit' | 'history'
   isFavorited?: boolean
   canEdit?: boolean
@@ -90,7 +91,12 @@ const isEditMode = computed(() => props.mode === 'edit')
 const handleView = () => {
   if (!isViewMode.value) {
     emit('view')
-    router.push(`/article/${props.articleId}`)
+    if (props.articleTitle) {
+      router.push(`/wiki/${props.articleTitle}`)
+    } else {
+      // 备用方案：使用文章ID
+      router.push(`/wiki/${props.articleId}`)
+    }
   }
 }
 

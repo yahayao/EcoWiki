@@ -291,4 +291,14 @@ public class ArticleService {
         dto.setUpdateTime(article.getUpdateTime());
         return dto;
     }
+
+    /**
+     * 根据标题获取文章ID
+     * @param title 文章标题
+     * @return 文章ID
+     */
+    public Long getArticleIdByTitle(String title) {
+        Optional<Article> articleOpt = articleRepository.findByTitle(title);
+        return articleOpt.map(Article::getArticleId).orElse(null);
+    }
 }

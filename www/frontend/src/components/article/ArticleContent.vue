@@ -178,7 +178,7 @@ const shareArticle = () => {
 }
 
 const editArticle = () => {
-  router.push(`/edit/${props.article.articleId}`)
+  router.push(`/edit/${props.article.title}`)
   emit('edit', props.article.articleId)
 }
 

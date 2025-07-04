@@ -64,7 +64,7 @@
         v-for="article in recentArticles" 
         :key="article.articleId"
         class="update-item"
-        @click="navigateToArticle(article.articleId.toString())"
+        @click="navigateToArticle(article.title)"
       >
         <!-- 分类图标 -->
         <div class="update-icon">{{ getCategoryIcon(article.category) }}</div>
@@ -115,10 +115,10 @@ const error = ref('')                     // 错误信息
 
 /**
  * 导航到文章详情页
- * @param articleId 文章ID
+ * @param articleTitle 文章标题
  */
-const navigateToArticle = (articleId: string) => {
-  router.push(`/article/${articleId}`)
+const navigateToArticle = (articleTitle: string) => {
+  router.push(`/wiki/${articleTitle}`)
 }
 
 /**

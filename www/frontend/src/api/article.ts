@@ -587,6 +587,28 @@ class ArticleApi {
     }
     return response.data.data
   }
+
+  /**
+   * 根据标题获取文章ID
+   * 
+   * 通过文章标题查找对应的文章ID，用于支持基于标题的路由。
+   * 
+   * @param {string} title - 文章标题
+   * @returns {Promise<number>} 文章ID
+   * @throws {Error} 当文章不存在或查询失败时抛出错误信息
+   * 
+   * @example
+   * ```typescript
+   * const articleId = await articleApi.getArticleIdByTitle("生态保护指南");
+   * ```
+   */
+  async getArticleIdByTitle(title: string): Promise<number> {
+    const response = await this.api.get<ApiResponse<number>>(`/articles/title/${encodeURIComponent(title)}/id`)
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message)
+    }
+    return response.data.data
+  }
 }
 
 /**

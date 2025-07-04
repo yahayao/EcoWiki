@@ -338,4 +338,25 @@ public class ArticleController {
                 .body(ApiResponse.error("获取统计信息失败: " + e.getMessage()));
         }
     }
+
+    /**
+     * 根据标题获取文章ID
+     * @param title 文章标题
+     * @return 文章ID
+     */
+    @GetMapping("/title/{title}/id")
+    public ResponseEntity<ApiResponse<Long>> getArticleIdByTitle(@PathVariable String title) {
+        try {
+            Long articleId = articleService.getArticleIdByTitle(title);
+            if (articleId != null) {
+                return ResponseEntity.ok(ApiResponse.success(articleId, "获取文章ID成功"));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("未找到标题为 '" + title + "' 的文章"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("获取文章ID失败: " + e.getMessage()));
+        }
+    }
 }

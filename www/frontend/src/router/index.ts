@@ -13,8 +13,8 @@
  * 
  * 路由结构：
  * - / : 动态首页（根据用户偏好显示不同风格）
- * - /article/:id : 文章详情页
- * - /edit/:id : 文章编辑页
+ * - /wiki/:title : 文章详情页（通过标题访问）
+ * - /edit/:title : 文章编辑页（编辑现有文章）或 /edit/new（创建新文章）
  * - /admin : 管理后台布局
  *   - /admin/settings : 系统设置
  *   - /admin/users : 用户管理
@@ -52,9 +52,8 @@ import RolePermissionAssignment from '../components/admin/views/RolePermissionAs
  */
 const routes = [
   { path: '/', name: 'Home', component: DynamicHome },
-  { path: '/wiki/:id', name: 'ArticleDetail', component: ArticleDetail },
-  { path: '/edit/:id', name: 'ArticleEdit', component: ArticleEdit },
-  // { path: '/forgot-password', name: 'ForgotPassword', component: ForgotPassword},
+  { path: '/wiki/:title', name: 'ArticleDetail', component: ArticleDetail },
+  { path: '/edit/:title', name: 'ArticleEdit', component: ArticleEdit },
   {
     path: '/admin',
     component: AdminLayout,

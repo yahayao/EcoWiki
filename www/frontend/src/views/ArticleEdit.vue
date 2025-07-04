@@ -45,7 +45,7 @@
   @example
   <!-- 在路由中使用 -->
   <!-- 新建文章：/edit/new -->
-  <!-- 编辑文章：/edit/123 --
+  <!-- 编辑文章：/edit/文章标题 -->
   <ArticleEdit />
 -->
 <template>
@@ -463,13 +463,12 @@ const displayTags = computed(() => {
  * 加载文章数据
  * 
  * 根据路由参数加载现有文章数据，或初始化新文章创建模式。
- * 处理无效ID、文章不存在等各种情况。
  */
 const loadArticle = async () => {
-  const articleId = route.params.id as string
+  const articleTitle = route.params.title as string
   
-  // 如果ID无效，直接进入创建模式
-  if (!articleId || isNaN(Number(articleId))) {
+  // 验证文章标题的有效性
+  if (!articleTitle || articleTitle === 'new') {
     articleExists.value = false
     // 在创建模式下，设置当前登录用户为作者
     articleForm.value.author = user.value?.username || userDisplayName.value || '未知用户'
@@ -478,7 +477,12 @@ const loadArticle = async () => {
   }
 
   try {
-    const article = await articleApi.getArticleById(Number(articleId))
+    // 先通过标题获取文章ID
+    const articleId = await articleApi.getArticleIdByTitle(articleTitle)
+    
+    // 再通过ID获取文章详情
+    const article = await articleApi.getArticleById(articleId)
+    
     // 文章存在，进入编辑模式
     originalArticle.value = article
     articleExists.value = true
@@ -536,7 +540,7 @@ const handleSave = async () => {
         tags: articleForm.value.tags.trim()
       }
       
-      const updated = await articleApi.updateArticle(Number(route.params.id), updateData)
+      const updated = await articleApi.updateArticle(originalArticle.value!.articleId, updateData)
       
       // 更新原始文章数据，防止离开页面时显示未保存提示
       originalArticle.value = updated
@@ -556,7 +560,7 @@ const handleSave = async () => {
       
       // 使用setTimeout确保状态更新后再导航
       setTimeout(() => {
-        router.push(`/article/${updated.articleId}`)
+        router.push(`/wiki/${updated.title}`)
       }, 100)
     } else {
       // 创建文章，确保使用当前登录用户作为作者
@@ -590,7 +594,7 @@ const handleSave = async () => {
       
       // 使用setTimeout确保状态更新后再导航
       setTimeout(() => {
-        router.push(`/article/${created.articleId}`)
+        router.push(`/wiki/${created.title}`)
       }, 100)
     }
   } catch (error) {
@@ -615,7 +619,7 @@ const closePreviewModal = () => {
 
 const goBack = () => {
   if (isEditMode.value && originalArticle.value) {
-    router.push(`/article/${originalArticle.value.articleId}`)
+    router.push(`/wiki/${originalArticle.value.title}`)
   } else {
     router.push('/')
   }
