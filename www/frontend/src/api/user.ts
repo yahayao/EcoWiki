@@ -681,8 +681,7 @@ export const userApi = {
         username: data.username,
         email: data.email,
         newPassword: data.newPassword,
-        confirmPassword: data.confirmPassword,
-        answer: data.answer
+        securityAnswer: data.answer
       })
 
       if (response.data.code === 200 && response.data.data) {
