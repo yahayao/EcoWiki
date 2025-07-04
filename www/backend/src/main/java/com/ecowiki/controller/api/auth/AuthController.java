@@ -175,16 +175,42 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) {
-        User user = userService.findUserByEmail(resetPasswordRequest.getEmail());
-        if (user == null || !resetPasswordRequest.getAnswer().equals(user.getSecurityAnswer())) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("安全问题答案错误"));
-        }
-        boolean success = userService.resetPassword(user, resetPasswordRequest.getNewPassword());
-        if (success) {
-            return ResponseEntity.ok(ApiResponse.success("密码重置成功"));
-        } else {
-            return ResponseEntity.internalServerError().body(ApiResponse.error("密码重置失败"));
+    public ResponseEntity<ApiResponse<Map<String, Object>>> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) {
+        try {
+            // 支持用户名或邮箱登录
+            User user = null;
+            if (resetPasswordRequest.getEmail() != null && !resetPasswordRequest.getEmail().isEmpty()) {
+                user = userService.findUserByEmail(resetPasswordRequest.getEmail());
+            } else if (resetPasswordRequest.getUsername() != null && !resetPasswordRequest.getUsername().isEmpty()) {
+                user = userService.findByUsername(resetPasswordRequest.getUsername()).orElse(null);
+            }
+            
+            if (user == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("用户不存在"));
+            }
+            
+            if (!resetPasswordRequest.getAnswer().equals(user.getSecurityAnswer())) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("安全问题答案错误"));
+            }
+            
+            boolean success = userService.resetPassword(user, resetPasswordRequest.getNewPassword());
+            if (success) {
+                // 密码重置成功后，生成新的JWT token并返回认证信息
+                String token = jwtUtil.generateToken(user.getUsername());
+                String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
+                
+                Map<String, Object> result = new HashMap<>();
+                result.put("user", createUserResponse(user));
+                result.put("token", token);
+                result.put("refreshToken", refreshToken);
+                
+                return ResponseEntity.ok(ApiResponse.success(result, "密码重置成功"));
+            } else {
+                return ResponseEntity.internalServerError().body(ApiResponse.error("密码重置失败"));
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error(e.getMessage()));
         }
     }
     

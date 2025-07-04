@@ -25,14 +25,14 @@
 // === 依赖导入 ===
 import axios from 'axios'  // HTTP客户端
 import { api } from './index'  // 通用API实例
-import type { 
-  PermissionGroup, 
-  Permission, 
-  PermissionGroupForm, 
-  PermissionForm, 
-  Role, 
-  RoleForm, 
-  RolePermission 
+import type {
+  PermissionGroup,
+  Permission,
+  PermissionGroupForm,
+  PermissionForm,
+  Role,
+  RoleForm,
+  RolePermission
 } from '@/types/permission'  // 权限相关类型定义
 
 // === API配置 ===
@@ -88,7 +88,7 @@ apiClient.interceptors.response.use(
     if (error.response) {
       // 服务器返回错误状态码
       const { status, data } = error.response
-      
+
       switch (status) {
         case 401:
           // 未授权，清除本地令牌并跳转到登录页
@@ -115,7 +115,7 @@ apiClient.interceptors.response.use(
       // 其他错误
       console.error('请求配置错误:', error.message)
     }
-    
+
     return Promise.reject(error)
   }
 )
@@ -136,7 +136,7 @@ export const USER_GROUPS = {
   /** 普通用户 - 基础权限 */
   USER: 'user',
   /** 版主 - 内容管理权限 */
-  MODERATOR: 'moderator', 
+  MODERATOR: 'moderator',
   /** 管理员 - 系统管理权限 */
   ADMIN: 'admin',
   /** 超级管理员 - 所有权限 */
@@ -169,11 +169,11 @@ export interface ResetPasswordRequest {
   /** 邮箱（与用户名二选一） */
   email?: string
   /** 新密码 */
-  password: string
+  newPassword: string
   /** 确认新密码（前端验证用，后端可忽略） */
   confirmPassword?: string
   /** 安全问题答案（如果有） */
-  securityAnswer?: string
+  answer?: string
 }
 /**
  * 用户注册请求接口
@@ -311,7 +311,7 @@ export const adminApi = {
       throw new Error(error.response?.data?.message || error.message || '获取用户列表失败')
     }
   },
-  
+
   /**
    * 更新用户权限组
    * 
@@ -338,7 +338,7 @@ export const adminApi = {
       throw new Error(error.response?.data?.message || error.message || '更新用户权限失败')
     }
   },
-  
+
   /**
    * 更新用户激活状态
    * 
@@ -365,7 +365,7 @@ export const adminApi = {
       throw new Error(error.response?.data?.message || error.message || '更新用户状态失败')
     }
   },
-  
+
   /**
    * 获取系统统计信息
    * 
@@ -390,7 +390,7 @@ export const adminApi = {
       throw new Error(error.response?.data?.message || error.message || '获取系统统计失败')
     }
   },
-  
+
   /**
    * 获取所有角色列表（简化版）
    * 
@@ -416,7 +416,7 @@ export const adminApi = {
       throw new Error(error.response?.data?.message || error.message || '获取角色列表失败')
     }
   },
-  
+
   /**
    * 获取角色详细信息（完整版）
    * 
@@ -446,7 +446,7 @@ export const adminApi = {
       throw new Error(error.response?.data?.message || error.message || '获取角色详情失败')
     }
   },
-  
+
   /**
    * 创建角色
    * @param roleData 角色数据
@@ -466,7 +466,7 @@ export const adminApi = {
       throw new Error(error.response?.data?.message || error.message || '创建角色失败')
     }
   },
-  
+
   /**
    * 更新角色
    * @param roleId 角色ID
@@ -487,7 +487,7 @@ export const adminApi = {
       throw new Error(error.response?.data?.message || error.message || '更新角色失败')
     }
   },
-  
+
   /**
    * 删除角色
    * @param roleId 角色ID
@@ -507,7 +507,7 @@ export const adminApi = {
       throw new Error(error.response?.data?.message || error.message || '删除角色失败')
     }
   },
-  
+
   /**
    * 删除用户（软删除，设置为非激活状态）
    * @param userId 用户ID
@@ -630,19 +630,19 @@ export const userApi = {
    */
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     try {
-      console.log('发送登录请求:', { 
-        username: data.username, 
-        email: data.email, 
-        rememberMe: data.rememberMe 
+      console.log('发送登录请求:', {
+        username: data.username,
+        email: data.email,
+        rememberMe: data.rememberMe
       })
-      
+
       const response = await api.post('/auth/login', {
         username: data.username,
         email: data.email,
         password: data.password,
         rememberMe: data.rememberMe
       })
-      
+
       if (response.data.code === 200 && response.data.data) {
         const authData = response.data.data
         return {
@@ -651,11 +651,11 @@ export const userApi = {
           refreshToken: authData.refreshToken
         }
       }
-      
+
       throw new Error(response.data.message || '登录失败')
     } catch (error: any) {
       console.error('登录失败:', error)
-      
+
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message)
       } else if (error.message) {
@@ -672,19 +672,19 @@ export const userApi = {
    */
   resetPassword: async (data: ResetPasswordRequest): Promise<AuthResponse> => {
     try {
-      console.log('发送密码重置请求:', { 
-        email: data.email, 
-        password: data.password,
-        confirmPassword: data.confirmPassword 
+      console.log('发送密码重置请求:', {
+        email: data.email,
+        newPassword: data.newPassword,
+        confirmPassword: data.confirmPassword
       })
       const response = await api.post('/auth/reset-password', {
         username: data.username,
         email: data.email,
-        password: data.password,
+        newPassword: data.newPassword,
         confirmPassword: data.confirmPassword,
-        securityAnswer: data.securityAnswer
+        answer: data.answer
       })
-      
+
       if (response.data.code === 200 && response.data.data) {
         const authData = response.data.data
         return {
@@ -693,11 +693,11 @@ export const userApi = {
           refreshToken: authData.refreshToken
         }
       }
-      
+
       throw new Error(response.data.message || '密码重置失败')
     } catch (error: any) {
       console.error('密码重置失败:', error)
-      
+
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message)
       } else if (error.message) {
@@ -714,19 +714,19 @@ export const userApi = {
    */
   register: async (data: RegisterRequest): Promise<AuthResponse> => {
     try {
-      console.log('发送注册请求:', { 
-        username: data.username, 
-        email: data.email, 
-        fullName: data.fullName 
+      console.log('发送注册请求:', {
+        username: data.username,
+        email: data.email,
+        fullName: data.fullName
       })
-      
+
       const response = await api.post('/auth/register', {
         username: data.username,
         email: data.email,
         password: data.password,
         fullName: data.fullName || ''
       })
-      
+
       if (response.data.code === 200 && response.data.data) {
         const authData = response.data.data
         return {
@@ -735,11 +735,11 @@ export const userApi = {
           refreshToken: authData.refreshToken
         }
       }
-      
+
       throw new Error(response.data.message || '注册失败')
     } catch (error: any) {
       console.error('注册失败:', error)
-      
+
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message)
       } else if (error.message) {
@@ -758,19 +758,19 @@ export const userApi = {
   checkUsername: async (username: string): Promise<boolean> => {
     try {
       const response = await api.get(`/auth/check-username?username=${encodeURIComponent(username)}`)
-      
+
       if (response.data.code === 200 && response.data.data) {
         return response.data.data.available
       }
-      
+
       throw new Error(response.data.message || '检查用户名失败')
     } catch (error: any) {
       console.error('检查用户名失败:', error)
-      
+
       if (error.response?.status >= 500) {
         throw new Error('服务器错误，无法检查用户名')
       }
-      
+
       throw new Error(error.response?.data?.message || error.message || '检查用户名失败')
     }
   },
@@ -783,19 +783,19 @@ export const userApi = {
   checkEmail: async (email: string): Promise<boolean> => {
     try {
       const response = await api.get(`/auth/check-email?email=${encodeURIComponent(email)}`)
-      
+
       if (response.data.code === 200 && response.data.data) {
         return response.data.data.available
       }
-      
+
       throw new Error(response.data.message || '检查邮箱失败')
     } catch (error: any) {
       console.error('检查邮箱失败:', error)
-      
+
       if (error.response?.status >= 500) {
         throw new Error('服务器错误，无法检查邮箱')
       }
-      
+
       throw new Error(error.response?.data?.message || error.message || '检查邮箱失败')
     }
   },
@@ -807,11 +807,11 @@ export const userApi = {
   getCurrentUser: async (): Promise<UserResponse> => {
     try {
       const response = await api.get('/auth/me')
-      
+
       if (response.data.code === 200 && response.data.data) {
         return response.data.data
       }
-      
+
       throw new Error(response.data.message || '获取用户信息失败')
     } catch (error: any) {
       console.error('获取用户信息失败:', error)
@@ -829,7 +829,7 @@ export const userApi = {
       } catch (error) {
         console.warn('后端登出接口调用失败，但仍清除本地数据')
       }
-      
+
       localStorage.removeItem('token')
       localStorage.removeItem('refreshToken')
       localStorage.removeItem('user')
@@ -850,11 +850,11 @@ export const userApi = {
   refreshToken: async (refreshToken: string): Promise<{ token: string; refreshToken: string }> => {
     try {
       const response = await api.post('/auth/refresh', { refreshToken })
-      
+
       if (response.data.code === 200 && response.data.data) {
         return response.data.data
       }
-      
+
       throw new Error(response.data.message || '刷新令牌失败')
     } catch (error: any) {
       console.error('刷新令牌失败:', error)

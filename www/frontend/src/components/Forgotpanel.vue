@@ -286,13 +286,13 @@ const handleForgot = async () => {
     const resetData = isEmail(formData.username) 
       ? {
           email: formData.username,
-          password: formData.password,
-          securityAnswer: formData.securityAnswer
+          newPassword: formData.password,
+          answer: formData.securityAnswer
         }
       : {
           username: formData.username,
-          password: formData.password,
-          securityAnswer: formData.securityAnswer
+          newPassword: formData.password,
+          answer: formData.securityAnswer
         }
     
     // 4. 调用重置API
@@ -312,7 +312,7 @@ const handleForgot = async () => {
     
   } catch (error: any) {
     // 8. 错误处理
-    console.error('验证失败:', error)
+    // console.error('验证失败:', error)
     toast.error(error.message || '验证失败，请检查用户名或安全问题答案', '验证失败')
   } finally {
     // 重置加载状态
