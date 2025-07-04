@@ -177,7 +177,8 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) {
         User user = userService.findUserByEmail(resetPasswordRequest.getEmail());
-        if (user == null || !resetPasswordRequest.getAnswer().equals(user.getSecurityAnswer())) {
+        if (user == null || !resetPasswordRequest.getSecurityAnswer().equals(user.getSecurityAnswer())) {
+            System.out.println(resetPasswordRequest.getSecurityAnswer() + " 数据库: " + user.getSecurityAnswer());
             return ResponseEntity.badRequest().body(ApiResponse.error("安全问题答案错误"));
         }
         boolean success = userService.resetPassword(user, resetPasswordRequest.getNewPassword());

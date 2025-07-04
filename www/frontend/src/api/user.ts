@@ -169,11 +169,11 @@ export interface ResetPasswordRequest {
   /** 邮箱（与用户名二选一） */
   email?: string
   /** 新密码 */
-  password: string
+  newPassword: string
   /** 确认新密码（前端验证用，后端可忽略） */
   confirmPassword?: string
   /** 安全问题答案（如果有） */
-  securityAnswer?: string
+  securityAnswer: string
 }
 /**
  * 用户注册请求接口
@@ -674,13 +674,14 @@ export const userApi = {
     try {
       console.log('发送密码重置请求:', { 
         email: data.email, 
-        password: data.password,
-        confirmPassword: data.confirmPassword 
+        newPassword: data.newPassword,
+        confirmPassword: data.confirmPassword,
+        securityAnswer: data.securityAnswer
       })
       const response = await api.post('/auth/reset-password', {
         username: data.username,
         email: data.email,
-        password: data.password,
+        newPassword: data.newPassword,
         confirmPassword: data.confirmPassword,
         securityAnswer: data.securityAnswer
       })
