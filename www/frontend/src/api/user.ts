@@ -170,6 +170,7 @@ export interface ResetPasswordRequest {
   email?: string
   /** 新密码 */
   newPassword: string
+  newPassword: string
   /** 确认新密码（前端验证用，后端可忽略） */
   confirmPassword?: string
   /** 安全问题答案（如果有） */
@@ -680,6 +681,7 @@ export const userApi = {
       const response = await api.post('/auth/reset-password', {
         username: data.username,
         email: data.email,
+        newPassword: data.newPassword,
         newPassword: data.newPassword,
         confirmPassword: data.confirmPassword,
         answer: data.answer

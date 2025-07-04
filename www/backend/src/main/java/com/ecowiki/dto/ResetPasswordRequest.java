@@ -52,7 +52,7 @@ public class ResetPasswordRequest {
     
     /** 验证答案 */
     @NotBlank(message = "验证答案不能为空")
-    private String answer;
+    private String securityAnswer;
     /**
      * 用户设置的新密码
      * 
@@ -90,16 +90,16 @@ public class ResetPasswordRequest {
      * 获取验证答案
      * @return 安全问题答案或验证码
      */
-    public String getAnswer() { 
-        return answer; 
+    public String getSecurityAnswer() { 
+        return securityAnswer; 
     }
     
     /**
      * 设置验证答案
-     * @param answer 安全问题答案或验证码
+     * @param securityAnswer 安全问题答案或验证码
      */
-    public void setAnswer(String answer) { 
-        this.answer = answer; 
+    public void setSecurityAnswer(String securityAnswer) { 
+        this.securityAnswer = securityAnswer; 
     }
 
     /**

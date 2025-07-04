@@ -132,10 +132,10 @@ public class User {
     @Column
     private String bio; // 个人简介
 
-    @Column
+    @Column(name = "security_question")
     private String securityQuestion; // 安全问题
     
-    @Column
+    @Column(name = "security_answer")
     private String securityAnswer; // 问题答案
     
     @CreationTimestamp
