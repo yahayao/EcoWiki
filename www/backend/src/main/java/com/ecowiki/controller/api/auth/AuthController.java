@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecowiki.dto.ApiResponse;
-import com.ecowiki.dto.ForgotPasswordRequest;
 import com.ecowiki.dto.LoginRequest;
 import com.ecowiki.dto.ResetPasswordRequest;
 import com.ecowiki.dto.UserRegistrationDto;
@@ -173,16 +172,6 @@ public class AuthController {
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error(e.getMessage()));
         }
-    }
-    
-    @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody ForgotPasswordRequest forgotPasswordRequest) {
-        User user = userService.findUserByEmail(forgotPasswordRequest.getEmail());
-        if (user == null) {
-            return ((BodyBuilder) ResponseEntity.notFound()).body(ApiResponse.error("用户不存在"));
-        }
-        String securityQuestion = userService.getSecurityQuestion(user);
-        return ResponseEntity.ok(ApiResponse.success(securityQuestion));
     }
 
     @PostMapping("/reset-password")

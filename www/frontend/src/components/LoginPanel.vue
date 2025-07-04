@@ -137,9 +137,10 @@
               <span v-if="isLoading" class="loading-spinner"></span>
               {{ isLoading ? '登录中...' : '登录' }}
             </button>
-            <div>
             <!-- 其他登录表单内容 -->
-            <button @click="goToForgotPassword">忘记密码</button>
+            <div class="form-footer">
+              <span class="register-prompt">登不上去？</span>
+            <a href="#" @click="$emit('switchToForgot')" class="register-link">忘记密码</a>
             </div>
             <!-- 底部链接 -->
             <div class="form-footer">
@@ -171,7 +172,7 @@ import toast from '../utils/toast'
  * 组件事件定义
  * 定义了组件向父组件发送的事件
  */
-const emit = defineEmits(['switchToRegister', 'loginSuccess'])
+const emit = defineEmits(['switchToRegister', 'loginSuccess','switchToForgot'])
 
 /**
  * 认证状态管理
@@ -304,9 +305,6 @@ const handleLogin = async () => {
 }
 const router = useRouter()
 
-const goToForgotPassword = () => {
-  router.push('/forgot-password')
-}
 </script>
 
 <style scoped>

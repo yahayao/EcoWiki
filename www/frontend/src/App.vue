@@ -137,21 +137,22 @@ const showAdminModal = () => {
 const switchToRegister = () => {
   showLoginForm.value = false
   showRegisterForm.value = true
-  showRegisterForm.value = false
+  showForgotPassword.value = false
 }
 
 // 切换到登录
 const switchToLogin = () => {
   showRegisterForm.value = false
   showLoginForm.value = true
-  showRegisterForm.value = false
+  showForgotPassword.value = false
 }
 
 // 切换到忘记密码
 const switchToForgot = () => {
-  showRegisterForm.value = true
-  showRegisterForm.value = false
+  console.log("切换到忘记密码模态框");
+  showForgotPassword.value = true
   showLoginForm.value = false
+  showRegisterForm.value = false
 }
 
 // 关闭所有模态框

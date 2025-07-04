@@ -76,7 +76,7 @@
         <!-- 忘记密码表单组件 -->
         <Forgotpannel 
           @switchToLogin="$emit('switchToLogin')" 
-          @loginSuccess="$emit('closeModals')"
+          @forgotSuccess="$emit('closeModals')"
         />
         <!-- 模态框关闭按钮 -->
         <button class="close-button" @click="$emit('closeModals')">×</button>
