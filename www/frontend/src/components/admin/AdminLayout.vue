@@ -173,7 +173,8 @@ import RolePermissionAssignment from './views/RolePermissionAssignment.vue'  // 
 // === 实例化依赖 ===
 const router = useRouter()
 const adminUserStore = useAdminUserStore()
-const { pendingUserChanges } = storeToRefs(adminUserStore)  // 获取待处理的用户变更
+// 直接访问store属性，避免类型兼容性问题
+const pendingUserChanges = computed(() => adminUserStore.pendingUserChanges)
 
 // === 组件状态管理 ===
 const applying = ref(false)  // 全局应用按钮的加载状态

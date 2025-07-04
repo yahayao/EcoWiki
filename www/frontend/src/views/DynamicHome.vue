@@ -31,7 +31,7 @@
   @since 2024-01-01
   
   @example
-  <!-- 在路由中使用 -->
+  <!-- 在路由中使用 --
   <DynamicHome 
     @show-login="handleShowLogin"
     @show-register="handleShowRegister"
@@ -58,7 +58,7 @@
  * 使用Vue 3 Composition API确保响应式更新和生命周期管理。
  */
 
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, markRaw } from 'vue'
 import ClassicHome from './ClassicHome.vue'
 import SimpleHome from './SimpleHome.vue'
 
@@ -72,12 +72,14 @@ const emit = defineEmits(['show-login', 'show-register', 'show-admin', 'logout']
  * 获取当前首页组件
  * 
  * 根据本地存储的用户偏好设置确定应该使用哪个首页组件。
+ * 使用 markRaw 包装组件以避免将其变为响应式对象，提升性能。
  * 默认使用经典风格，确保在没有设置时的良好体验。
  * 
- * @returns {Component} Vue组件对象（ClassicHome 或 SimpleHome）
+ * @returns {Component} Vue组件对象（ClassicHome 或 SimpleHome），经过markRaw处理
  */
 function getHomeComponent() {
-  return localStorage.getItem('homeStyle') === 'simple' ? SimpleHome : ClassicHome
+  const homeStyle = localStorage.getItem('homeStyle')
+  return markRaw(homeStyle === 'simple' ? SimpleHome : ClassicHome)
 }
 
 /**
@@ -90,6 +92,7 @@ const currentHome = ref(getHomeComponent())
  * 更新首页风格
  * 
  * 当接收到首页风格变更事件时调用，重新读取设置并更新当前组件。
+ * 使用 markRaw 确保组件不会被包装成响应式对象，避免性能警告。
  * 这个函数会在用户在管理后台修改首页设置时被触发。
  * 
  * @example

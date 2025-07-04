@@ -53,7 +53,7 @@
   <!-- 精选文章容器 -->
   <div class="featured-articles">
     <!-- 区域标题 -->
-    <h2 class="section-title"><icon-fire></icon-fire> 热门内容</h2>
+    <h2 class="section-title"><IconFire color="red"></IconFire> 热门内容</h2>
     
     <!-- 加载状态 -->
     <div v-if="loading" class="loading-container">
@@ -63,7 +63,7 @@
     
     <!-- 错误状态 -->
     <div v-else-if="error" class="error-container">
-      <span>❌ 加载失败: {{ error }}</span>
+      <span><IconCross color="red"></IconCross> 加载失败: {{ error }}</span>
     </div>
     
     <!-- 文章网格 -->
@@ -122,7 +122,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { articleApi, type Article } from '../api/article'
 import { wikiParser } from '../utils/wikiParser'
-import { IconFire } from './icons'
+import { IconFire, IconCross } from './icons'
 
 // 路由实例
 const router = useRouter()

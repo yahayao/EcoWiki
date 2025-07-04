@@ -135,6 +135,17 @@
           <span class="icon">❓</span>
         </button>
       </div>
+
+      <div class="toolbar-divider"></div>
+      
+      <div class="toolbar-group">
+        <button @click="undo" title="撤销 (Ctrl+Z)" class="toolbar-btn" :disabled="!canUndo">
+          <span class="icon">↶</span>
+        </button>
+        <button @click="redo" title="重做 (Ctrl+Y)" class="toolbar-btn" :disabled="!canRedo">
+          <span class="icon">↷</span>
+        </button>
+      </div>
     </div>
 
     <!-- 编辑器主体 -->
@@ -287,6 +298,12 @@
           <h5>快捷键</h5>
           <div class="help-items">
             <div class="help-item">
+              <code>Ctrl+Z</code> → 撤销
+            </div>
+            <div class="help-item">
+              <code>Ctrl+Y</code> → 重做
+            </div>
+            <div class="help-item">
               <code>Ctrl+B</code> → 粗体
             </div>
             <div class="help-item">
@@ -353,6 +370,13 @@ const showEditor = ref(true)
 const currentLine = ref(1)
 const currentColumn = ref(1)
 
+// 撤销重做历史记录
+const history = ref<Array<{ content: string; cursor: number }>>([])
+const historyIndex = ref(-1)
+const maxHistorySize = 100
+let isUndoRedo = false
+let historyTimer: number | null = null
+
 // 模板引用
 const editorTextarea = ref<HTMLTextAreaElement>()
 const previewPane = ref<HTMLElement>()
@@ -365,6 +389,10 @@ const lineCount = computed(() => {
 const previewHtml = computed(() => {
   return wikiParser.parseToHtml(content.value)
 })
+
+// 撤销重做状态
+const canUndo = computed(() => historyIndex.value > 0)
+const canRedo = computed(() => historyIndex.value < history.value.length - 1)
 
 // 监听内容变化
 watch(content, (newValue) => {
@@ -453,6 +481,20 @@ const handleKeydown = (event: KeyboardEvent) => {
         event.preventDefault()
         emit('save', content.value)
         break
+      case 'z':
+      case 'Z':
+        event.preventDefault()
+        if (canUndo.value) {
+          undo()
+        }
+        break
+      case 'y':
+      case 'Y':
+        event.preventDefault()
+        if (canRedo.value) {
+          redo()
+        }
+        break
     }
   } else if (event.key === 'Tab') {
     event.preventDefault()
@@ -486,6 +528,17 @@ const handleKeydown = (event: KeyboardEvent) => {
 
 const handleInput = () => {
   updateSelection()
+  
+  // 添加到历史记录（使用防抖避免频繁添加）
+  const textarea = editorTextarea.value
+  if (textarea && !isUndoRedo) {
+    if (historyTimer) {
+      clearTimeout(historyTimer)
+    }
+    historyTimer = setTimeout(() => {
+      addToHistory(content.value, textarea.selectionStart)
+    }, 500)
+  }
 }
 
 const updateSelection = () => {
@@ -510,13 +563,75 @@ const syncScroll = () => {
   preview.scrollTop = scrollRatio * (preview.scrollHeight - preview.clientHeight)
 }
 
+// 历史记录管理
+const addToHistory = (content: string, cursor: number) => {
+  if (isUndoRedo) return
+  
+  // 移除当前位置之后的所有历史记录
+  if (historyIndex.value < history.value.length - 1) {
+    history.value = history.value.slice(0, historyIndex.value + 1)
+  }
+  
+  // 添加新的历史记录
+  history.value.push({ content, cursor })
+  historyIndex.value = history.value.length - 1
+  
+  // 限制历史记录数量
+  if (history.value.length > maxHistorySize) {
+    history.value.shift()
+    historyIndex.value--
+  }
+}
+
+// 撤销操作
+const undo = () => {
+  if (canUndo.value) {
+    isUndoRedo = true
+    historyIndex.value--
+    const historyItem = history.value[historyIndex.value]
+    content.value = historyItem.content
+    nextTick(() => {
+      const textarea = editorTextarea.value
+      if (textarea) {
+        textarea.focus()
+        textarea.setSelectionRange(historyItem.cursor, historyItem.cursor)
+      }
+      isUndoRedo = false
+    })
+  }
+}
+
+// 重做操作
+const redo = () => {
+  if (canRedo.value) {
+    isUndoRedo = true
+    historyIndex.value++
+    const historyItem = history.value[historyIndex.value]
+    content.value = historyItem.content
+    nextTick(() => {
+      const textarea = editorTextarea.value
+      if (textarea) {
+        textarea.focus()
+        textarea.setSelectionRange(historyItem.cursor, historyItem.cursor)
+      }
+      isUndoRedo = false
+    })
+  }
+}
+
 // 生命周期
 onMounted(() => {
   updateSelection()
+  // 初始化历史记录
+  if (content.value) {
+    addToHistory(content.value, 0)
+  }
 })
 
 onUnmounted(() => {
-  // 清理工作
+  if (historyTimer) {
+    clearTimeout(historyTimer)
+  }
 })
 </script>
 
@@ -575,6 +690,18 @@ onUnmounted(() => {
 .toolbar-btn.active {
   background: #0969da;
   color: white;
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: transparent;
+  color: #d0d7de;
+}
+
+.toolbar-btn:disabled:hover {
+  background: transparent;
+  color: #d0d7de;
 }
 
 .toolbar-btn .icon {
