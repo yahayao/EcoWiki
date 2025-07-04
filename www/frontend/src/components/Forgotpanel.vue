@@ -117,7 +117,7 @@
                 v-model="formData.password"
                 :type="showPassword ? 'text' : 'password'"
                 class="form-input"
-                placeholder="密码"
+                placeholder="新密码"
                 required
               />
               <!-- 密码显示/隐藏切换按钮 -->
