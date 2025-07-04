@@ -61,6 +61,7 @@
         <LoginPanel 
           @switchToRegister="$emit('switchToRegister')" 
           @loginSuccess="$emit('closeModals')"
+          @switchToForgot="$emit('switchToForgot')"
         />
         <!-- 模态框关闭按钮 -->
         <button class="close-button" @click="$emit('closeModals')">×</button>
@@ -76,7 +77,7 @@
         <!-- 忘记密码表单组件 -->
         <Forgotpannel 
           @switchToLogin="$emit('switchToLogin')" 
-          @forgotSuccess="$emit('closeModals')"
+          @resetSuccess="$emit('closeModals')"
         />
         <!-- 模态框关闭按钮 -->
         <button class="close-button" @click="$emit('closeModals')">×</button>
