@@ -112,7 +112,7 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
      * @param tag 标签名
      * @return 文章列表
      */
-    @Query("SELECT a FROM Article a WHERE a.tags LIKE CONCAT('%', :tag, '%')")
+    @Query("SELECT a FROM Article a JOIN a.tags t WHERE t.tagName = :tag")
     List<Article> findByTagsContaining(@Param("tag") String tag);
     
     /**
@@ -121,7 +121,7 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
      * @param pageable 分页参数
      * @return 文章分页数据
      */
-    @Query("SELECT a FROM Article a WHERE a.tags LIKE CONCAT('%', :tag, '%')")
+    @Query("SELECT a FROM Article a JOIN a.tags t WHERE t.tagName = :tag")
     Page<Article> findByTagsContaining(@Param("tag") String tag, Pageable pageable);
     
     // 按发布时间倒序查找文章

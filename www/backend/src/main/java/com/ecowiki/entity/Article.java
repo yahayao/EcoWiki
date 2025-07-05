@@ -1,15 +1,22 @@
 package com.ecowiki.entity;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.annotations.UpdateTimestamp;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -76,10 +83,14 @@ public class Article {
     @Column(columnDefinition = "INT DEFAULT 0")
     private Integer likes = 0;
     
-    /** 文章标签（多个标签以逗号分隔） */
-    @Size(max = 255, message = "标签长度不能超过255个字符")
-    @Column(length = 255)
-    private String tags;
+    /** 文章标签（多对多关系） */
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "Article_Tags",
+        joinColumns = @JoinColumn(name = "article_id"),
+        inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private Set<Tag> tags = new HashSet<>();
     
     /** 评论数 */
     @Column(columnDefinition = "INT DEFAULT 0")
@@ -169,11 +180,11 @@ public class Article {
         this.likes = likes;
     }
     
-    public String getTags() {
+    public Set<Tag> getTags() {
         return tags;
     }
     
-    public void setTags(String tags) {
+    public void setTags(Set<Tag> tags) {
         this.tags = tags;
     }
     
@@ -193,6 +204,58 @@ public class Article {
         this.updateTime = updateTime;
     }
     
+    // ==================== 标签操作方法 ====================
+    
+    /**
+     * 添加标签
+     * @param tag 要添加的标签
+     */
+    public void addTag(Tag tag) {
+        this.tags.add(tag);
+        tag.getArticles().add(this);
+    }
+    
+    /**
+     * 移除标签
+     * @param tag 要移除的标签
+     */
+    public void removeTag(Tag tag) {
+        this.tags.remove(tag);
+        tag.getArticles().remove(this);
+    }
+    
+    /**
+     * 清空所有标签
+     */
+    public void clearTags() {
+        for (Tag tag : new HashSet<>(this.tags)) {
+            removeTag(tag);
+        }
+    }
+    
+    /**
+     * 获取标签名称列表（用于向后兼容）
+     * @return 逗号分隔的标签名称字符串
+     */
+    public String getTagsAsString() {
+        if (tags == null || tags.isEmpty()) {
+            return "";
+        }
+        return tags.stream()
+                .map(Tag::getTagName)
+                .reduce((a, b) -> a + "," + b)
+                .orElse("");
+    }
+    
+    /**
+     * 检查是否包含指定标签
+     * @param tagName 标签名称
+     * @return 如果包含返回true，否则返回false
+     */
+    public boolean hasTag(String tagName) {
+        return tags.stream().anyMatch(tag -> tag.getTagName().equals(tagName));
+    }
+
     /**
      * 增加浏览次数
      */

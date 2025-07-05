@@ -228,8 +228,10 @@
                   <option value="其他">其他</option>
                 </select>
               </div>
-              
-              <div class="meta-group tags-display" v-if="articleForm.tags">
+            </div>
+            
+            <div class="meta-row" v-if="displayTags.length > 0">
+              <div class="meta-group tags-display">
                 <label>自动生成的标签：</label>
                 <div class="tags-container">
                   <span v-for="tag in displayTags" :key="tag" class="tag-badge">{{ tag }}</span>
@@ -1212,7 +1214,7 @@ const insertTable = () => {
     min-width: 200px;
 }
 
-.meta-group label {
+.meta-group.label {
     font-size: 14px;
     font-weight: 500;
     color: #374151;

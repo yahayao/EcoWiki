@@ -3,6 +3,7 @@ package com.ecowiki.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -17,6 +18,7 @@ import com.ecowiki.dto.ArticleDto;
 import com.ecowiki.dto.ArticleStatisticsDto;
 import com.ecowiki.dto.ArticleUpdateRequest;
 import com.ecowiki.entity.Article;
+import com.ecowiki.entity.Tag;
 import com.ecowiki.repository.ArticleRepository;
 
 /**
@@ -43,6 +45,12 @@ public class ArticleService {
      */
     @Autowired
     private ArticleRepository articleRepository;
+    
+    /**
+     * 标签服务接口
+     */
+    @Autowired
+    private TagService tagService;
 
     /**
      * 创建新文章
@@ -55,7 +63,13 @@ public class ArticleService {
         article.setAuthor(request.getAuthor());
         article.setContent(request.getContent());
         article.setCategory(request.getCategory());
-        article.setTags(request.getTags());
+        
+        // 处理标签
+        if (request.getTags() != null && !request.getTags().trim().isEmpty()) {
+            Set<Tag> tags = tagService.parseAndCreateTags(request.getTags());
+            article.setTags(tags);
+        }
+        
         article.setPublishDate(LocalDateTime.now());
         article.setViews(0);
         article.setLikes(0);
@@ -82,7 +96,13 @@ public class ArticleService {
         article.setTitle(request.getTitle());
         article.setContent(request.getContent());
         article.setCategory(request.getCategory());
-        article.setTags(request.getTags());
+        
+        // 更新标签
+        article.clearTags(); // 清除现有标签关联
+        if (request.getTags() != null && !request.getTags().trim().isEmpty()) {
+            Set<Tag> tags = tagService.parseAndCreateTags(request.getTags());
+            article.setTags(tags);
+        }
         
         Article savedArticle = articleRepository.save(article);
         return convertToDto(savedArticle);
@@ -286,7 +306,7 @@ public class ArticleService {
         dto.setCategory(article.getCategory());
         dto.setViews(article.getViews());
         dto.setLikes(article.getLikes());
-        dto.setTags(article.getTags());
+        dto.setTags(article.getTagsAsString()); // 转换为逗号分隔的字符串
         dto.setComments(article.getComments());
         dto.setUpdateTime(article.getUpdateTime());
         return dto;
