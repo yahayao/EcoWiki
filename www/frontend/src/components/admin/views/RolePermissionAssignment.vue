@@ -45,12 +45,12 @@
               >
                 <i class="icon-edit"></i>
               </button>
-              <!-- 删除角色按钮，系统默认角色(admin/user)禁用删除 -->
+              <!-- 删除角色按钮，系统默认角色(admin/superadmin)禁用删除 -->
               <button 
                 class="btn btn-sm btn-danger"
                 @click.stop="deleteRole(role)"
                 title="删除角色"
-                :disabled="role.roleName === 'admin' || role.roleName === 'user'"
+                :disabled="role.roleName === 'admin' || role.roleName === 'superadmin' "
               >
                 <i class="icon-delete"></i>
               </button>
