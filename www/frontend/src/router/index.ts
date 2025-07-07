@@ -37,6 +37,9 @@ import DynamicHome from '../views/DynamicHome.vue'
 import ArticleDetail from '../views/ArticleDetail.vue'
 import ArticleEdit from '../views/ArticleEdit.vue'
 
+// 导入用户个人资料组件
+import userProfile from '../components/user/UserProfile.vue'
+
 // 导入管理后台组件
 import AdminLayout from '../components/admin/AdminLayout.vue'
 import SystemSettings from '../components/admin/views/SystemSettings.vue'
@@ -54,6 +57,7 @@ const routes = [
   { path: '/', name: 'Home', component: DynamicHome },
   { path: '/wiki/:title', name: 'ArticleDetail', component: ArticleDetail },
   { path: '/edit/:title', name: 'ArticleEdit', component: ArticleEdit },
+  { path: '/userProfile', name: 'userProfile', component: userProfile },
   {
     path: '/admin',
     component: AdminLayout,
