@@ -38,6 +38,7 @@
         <div class="game-controls">
           <div class="score">分数: {{ score }}</div>
           <div class="lives">生命: {{ lives }}</div>
+          <div class="shield" v-if="hasShield" style="color: #00ffff;">🛡️ 护盾</div>
           <div class="difficulty">难度: {{ Math.floor((currentTime - gameStartTime) / 1000 / 10) + 1 }}</div>
           <div class="ammo" :class="{ 'low-ammo': currentAmmo <= 5 && !powerUpActive }">
             弹夹: 
@@ -73,6 +74,7 @@
             <p>使用WASD移动，鼠标左键射击</p>
             <p style="font-size: 0.9rem; color: #ffa500;">💡 只有击中红色中心点才会减少生命</p>
             <p style="font-size: 0.8rem; color: #00ffff;">🎁 拾取蓝色增益球获得自动散弹射击</p>
+            <p style="font-size: 0.8rem; color: #ffff00;">🛡️ 拾取金色护盾抵挡一次伤害</p>
             <button @click="startGame" class="start-btn">开始游戏</button>
           </div>
           
@@ -137,6 +139,12 @@ const powerUpEndTime = ref(0)
 const powerUpDuration = 8000 // 增益持续8秒
 
 /**
+ * 护盾系统
+ */
+const hasShield = ref(false)
+const shieldWaves: { x: number, y: number, radius: number, opacity: number, startTime: number }[] = []
+
+/**
  * 游戏难度和时间管理
  */
 const gameStartTime = ref(0)
@@ -192,7 +200,7 @@ interface SpreadBullet extends Bullet {
 
 interface PowerUp extends GameObject {
   active: boolean
-  type: 'spreadShot'
+  type: 'spreadShot' | 'shield'
   floatOffset: number
   curveSpeed: number
 }
@@ -261,6 +269,8 @@ function initGame() {
   currentAmmo.value = maxAmmo
   isReloading.value = false
   powerUpActive.value = false
+  hasShield.value = false
+  shieldWaves.length = 0
   
   // 清空玩家轨迹
   playerTrail = []
@@ -550,16 +560,19 @@ function spawnPowerUp() {
   
   // 每20秒生成一个增益道具
   if (currentTime.value - lastPowerUpSpawn > 20000) {
+    // 随机选择道具类型：70%散弹，30%护盾
+    const powerUpType = Math.random() < 0.7 ? 'spreadShot' : 'shield'
+    
     powerUps.push({
       x: Math.random() * (gameWidth - 30),
       y: -30,
-      width: 30,
-      height: 30,
+      width: 30, // 增大尺寸
+      height: 30, // 增大尺寸
       vx: 0,
       vy: 2,
-      color: '#00ffff',
+      color: powerUpType === 'spreadShot' ? '#00ffff' : '#ffff00', // 护盾道具是金色
       active: true,
-      type: 'spreadShot',
+      type: powerUpType,
       floatOffset: Math.random() * Math.PI * 2,
       curveSpeed: 0.02 + Math.random() * 0.02
     })
@@ -764,9 +777,41 @@ function updateGameObjects() {
   
   // 更新增益道具
   powerUps.forEach(powerUp => {
-    // 曲线飘落运动
-    powerUp.floatOffset += powerUp.curveSpeed
-    powerUp.x += Math.sin(powerUp.floatOffset) * 2
+    // 计算与玩家的距离
+    const playerCenterX = player.x + player.width / 2
+    const playerCenterY = player.y + player.height / 2
+    const powerUpCenterX = powerUp.x + powerUp.width / 2
+    const powerUpCenterY = powerUp.y + powerUp.height / 2
+    
+    const distance = Math.sqrt(
+      Math.pow(powerUpCenterX - playerCenterX, 2) + 
+      Math.pow(powerUpCenterY - playerCenterY, 2)
+    )
+    
+    // 自动吸附功能
+    const attractRange = 120 // 吸附范围
+    const attractStrength = 0.15 // 吸附强度
+    
+    if (distance <= attractRange && distance > 0) {
+      // 计算吸附方向
+      const dx = playerCenterX - powerUpCenterX
+      const dy = playerCenterY - powerUpCenterY
+      
+      // 应用吸附力，距离越近吸引力越强
+      const attractionFactor = (attractRange - distance) / attractRange
+      const attractForce = attractStrength * attractionFactor
+      
+      powerUp.vx = dx / distance * attractForce * 5
+      powerUp.vy = Math.max(powerUp.vy * 0.7, dy / distance * attractForce * 5) // 保持一定的下落速度
+    } else {
+      // 正常的曲线飘落运动
+      powerUp.floatOffset += powerUp.curveSpeed
+      powerUp.vx = Math.sin(powerUp.floatOffset) * 2
+      if (!powerUp.vy) powerUp.vy = 2 // 确保有基础下落速度
+    }
+    
+    // 更新位置
+    powerUp.x += powerUp.vx
     powerUp.y += powerUp.vy
     
     if (powerUp.y > gameHeight) powerUp.active = false
@@ -809,12 +854,20 @@ function checkCollisions() {
         Math.pow(bulletCenterY - playerCenterY, 2)
       )
       
-      // 只有击中中心点才减少生命
+      // 只有击中中心点才会触发伤害或护盾
       if (distance <= centerHitRadius) {
         bullet.active = false
-        lives.value--
-        if (lives.value <= 0) {
-          gameOver.value = true
+        
+        if (hasShield.value) {
+          // 护盾抵挡伤害，产生冲击波特效
+          createShieldWave(playerCenterX, playerCenterY)
+          hasShield.value = false
+        } else {
+          // 没有护盾，正常扣血
+          lives.value--
+          if (lives.value <= 0) {
+            gameOver.value = true
+          }
         }
       }
     }
@@ -832,12 +885,20 @@ function checkCollisions() {
         Math.pow(enemyCenterY - playerCenterY, 2)
       )
       
-      // 只有撞击中心点才减少生命
+      // 只有撞击中心点才会触发伤害或护盾
       if (distance <= centerHitRadius + 10) {
         enemy.active = false
-        lives.value--
-        if (lives.value <= 0) {
-          gameOver.value = true
+        
+        if (hasShield.value) {
+          // 护盾抵挡伤害，产生冲击波特效
+          createShieldWave(playerCenterX, playerCenterY)
+          hasShield.value = false
+        } else {
+          // 没有护盾，正常扣血
+          lives.value--
+          if (lives.value <= 0) {
+            gameOver.value = true
+          }
         }
       }
     }
@@ -851,11 +912,17 @@ function checkCollisions() {
         Math.pow(powerUp.y + powerUp.height / 2 - playerCenterY, 2)
       )
       
-      if (distance <= 20) {
+      if (distance <= 35) { // 增大拾取范围，适应更大的道具
         powerUp.active = false
-        // 激活增益效果
-        powerUpActive.value = true
-        powerUpEndTime.value = Date.now() + powerUpDuration
+        
+        if (powerUp.type === 'spreadShot') {
+          // 激活散弹增益效果
+          powerUpActive.value = true
+          powerUpEndTime.value = Date.now() + powerUpDuration
+        } else if (powerUp.type === 'shield') {
+          // 激活护盾效果
+          hasShield.value = true
+        }
       }
     }
   })
@@ -904,8 +971,11 @@ function render() {
   
   // 绘制增益道具
   powerUps.forEach(powerUp => {
-    drawPowerUp(powerUp.x, powerUp.y, powerUp.width, powerUp.height)
+    drawPowerUp(powerUp.x, powerUp.y, powerUp.width, powerUp.height, powerUp.type)
   })
+  
+  // 绘制护盾冲击波
+  drawShieldWaves()
   
   // 绘制UI元素
   drawAmmoDisplay()
@@ -913,6 +983,79 @@ function render() {
   drawPowerUpIndicator()
   drawGameTimer() // 添加游戏计时器
   drawSpeedIndicator() // 添加速度指示器
+}
+
+/**
+ * 创建护盾冲击波特效
+ */
+function createShieldWave(x: number, y: number) {
+  shieldWaves.push({
+    x: x,
+    y: y,
+    radius: 0,
+    opacity: 1,
+    startTime: Date.now()
+  })
+}
+
+/**
+ * 更新护盾冲击波
+ */
+function updateShieldWaves() {
+  const currentTime = Date.now()
+  
+  // 更新冲击波效果
+  shieldWaves.forEach(wave => {
+    const elapsed = currentTime - wave.startTime
+    const duration = 800 // 冲击波持续800ms
+    
+    if (elapsed < duration) {
+      // 半径增长
+      wave.radius = (elapsed / duration) * 150 // 最大半径150像素
+      // 透明度递减
+      wave.opacity = 1 - (elapsed / duration)
+    }
+  })
+  
+  // 移除已完成的冲击波
+  shieldWaves.splice(0, shieldWaves.length, ...shieldWaves.filter(wave => 
+    Date.now() - wave.startTime < 800
+  ))
+}
+
+/**
+ * 绘制护盾冲击波
+ */
+function drawShieldWaves() {
+  shieldWaves.forEach(wave => {
+    if (wave.opacity > 0) {
+      ctx.save()
+      
+      // 外圈冲击波
+      ctx.strokeStyle = `rgba(0, 255, 255, ${wave.opacity})`
+      ctx.lineWidth = 4
+      ctx.setLineDash([10, 5])
+      ctx.beginPath()
+      ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2)
+      ctx.stroke()
+      
+      // 内圈光晕
+      const innerGradient = ctx.createRadialGradient(
+        wave.x, wave.y, 0,
+        wave.x, wave.y, wave.radius * 0.8
+      )
+      innerGradient.addColorStop(0, `rgba(255, 255, 255, ${wave.opacity * 0.3})`)
+      innerGradient.addColorStop(0.5, `rgba(0, 255, 255, ${wave.opacity * 0.2})`)
+      innerGradient.addColorStop(1, 'rgba(0, 255, 255, 0)')
+      
+      ctx.fillStyle = innerGradient
+      ctx.beginPath()
+      ctx.arc(wave.x, wave.y, wave.radius * 0.8, 0, Math.PI * 2)
+      ctx.fill()
+      
+      ctx.restore()
+    }
+  })
 }
 
 /**
@@ -1168,6 +1311,30 @@ function drawPlayerShip(x: number, y: number, width: number, height: number) {
     ctx.beginPath()
     ctx.arc(x + width / 2, y + height / 2, 1, 0, Math.PI * 2)
     ctx.fill()
+  }
+  
+  // 护盾指示器
+  if (hasShield.value) {
+    const time = Date.now() * 0.01
+    const shieldRadius = width / 2 + 15 + Math.sin(time) * 3
+    
+    // 护盾光环
+    const shieldGradient = ctx.createRadialGradient(
+      x + width / 2, y + height / 2, shieldRadius - 5,
+      x + width / 2, y + height / 2, shieldRadius + 5
+    )
+    shieldGradient.addColorStop(0, 'rgba(0, 255, 255, 0)')
+    shieldGradient.addColorStop(0.5, 'rgba(0, 255, 255, 0.6)')
+    shieldGradient.addColorStop(1, 'rgba(0, 255, 255, 0)')
+    
+    ctx.strokeStyle = shieldGradient
+    ctx.lineWidth = 3
+    ctx.setLineDash([8, 4])
+    ctx.lineDashOffset = time * 2
+    ctx.beginPath()
+    ctx.arc(x + width / 2, y + height / 2, shieldRadius, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.setLineDash([]) // 重置虚线
   }
   
   ctx.restore()
@@ -1446,35 +1613,110 @@ function drawEnemyShip(x: number, y: number, width: number, height: number, type
 /**
  * 绘制增益道具
  */
-function drawPowerUp(x: number, y: number, width: number, height: number) {
+function drawPowerUp(x: number, y: number, width: number, height: number, powerUpType: 'spreadShot' | 'shield' = 'spreadShot') {
   ctx.save()
   
-  // 半透明球体效果
+  // 计算与玩家的距离用于吸附效果
+  const playerCenterX = player.x + player.width / 2
+  const playerCenterY = player.y + player.height / 2
+  const powerUpCenterX = x + width / 2
+  const powerUpCenterY = y + height / 2
+  
+  const distance = Math.sqrt(
+    Math.pow(powerUpCenterX - playerCenterX, 2) + 
+    Math.pow(powerUpCenterY - playerCenterY, 2)
+  )
+  
+  const attractRange = 120
+  const isInAttractRange = distance <= attractRange
+  
+  // 外部吸附光圈效果
+  if (isInAttractRange) {
+    const attractionFactor = (attractRange - distance) / attractRange
+    const circleRadius = width / 2 + 10 + attractionFactor * 15
+    
+    const attractGradient = ctx.createRadialGradient(
+      powerUpCenterX, powerUpCenterY, 0,
+      powerUpCenterX, powerUpCenterY, circleRadius
+    )
+    attractGradient.addColorStop(0, 'rgba(255, 255, 0, 0)')
+    attractGradient.addColorStop(0.7, `rgba(255, 255, 0, ${attractionFactor * 0.3})`)
+    attractGradient.addColorStop(1, 'rgba(255, 255, 0, 0)')
+    
+    ctx.fillStyle = attractGradient
+    ctx.beginPath()
+    ctx.arc(powerUpCenterX, powerUpCenterY, circleRadius, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  
+  // 根据道具类型设置颜色
+  let baseColor, iconText
+  if (powerUpType === 'shield') {
+    baseColor = { r: 255, g: 255, b: 0 } // 金色
+    iconText = '🛡️'
+  } else {
+    baseColor = { r: 0, g: 255, b: 255 } // 青色
+    iconText = '散'
+  }
+  
+  // 主体球体效果 - 更大更亮
   const gradient = ctx.createRadialGradient(
     x + width / 2, y + height / 2, 0,
     x + width / 2, y + height / 2, width / 2
   )
-  gradient.addColorStop(0, 'rgba(0, 255, 255, 0.8)')
-  gradient.addColorStop(0.7, 'rgba(0, 200, 255, 0.4)')
-  gradient.addColorStop(1, 'rgba(0, 150, 255, 0.1)')
+  gradient.addColorStop(0, `rgba(${Math.min(baseColor.r + 100, 255)}, ${baseColor.g}, ${baseColor.b}, 0.9)`)
+  gradient.addColorStop(0.5, `rgba(${Math.floor(baseColor.r * 0.8)}, ${Math.floor(baseColor.g * 0.8)}, ${Math.floor(baseColor.b * 0.8)}, 0.7)`)
+  gradient.addColorStop(0.8, `rgba(${Math.floor(baseColor.r * 0.6)}, ${Math.floor(baseColor.g * 0.6)}, ${Math.floor(baseColor.b * 0.6)}, 0.5)`)
+  gradient.addColorStop(1, `rgba(${Math.floor(baseColor.r * 0.4)}, ${Math.floor(baseColor.g * 0.4)}, ${Math.floor(baseColor.b * 0.4)}, 0.2)`)
   
   ctx.fillStyle = gradient
   ctx.beginPath()
   ctx.arc(x + width / 2, y + height / 2, width / 2, 0, Math.PI * 2)
   ctx.fill()
   
-  // 内部发光效果
-  const pulseIntensity = 0.5 + Math.sin(Date.now() * 0.01) * 0.3
-  ctx.fillStyle = `rgba(255, 255, 255, ${pulseIntensity})`
+  // 外边框
+  ctx.strokeStyle = isInAttractRange ? '#ffff00' : '#ffffff'
+  ctx.lineWidth = isInAttractRange ? 3 : 2
   ctx.beginPath()
-  ctx.arc(x + width / 2, y + height / 2, width / 4, 0, Math.PI * 2)
+  ctx.arc(x + width / 2, y + height / 2, width / 2 - 2, 0, Math.PI * 2)
+  ctx.stroke()
+  
+  // 内部脉冲发光效果
+  const pulseIntensity = 0.6 + Math.sin(Date.now() * 0.008) * 0.4
+  const pulseGradient = ctx.createRadialGradient(
+    x + width / 2, y + height / 2, 0,
+    x + width / 2, y + height / 2, width / 3
+  )
+  pulseGradient.addColorStop(0, `rgba(255, 255, 255, ${pulseIntensity})`)
+  pulseGradient.addColorStop(0.6, `rgba(${Math.floor(baseColor.r * 0.6)}, ${baseColor.g}, ${baseColor.b}, ${pulseIntensity * 0.5})`)
+  pulseGradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
+  
+  ctx.fillStyle = pulseGradient
+  ctx.beginPath()
+  ctx.arc(x + width / 2, y + height / 2, width / 3, 0, Math.PI * 2)
   ctx.fill()
   
-  // 散弹图标
+  // 道具图标 - 更大更清晰
   ctx.fillStyle = '#ffffff'
-  ctx.font = '12px Arial'
-  ctx.textAlign = 'center'
-  ctx.fillText('散', x + width / 2, y + height / 2 + 4)
+  if (powerUpType === 'shield') {
+    ctx.font = 'bold 16px Arial'
+    ctx.textAlign = 'center'
+    ctx.fillText('🛡️', x + width / 2, y + height / 2 + 5)
+  } else {
+    ctx.font = 'bold 18px Arial'
+    ctx.textAlign = 'center'
+    ctx.strokeStyle = '#000000'
+    ctx.lineWidth = 1
+    ctx.strokeText('散', x + width / 2, y + height / 2 + 6)
+    ctx.fillText('散', x + width / 2, y + height / 2 + 6)
+  }
+  
+  // 吸附状态提示文字
+  if (isInAttractRange) {
+    ctx.fillStyle = '#ffff00'
+    ctx.font = 'bold 12px Arial'
+    ctx.fillText('吸附中...', x + width / 2, y + height + 15)
+  }
   
   ctx.restore()
 }
@@ -1797,6 +2039,7 @@ function gameLoop() {
   spawnEnemy()
   spawnPowerUp()
   updateGameObjects()
+  updateShieldWaves()
   checkCollisions()
   render()
   
