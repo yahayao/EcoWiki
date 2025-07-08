@@ -218,13 +218,16 @@ const shieldWaves: { x: number, y: number, radius: number, opacity: number, star
  */
 const gameStartTime = ref(0)
 const currentTime = ref(0)
+const pausedTime = ref(0) // 累计暂停时间
+const pauseStartTime = ref(0) // 暂停开始时间
 
 /**
- * 计算游戏时间（秒）
+ * 计算游戏时间（秒）- 排除暂停时间
  */
 const gameTimeSeconds = computed(() => {
   if (!gameStarted.value || gameStartTime.value === 0) return 0
-  return (currentTime.value - gameStartTime.value) / 1000
+  const totalTime = currentTime.value - gameStartTime.value
+  return (totalTime - pausedTime.value) / 1000
 })
 
 /**
@@ -279,7 +282,7 @@ interface PowerUp extends GameObject {
  * 游戏对象
  */
 let ctx: CanvasRenderingContext2D
-let animationId: number
+let animationId: number | null = null
 let player: Player
 let bullets: Bullet[] = []
 let enemies: Enemy[] = []
@@ -337,6 +340,8 @@ function initGame() {
   lastPowerUpSpawn = 0
   gameStartTime.value = Date.now()
   currentTime.value = Date.now()
+  pausedTime.value = 0 // 重置暂停累计时间
+  pauseStartTime.value = 0
   
   // 重置弹夹和增益状态
   currentAmmo.value = maxAmmo
@@ -396,9 +401,17 @@ function restartGame() {
  * 暂停/继续游戏
  */
 function togglePause() {
-  isPaused.value = !isPaused.value
-  if (!isPaused.value && gameStarted.value && !gameOver.value) {
-    gameLoop()
+  if (isPaused.value) {
+    // 从暂停恢复：累计暂停时间
+    pausedTime.value += Date.now() - pauseStartTime.value
+    isPaused.value = false
+    if (gameStarted.value && !gameOver.value) {
+      gameLoop()
+    }
+  } else {
+    // 开始暂停：记录暂停开始时间
+    pauseStartTime.value = Date.now()
+    isPaused.value = true
   }
 }
 
@@ -410,6 +423,7 @@ function closeGame() {
   gameStarted.value = false
   difficultySelected.value = false // 重置难度选择
   isPaused.value = false
+  playerExploding.value = false // 重置爆炸状态
   if (animationId) {
     cancelAnimationFrame(animationId)
   }
@@ -485,6 +499,9 @@ function handleMouseUp(event: MouseEvent) {
  * 更新玩家位置
  */
 function updatePlayer() {
+  // 如果玩家正在爆炸，停止更新玩家
+  if (playerExploding.value) return
+  
   const maxSpeed = 1.5 // 最大速度
   const acceleration = 0.25 // 加速度 (降低让加速更缓慢)
   const friction = 1.2 // 摩擦力/阻力系数 (进一步提高让减速更缓慢)
@@ -705,16 +722,19 @@ function spawnPowerUp() {
   // 这个函数不再使用，道具现在通过击毁敌机掉落
 }
 function spawnEnemy() {
+  // 如果玩家正在爆炸，停止生成敌人
+  if (playerExploding.value) return
+  
   currentTime.value = Date.now()
-  const gameTimeSeconds = (currentTime.value - gameStartTime.value) / 1000
+  const actualGameTime = (currentTime.value - gameStartTime.value - pausedTime.value) / 1000 // 使用修正后的游戏时间
   
   // 根据难度调整基础速度和难度递增
   const baseDifficultyMultiplier = selectedDifficulty.value === 'easy' ? 0.7 : 1.2 // 简单模式更慢，困难模式更快
-  let difficultyMultiplier = baseDifficultyMultiplier + gameTimeSeconds / 30 // 每30秒增加难度
+  let difficultyMultiplier = baseDifficultyMultiplier + actualGameTime / 30 // 每30秒增加难度
   
   // 在1分30秒（90秒）后大幅加速
-  if (gameTimeSeconds > 90) {
-    const extraTime = gameTimeSeconds - 90
+  if (actualGameTime > 90) {
+    const extraTime = actualGameTime - 90
     difficultyMultiplier = baseDifficultyMultiplier + 3 + extraTime / 15 // 90秒后基础倍率+3，并且每15秒再增加
   }
   
@@ -726,7 +746,7 @@ function spawnEnemy() {
   let minSpawnInterval = selectedDifficulty.value === 'easy' ? 300 : 150
   
   // 90秒后敌人生成频率大幅提升
-  if (gameTimeSeconds > 90) {
+  if (actualGameTime > 90) {
     baseSpawnInterval = selectedDifficulty.value === 'easy' ? 600 : 400 // 基础生成间隔减半
     minSpawnInterval = selectedDifficulty.value === 'easy' ? 120 : 80 // 最小间隔也显著降低
   }
@@ -744,12 +764,13 @@ function spawnEnemy() {
     let enemyVy = enemySpeed
     
     const advancedEnemyStartTime = selectedDifficulty.value === 'easy' ? 30 : 20 // 简单模式延迟出现高级敌人
-    if (gameTimeSeconds > advancedEnemyStartTime) {
+    const actualGameTime = gameTimeSeconds.value
+    if (actualGameTime > advancedEnemyStartTime) {
       let fastChance = selectedDifficulty.value === 'easy' ? 0.15 : 0.25 // 简单模式减少高速敌人
       let spreadChance = selectedDifficulty.value === 'easy' ? 0.25 : 0.4 // 简单模式减少扩散弹敌人
       
       // 90秒后大幅增加高级敌人出现概率
-      if (gameTimeSeconds > 90) {
+      if (actualGameTime > 90) {
         fastChance = selectedDifficulty.value === 'easy' ? 0.35 : 0.45 // 显著增加高速敌人
         spreadChance = selectedDifficulty.value === 'easy' ? 0.65 : 0.75 // 显著增加扩散弹敌人
       }
@@ -785,6 +806,9 @@ function spawnEnemy() {
  * 更新游戏对象
  */
 function updateGameObjects() {
+  // 如果玩家正在爆炸，停止更新所有游戏对象
+  if (playerExploding.value) return
+  
   currentTime.value = Date.now()
   const gameTimeSeconds = (currentTime.value - gameStartTime.value) / 1000
   
@@ -968,6 +992,9 @@ function updateGameObjects() {
  * 碰撞检测
  */
 function checkCollisions() {
+  // 如果玩家正在爆炸，停止碰撞检测
+  if (playerExploding.value) return
+  
   // 玩家子弹击中敌人
   bullets.forEach((bullet, bulletIndex) => {
     enemies.forEach((enemy, enemyIndex) => {
@@ -1465,14 +1492,136 @@ function triggerShakeEffect() {
 }
 
 /**
+ * 爆炸动画循环 - 只渲染爆炸特效
+ */
+function explosionAnimationLoop() {
+  if (!playerExploding.value) return
+  
+  const canvas = gameCanvas.value
+  if (!canvas) return
+  
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  
+  // 清空画布
+  ctx.clearRect(0, 0, gameWidth, gameHeight)
+  
+  // 只渲染爆炸特效
+  renderExplosionOnly(ctx)
+  
+  // 继续动画循环
+  if (playerExploding.value) {
+    requestAnimationFrame(explosionAnimationLoop)
+  }
+}
+
+/**
+ * 渲染爆炸动画（静止的游戏画面 + 爆炸特效）
+ */
+function renderExplosionOnly(ctx: CanvasRenderingContext2D) {
+  const currentTime = Date.now()
+  
+  // 渲染静止的游戏背景
+  ctx.fillStyle = '#000011'
+  ctx.fillRect(0, 0, gameWidth, gameHeight)
+  
+  // 绘制星星背景
+  for (let i = 0; i < 50; i++) {
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(
+      (i * 37 + Date.now() * 0.1) % gameWidth,
+      (i * 43 + Date.now() * 0.05) % gameHeight,
+      1, 1
+    )
+  }
+  
+  // 绘制静止的游戏对象（不更新位置，只显示当前状态）
+  
+  // 绘制玩家子弹（静止）
+  bullets.forEach(bullet => {
+    ctx.fillStyle = bullet.color
+    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height)
+  })
+  
+  // 绘制敌人飞机（静止）
+  enemies.forEach(enemy => {
+    if (enemy.active) {
+      drawEnemyShip(enemy.x, enemy.y, enemy.width, enemy.height, enemy.type)
+    }
+  })
+  
+  // 绘制敌人子弹（静止）
+  enemyBullets.forEach(bullet => {
+    ctx.fillStyle = bullet.color
+    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height)
+  })
+  
+  // 绘制增益道具（静止）
+  powerUps.forEach(powerUp => {
+    drawPowerUp(powerUp.x, powerUp.y, powerUp.width, powerUp.height, powerUp.type)
+  })
+  
+  // 绘制护盾冲击波（静止）
+  drawShieldWaves()
+  
+  // 绘制其他击杀特效（静止，但不包括玩家爆炸）
+  killEffects.forEach((effect, index) => {
+    const elapsed = currentTime - effect.startTime
+    
+    effect.particles.forEach((particle, particleIndex) => {
+      if (particle.life > 0) {
+        // 更新粒子（只有爆炸粒子继续运动）
+        particle.x += particle.vx
+        particle.y += particle.vy
+        particle.life -= 16 // 假设60fps
+        particle.rotation += particle.rotationSpeed
+        
+        // 计算透明度
+        const lifeRatio = particle.life / particle.maxLife
+        const alpha = Math.max(0, lifeRatio)
+        
+        // 绘制粒子
+        ctx.save()
+        ctx.globalAlpha = alpha
+        ctx.fillStyle = particle.color
+        ctx.translate(particle.x, particle.y)
+        ctx.rotate(particle.rotation)
+        ctx.fillRect(-particle.size / 2, -particle.size / 2, particle.size, particle.size)
+        ctx.restore()
+      }
+    })
+    
+    // 移除死亡粒子
+    effect.particles = effect.particles.filter(p => p.life > 0)
+    
+    // 如果所有粒子都死亡，移除整个效果
+    if (effect.particles.length === 0) {
+      killEffects.splice(index, 1)
+    }
+  })
+  
+  // 绘制道具拾取特效（静止）
+  drawPowerUpPickupEffects()
+}
+
+/**
  * 触发玩家飞机爆炸效果
  */
 function triggerPlayerExplosion() {
   playerExploding.value = true
   explosionStartTime.value = Date.now()
   
+  // 立即停止游戏循环，不再更新游戏对象
+  if (animationId) {
+    cancelAnimationFrame(animationId)
+    animationId = null
+  }
+  
   // 创建超级剧烈的玩家爆炸特效
   createPlayerKillEffect(player.x + player.width / 2, player.y + player.height / 2)
+  
+  // 启动专门的爆炸动画循环
+  explosionAnimationLoop()
   
   // 2.5秒后结束爆炸动画并显示游戏结束
   setTimeout(() => {
@@ -1985,7 +2134,7 @@ function drawPlayerExplosion(x: number, y: number, width: number, height: number
 }
 
 /**
- * 绘制敌人飞船 - 三种不同设计的战斗机
+ * 爆炸动画专用循环（只更新和渲染爆炸特效）
  */
 function drawEnemyShip(x: number, y: number, width: number, height: number, type: 'normal' | 'fast' | 'spread') {
   ctx.save()
@@ -2796,7 +2945,7 @@ function drawPlayerTrail() {
  * 游戏主循环
  */
 function gameLoop() {
-  if (isPaused.value || gameOver.value) return
+  if (isPaused.value || gameOver.value || playerExploding.value) return
   
   // 更新当前时间
   currentTime.value = Date.now()
