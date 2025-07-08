@@ -72,8 +72,15 @@
     <div class="nav-btns">
       <button class="nav-btn" @click="$emit('show-login')">登录</button>
       <button class="nav-btn" @click="$emit('show-register')">注册</button>
+      <button class="nav-btn" @click="showGame">太空射击</button>
       <button class="nav-btn" @click="$emit('show-admin')">管理设置</button>
     </div>
+    
+    <!-- 太空射击游戏组件 -->
+    <SpaceShooterGame 
+      :visible="gameVisible"
+      @close="closeGame"
+    />
   </div>
 </template>
 
@@ -84,6 +91,28 @@
  * 实现最简化的首页功能，只提供核心的用户操作入口。
  * 通过事件发射机制将用户操作传递给父组件处理。
  */
+
+import { ref } from 'vue'
+import SpaceShooterGame from '../spgame/SpaceShooterGame.vue'
+
+/**
+ * 游戏状态管理
+ */
+const gameVisible = ref(false)
+
+/**
+ * 显示游戏
+ */
+function showGame() {
+  gameVisible.value = true
+}
+
+/**
+ * 关闭游戏
+ */
+function closeGame() {
+  gameVisible.value = false
+}
 
 /**
  * 组件事件定义

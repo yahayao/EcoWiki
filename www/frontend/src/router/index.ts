@@ -38,7 +38,7 @@ import ArticleDetail from '../views/ArticleDetail.vue'
 import ArticleEdit from '../views/ArticleEdit.vue'
 
 // 导入用户个人资料组件
-import userProfile from '../components/user/UserProfile.vue'
+import userProfile from '../components/userhome/userProfile.vue'
 
 // 导入管理后台组件
 import AdminLayout from '../components/admin/AdminLayout.vue'
