@@ -39,12 +39,17 @@
           <div class="score">分数: {{ score }}</div>
           <div class="lives">生命: {{ lives }}</div>
           <div class="shield" v-if="hasShield" style="color: #00ffff;">🛡️ 护盾</div>
-          <div class="difficulty">难度: {{ Math.floor((currentTime - gameStartTime) / 1000 / 10) + 1 }}</div>
-          <div class="ammo" :class="{ 'low-ammo': currentAmmo <= 5 && !powerUpActive }">
+          <div class="difficulty">
+            {{ selectedDifficulty === 'easy' ? '简单模式' : '困难模式' }}
+          </div>
+          <div v-if="selectedDifficulty === 'hard'" class="ammo" :class="{ 'low-ammo': currentAmmo <= 5 && !powerUpActive }">
             弹夹: 
             <span v-if="powerUpActive" class="infinite-ammo">∞/∞</span>
             <span v-else>{{ currentAmmo }}/{{ maxAmmo }}</span>
             <span v-if="isReloading && !powerUpActive" class="reloading">(换弹中)</span>
+          </div>
+          <div v-else class="ammo-easy">
+            🌟 无限弹药
           </div>
           <button @click="togglePause" class="pause-btn">
             {{ isPaused ? '继续' : '暂停' }}
@@ -67,15 +72,47 @@
       ></canvas>
       
       <!-- 游戏状态覆盖层 -->
-      <div v-if="!gameStarted || isPaused || gameOver" class="game-status-overlay">
+      <div v-if="!gameStarted || isPaused || gameOver || !difficultySelected" class="game-status-overlay">
         <div class="status-content">
-          <div v-if="!gameStarted" class="start-screen">
+          <div v-if="!difficultySelected" class="difficulty-screen">
+            <h3>选择游戏难度</h3>
+            
+            <div class="difficulty-options">
+              <div class="difficulty-card" @click="selectDifficulty('easy')">
+                <h4 style="color: #00ff00;">🌟 简单模式</h4>
+                <div class="difficulty-features">
+                  <p>✅ 自动发射子弹</p>
+                  <p>✅ 无限弹药</p>
+                  <p>✅ 较慢的敌人速度</p>
+                  <p>✅ 适合休闲玩家</p>
+                </div>
+                <button class="difficulty-btn easy-btn">选择简单</button>
+              </div>
+              
+              <div class="difficulty-card" @click="selectDifficulty('hard')">
+                <h4 style="color: #ff4444;">🔥 困难模式</h4>
+                <div class="difficulty-features">
+                  <p>⚡ 手动鼠标点击射击</p>
+                  <p>⚡ 有限弹夹，需要换弹</p>
+                  <p>⚡ 更快的敌人速度</p>
+                  <p>⚡ 挑战硬核玩家</p>
+                </div>
+                <button class="difficulty-btn hard-btn">选择困难</button>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else-if="!gameStarted" class="start-screen">
             <h3>太空射击</h3>
-            <p>使用WASD移动飞船，飞船自动射击</p>
+            <p v-if="selectedDifficulty === 'easy'">简单模式：使用WASD移动飞船，自动射击</p>
+            <p v-else>困难模式：使用WASD移动，鼠标左键射击</p>
             <p style="font-size: 0.9rem; color: #ffa500;">💡 只有击中红色中心点才会减少生命</p>
             <p style="font-size: 0.8rem; color: #00ffff;">🎁 拾取蓝色增益球获得自动散弹射击</p>
             <p style="font-size: 0.8rem; color: #ffff00;">🛡️ 拾取金色护盾抵挡一次伤害</p>
-            <button @click="startGame" class="start-btn">开始游戏</button>
+            <div class="start-actions">
+              <button @click="startGame" class="start-btn">开始游戏</button>
+              <button @click="backToDifficulty" class="back-btn">重选难度</button>
+            </div>
           </div>
           
           <div v-else-if="isPaused && !gameOver" class="pause-screen">
@@ -117,6 +154,8 @@ const emit = defineEmits(['close'])
 const isVisible = ref(props.visible)
 const gameCanvas = ref<HTMLCanvasElement>()
 const gameStarted = ref(false)
+const difficultySelected = ref(false) // 难度是否已选择
+const selectedDifficulty = ref<'easy' | 'hard'>('easy') // 选择的难度
 const isPaused = ref(false)
 const gameOver = ref(false)
 const score = ref(0)
@@ -279,6 +318,22 @@ function initGame() {
 }
 
 /**
+ * 选择游戏难度
+ */
+function selectDifficulty(difficulty: 'easy' | 'hard') {
+  selectedDifficulty.value = difficulty
+  difficultySelected.value = true
+}
+
+/**
+ * 返回难度选择
+ */
+function backToDifficulty() {
+  difficultySelected.value = false
+  gameStarted.value = false
+}
+
+/**
  * 开始游戏
  */
 function startGame() {
@@ -299,7 +354,8 @@ function startGame() {
  */
 function restartGame() {
   gameOver.value = false
-  startGame()
+  difficultySelected.value = false // 重新选择难度
+  gameStarted.value = false
 }
 
 /**
@@ -318,6 +374,7 @@ function togglePause() {
 function closeGame() {
   isVisible.value = false
   gameStarted.value = false
+  difficultySelected.value = false // 重置难度选择
   isPaused.value = false
   if (animationId) {
     cancelAnimationFrame(animationId)
@@ -374,16 +431,20 @@ function handleKeyUp(event: KeyboardEvent) {
 }
 
 /**
- * 鼠标事件处理（保留用于UI交互，但不再用于射击）
+ * 鼠标事件处理（困难模式用于射击）
  */
 function handleMouseDown(event: MouseEvent) {
-  // 移除射击功能，鼠标只用于UI交互
-  event.preventDefault()
+  if (event.button === 0) { // 左键
+    mousePressed.value = true
+    event.preventDefault()
+  }
 }
 
 function handleMouseUp(event: MouseEvent) {
-  // 移除射击功能，鼠标只用于UI交互
-  event.preventDefault()
+  if (event.button === 0) { // 左键
+    mousePressed.value = false
+    event.preventDefault()
+  }
 }
 
 /**
@@ -452,25 +513,33 @@ function updatePlayer() {
     player.vy *= -0.2
   }
   
-  // 检查是否需要自动换弹（增益状态下不换弹）
-  if (currentAmmo.value <= 0 && !isReloading.value && !powerUpActive.value) {
+  // 检查是否需要自动换弹（仅困难模式有弹夹系统）
+  if (selectedDifficulty.value === 'hard' && currentAmmo.value <= 0 && !isReloading.value && !powerUpActive.value) {
     startReload()
   }
   
-  // 检查换弹是否完成
-  if (isReloading.value && Date.now() - reloadStartTime.value >= reloadDuration) {
+  // 检查换弹是否完成（仅困难模式）
+  if (selectedDifficulty.value === 'hard' && isReloading.value && Date.now() - reloadStartTime.value >= reloadDuration) {
     finishReload()
   }
   
-  // 增益状态下的自动散弹射击
+  // 增益状态下的自动散弹射击（两种难度都有）
   if (powerUpActive.value && Date.now() < powerUpEndTime.value) {
     if (Date.now() - player.lastShot > 150) { // 自动射击间隔150ms，让散弹效果更明显
       shootWithPowerUp()
     }
   } else {
-    // 普通状态下的自动射击
-    if (!isReloading.value && Date.now() - player.lastShot > 250) { // 普通自动射击间隔250ms
-      shoot()
+    // 根据难度模式处理射击
+    if (selectedDifficulty.value === 'easy') {
+      // 简单模式：自动射击，无限弹药
+      if (Date.now() - player.lastShot > 200) { // 简单模式射击更快
+        shootEasyMode()
+      }
+    } else {
+      // 困难模式：手动射击，有弹夹限制
+      if (mousePressed.value && !isReloading.value && Date.now() - player.lastShot > 200) {
+        shoot()
+      }
     }
   }
   
@@ -497,7 +566,7 @@ function finishReload() {
 }
 
 /**
- * 射击函数（普通）
+ * 射击函数（困难模式 - 有弹夹限制）
  */
 function shoot() {
   if (currentAmmo.value <= 0 || isReloading.value) return
@@ -516,6 +585,26 @@ function shoot() {
   
   currentAmmo.value--
   player.lastShot = Date.now()
+}
+
+/**
+ * 射击函数（简单模式 - 无限弹药）
+ */
+function shootEasyMode() {
+  // 简单模式：无弹夹限制，自动射击
+  bullets.push({
+    x: player.x + player.width / 2 - 2,
+    y: player.y,
+    width: 4,
+    height: 10,
+    vx: 0,
+    vy: -8,
+    color: '#00ff00', // 绿色子弹表示简单模式
+    active: true
+  })
+  
+  player.lastShot = Date.now()
+  // 注意：简单模式不消耗弹药，不减少 currentAmmo
 }
 
 /**
@@ -585,14 +674,15 @@ function spawnEnemy() {
   currentTime.value = Date.now()
   const gameTimeSeconds = (currentTime.value - gameStartTime.value) / 1000
   
-  // 随时间递增的难度
-  const difficultyMultiplier = 1 + gameTimeSeconds / 30 // 每30秒增加1倍难度
-  const baseSpeed = 2
-  const enemySpeed = baseSpeed * Math.min(difficultyMultiplier, 4) // 最大4倍速度
+  // 根据难度调整基础速度和难度递增
+  const baseDifficultyMultiplier = selectedDifficulty.value === 'easy' ? 0.7 : 1.2 // 简单模式更慢，困难模式更快
+  const difficultyMultiplier = baseDifficultyMultiplier + gameTimeSeconds / 30 // 每30秒增加难度
+  const baseSpeed = selectedDifficulty.value === 'easy' ? 1.5 : 2.5 // 简单模式基础速度更慢
+  const enemySpeed = baseSpeed * Math.min(difficultyMultiplier, selectedDifficulty.value === 'easy' ? 3 : 5) // 简单模式最大3倍，困难模式最大5倍
   
-  // 敌人生成频率随时间增加（最小间隔200ms）
-  const baseSpawnInterval = 1000
-  const spawnInterval = Math.max(200, baseSpawnInterval / difficultyMultiplier)
+  // 根据难度调整敌人生成频率
+  const baseSpawnInterval = selectedDifficulty.value === 'easy' ? 1200 : 800 // 简单模式生成更慢
+  const spawnInterval = Math.max(selectedDifficulty.value === 'easy' ? 300 : 150, baseSpawnInterval / difficultyMultiplier)
   
   if (currentTime.value - lastEnemySpawn > spawnInterval) {
     // 敌人尺寸更大
@@ -604,12 +694,16 @@ function spawnEnemy() {
     let enemyColor = '#ff0000'
     let enemyVy = enemySpeed
     
-    if (gameTimeSeconds > 20) { // 20秒后开始出现新类型敌人
-      if (random < 0.2) { // 20%概率生成高速型
+    const advancedEnemyStartTime = selectedDifficulty.value === 'easy' ? 30 : 20 // 简单模式延迟出现高级敌人
+    if (gameTimeSeconds > advancedEnemyStartTime) {
+      const fastChance = selectedDifficulty.value === 'easy' ? 0.15 : 0.25 // 简单模式减少高速敌人
+      const spreadChance = selectedDifficulty.value === 'easy' ? 0.25 : 0.4 // 简单模式减少扩散弹敌人
+      
+      if (random < fastChance) { // 高速型
         enemyType = 'fast'
         enemyColor = '#ff8800' // 橙色
-        enemyVy = enemySpeed * 2.5 // 高速飞行
-      } else if (random < 0.4) { // 20%概率生成扩散弹型
+        enemyVy = enemySpeed * (selectedDifficulty.value === 'easy' ? 2 : 2.5) // 简单模式高速敌人相对较慢
+      } else if (random < spreadChance) { // 扩散弹型
         enemyType = 'spread'
         enemyColor = '#8800ff' // 紫色
         enemyVy = enemySpeed * 0.8 // 稍慢但会射击
@@ -2704,5 +2798,128 @@ onUnmounted(() => {
 .start-btn:hover, .resume-btn:hover, .restart-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+
+/* 难度选择样式 */
+.difficulty-screen {
+  max-width: 800px;
+  width: 100%;
+}
+
+.difficulty-options {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.difficulty-card {
+  background: linear-gradient(135deg, rgba(26, 32, 44, 0.9), rgba(45, 55, 72, 0.9));
+  border: 2px solid transparent;
+  border-radius: 15px;
+  padding: 2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 280px;
+  position: relative;
+  overflow: hidden;
+}
+
+.difficulty-card:hover {
+  transform: translateY(-5px);
+  border-color: #667eea;
+  box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+}
+
+.difficulty-card:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.difficulty-card:hover:before {
+  left: 100%;
+}
+
+.difficulty-card h4 {
+  margin-bottom: 1.5rem;
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+.difficulty-features {
+  margin-bottom: 1.5rem;
+}
+
+.difficulty-features p {
+  margin: 0.5rem 0;
+  text-align: left;
+  font-size: 0.9rem;
+  color: #a0aec0;
+}
+
+.difficulty-btn {
+  width: 100%;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.easy-btn {
+  background: linear-gradient(135deg, #48bb78, #38a169);
+  color: white;
+}
+
+.easy-btn:hover {
+  background: linear-gradient(135deg, #38a169, #2f855a);
+  transform: translateY(-1px);
+}
+
+.hard-btn {
+  background: linear-gradient(135deg, #f56565, #e53e3e);
+  color: white;
+}
+
+.hard-btn:hover {
+  background: linear-gradient(135deg, #e53e3e, #c53030);
+  transform: translateY(-1px);
+}
+
+.start-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.back-btn {
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #718096, #4a5568);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+
+.back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(113, 128, 150, 0.4);
+}
+
+.ammo-easy {
+  color: #48bb78;
+  font-weight: bold;
 }
 </style>
