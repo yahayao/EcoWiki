@@ -390,7 +390,7 @@ function handleMouseUp(event: MouseEvent) {
  */
 function updatePlayer() {
   const maxSpeed = 1.5 // 最大速度
-  const acceleration = 0.2 // 加速度 (降低让加速更缓慢)
+  const acceleration = 0.25 // 加速度 (降低让加速更缓慢)
   const friction = 1.2 // 摩擦力/阻力系数 (进一步提高让减速更缓慢)
   
   // 基于按键输入计算目标速度
