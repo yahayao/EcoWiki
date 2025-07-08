@@ -184,6 +184,8 @@ const difficultySelected = ref(false) // 难度是否已选择
 const selectedDifficulty = ref<'easy' | 'hard'>('easy') // 选择的难度
 const isPaused = ref(false)
 const gameOver = ref(false)
+const playerExploding = ref(false) // 玩家飞机爆炸状态
+const explosionStartTime = ref(0) // 爆炸开始时间
 const score = ref(0)
 const lives = ref(3)
 const maxLives = 3 // 最大生命值
@@ -329,6 +331,8 @@ function initGame() {
   score.value = 0
   lives.value = maxLives
   isShaking.value = false
+  playerExploding.value = false
+  explosionStartTime.value = 0
   lastEnemySpawn = 0
   lastPowerUpSpawn = 0
   gameStartTime.value = Date.now()
@@ -1014,7 +1018,7 @@ function checkCollisions() {
           lives.value--
           triggerShakeEffect() // 触发震感效果
           if (lives.value <= 0) {
-            gameOver.value = true
+            triggerPlayerExplosion() // 触发玩家爆炸
           }
         }
       }
@@ -1046,7 +1050,7 @@ function checkCollisions() {
           lives.value--
           triggerShakeEffect() // 触发震感效果
           if (lives.value <= 0) {
-            gameOver.value = true
+            triggerPlayerExplosion() // 触发玩家爆炸
           }
         }
       }
@@ -1077,8 +1081,12 @@ function render() {
   // 绘制玩家轨迹
   drawPlayerTrail()
   
-  // 绘制玩家飞机（三角形 + 机翼）
-  drawPlayerShip(player.x, player.y, player.width, player.height)
+  // 绘制玩家飞机或爆炸效果
+  if (playerExploding.value) {
+    drawPlayerExplosion(player.x, player.y, player.width, player.height)
+  } else {
+    drawPlayerShip(player.x, player.y, player.width, player.height)
+  }
   
   // 绘制玩家子弹
   bullets.forEach(bullet => {
@@ -1459,6 +1467,20 @@ function triggerShakeEffect() {
 }
 
 /**
+ * 触发玩家飞机爆炸效果
+ */
+function triggerPlayerExplosion() {
+  playerExploding.value = true
+  explosionStartTime.value = Date.now()
+  
+  // 2秒后结束爆炸动画并显示游戏结束
+  setTimeout(() => {
+    playerExploding.value = false
+    gameOver.value = true
+  }, 2000)
+}
+
+/**
  * 更新护盾冲击波
  */
 function updateShieldWaves() {
@@ -1795,6 +1817,87 @@ function drawPlayerShip(x: number, y: number, width: number, height: number) {
     ctx.arc(x + width / 2, y + height / 2, shieldRadius, 0, Math.PI * 2)
     ctx.stroke()
     ctx.setLineDash([]) // 重置虚线
+  }
+  
+  ctx.restore()
+}
+
+/**
+ * 绘制玩家飞机爆炸效果
+ */
+function drawPlayerExplosion(x: number, y: number, width: number, height: number) {
+  const currentTime = Date.now()
+  const elapsed = currentTime - explosionStartTime.value
+  const duration = 2000 // 爆炸持续2秒
+  const progress = Math.min(elapsed / duration, 1)
+  
+  ctx.save()
+  
+  // 计算爆炸中心
+  const centerX = x + width / 2
+  const centerY = y + height / 2
+  
+  // 多层爆炸效果
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2 + elapsed * 0.01
+    const distance = progress * (50 + i * 15)
+    const particleX = centerX + Math.cos(angle) * distance
+    const particleY = centerY + Math.sin(angle) * distance
+    const size = (1 - progress) * (10 + i * 3)
+    
+    // 火焰颜色渐变
+    const colors = ['#ffff00', '#ff8800', '#ff4400', '#ff0000', '#880000']
+    const colorIndex = Math.floor(progress * colors.length)
+    ctx.fillStyle = colors[Math.min(colorIndex, colors.length - 1)]
+    
+    // 绘制爆炸粒子
+    ctx.globalAlpha = (1 - progress) * 0.8
+    ctx.beginPath()
+    ctx.arc(particleX, particleY, size, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  
+  // 中心火球
+  const fireballRadius = (1 - progress * 0.3) * 25
+  const fireballGradient = ctx.createRadialGradient(
+    centerX, centerY, 0,
+    centerX, centerY, fireballRadius
+  )
+  fireballGradient.addColorStop(0, `rgba(255, 255, 255, ${(1 - progress) * 0.9})`)
+  fireballGradient.addColorStop(0.3, `rgba(255, 200, 0, ${(1 - progress) * 0.8})`)
+  fireballGradient.addColorStop(0.6, `rgba(255, 100, 0, ${(1 - progress) * 0.6})`)
+  fireballGradient.addColorStop(1, `rgba(200, 0, 0, ${(1 - progress) * 0.3})`)
+  
+  ctx.globalAlpha = 1
+  ctx.fillStyle = fireballGradient
+  ctx.beginPath()
+  ctx.arc(centerX, centerY, fireballRadius, 0, Math.PI * 2)
+  ctx.fill()
+  
+  // 冲击波环
+  if (progress < 0.8) {
+    const shockwaveRadius = progress * 80
+    ctx.strokeStyle = `rgba(255, 255, 255, ${(0.8 - progress) * 0.6})`
+    ctx.lineWidth = 3
+    ctx.beginPath()
+    ctx.arc(centerX, centerY, shockwaveRadius, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+  
+  // 飞机碎片效果
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2 + elapsed * 0.005
+    const distance = progress * (30 + i * 8)
+    const pieceX = centerX + Math.cos(angle) * distance
+    const pieceY = centerY + Math.sin(angle) * distance
+    const rotation = elapsed * 0.02 + i
+    
+    ctx.save()
+    ctx.translate(pieceX, pieceY)
+    ctx.rotate(rotation)
+    ctx.fillStyle = `rgba(120, 120, 120, ${(1 - progress) * 0.7})`
+    ctx.fillRect(-3, -1, 6, 2) // 小碎片
+    ctx.restore()
   }
   
   ctx.restore()
@@ -2765,11 +2868,14 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.8rem;
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0;
   margin: 0 1rem;
   transition: transform 0.1s ease;
+  position: relative;
+  clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
 }
 
 .health-bar-container.shake {
@@ -2778,41 +2884,51 @@ onUnmounted(() => {
 
 .health-bar {
   display: flex;
-  gap: 4px;
-  padding: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  gap: 3px;
+  padding: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
 }
 
 .health-segment {
-  width: 40px;
-  height: 12px;
-  border-radius: 6px;
+  width: 45px;
+  height: 14px;
   transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .health-segment.active {
-  background: linear-gradient(45deg, #00ff88, #00cc66);
-  box-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+  background: linear-gradient(45deg, #00ff88, #00ffaa, #00cc66);
+  box-shadow: 
+    0 0 12px rgba(0, 255, 136, 0.6),
+    inset 0 0 8px rgba(255, 255, 255, 0.2);
+  border: 1px solid #00ffaa;
 }
 
 .health-segment.active.critical {
-  background: linear-gradient(45deg, #ff4444, #cc0000);
-  box-shadow: 0 0 12px rgba(255, 68, 68, 0.8);
+  background: linear-gradient(45deg, #ff4444, #ff6666, #cc0000);
+  box-shadow: 
+    0 0 16px rgba(255, 68, 68, 0.9),
+    inset 0 0 8px rgba(255, 255, 255, 0.3);
+  border: 1px solid #ff6666;
   animation: pulse-critical 0.8s infinite;
 }
 
 .health-segment.damaged {
-  background: rgba(100, 100, 100, 0.3);
-  box-shadow: none;
+  background: linear-gradient(45deg, rgba(100, 100, 100, 0.2), rgba(60, 60, 60, 0.4));
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(100, 100, 100, 0.3);
 }
 
 .health-text {
   color: #e2e8f0;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: bold;
+  letter-spacing: 1px;
 }
 
 @keyframes shake {
