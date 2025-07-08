@@ -150,6 +150,14 @@ interface Bullet extends GameObject {
 interface Enemy extends GameObject {
   active: boolean
   lastShot: number
+  type: 'normal' | 'fast' | 'spread' // 敌人类型：普通、高速、扩散弹
+}
+
+interface SpreadBullet extends Bullet {
+  parentBullet?: boolean
+  spreadTime?: number
+  hasSpread?: boolean
+  spreadDistance?: number
 }
 
 /**
@@ -374,16 +382,35 @@ function spawnEnemy() {
     // 敌人尺寸更大
     const enemySize = 45 // 比之前的30更大
     
+    // 根据游戏时间决定敌人类型概率
+    const random = Math.random()
+    let enemyType: 'normal' | 'fast' | 'spread' = 'normal'
+    let enemyColor = '#ff0000'
+    let enemyVy = enemySpeed
+    
+    if (gameTimeSeconds > 20) { // 20秒后开始出现新类型敌人
+      if (random < 0.2) { // 20%概率生成高速型
+        enemyType = 'fast'
+        enemyColor = '#ff8800' // 橙色
+        enemyVy = enemySpeed * 2.5 // 高速飞行
+      } else if (random < 0.4) { // 20%概率生成扩散弹型
+        enemyType = 'spread'
+        enemyColor = '#8800ff' // 紫色
+        enemyVy = enemySpeed * 0.8 // 稍慢但会射击
+      }
+    }
+    
     enemies.push({
       x: Math.random() * (gameWidth - enemySize),
       y: -enemySize,
       width: enemySize,
       height: enemySize,
       vx: 0,
-      vy: enemySpeed,
-      color: '#ff0000',
+      vy: enemyVy,
+      color: enemyColor,
       active: true,
-      lastShot: 0
+      lastShot: 0,
+      type: enemyType
     })
     lastEnemySpawn = currentTime.value
   }
@@ -393,6 +420,14 @@ function spawnEnemy() {
  * 更新游戏对象
  */
 function updateGameObjects() {
+  currentTime.value = Date.now()
+  const gameTimeSeconds = (currentTime.value - gameStartTime.value) / 1000
+  
+  // 随时间递增的敌人子弹速度
+  const difficultyMultiplier = 1 + gameTimeSeconds / 30
+  const baseBulletSpeed = 4
+  const enemyBulletSpeed = baseBulletSpeed * Math.min(difficultyMultiplier, 3) // 最大3倍速度
+  
   // 更新玩家子弹
   bullets.forEach(bullet => {
     bullet.y += bullet.vy
@@ -405,27 +440,84 @@ function updateGameObjects() {
     enemy.y += enemy.vy
     if (enemy.y > gameHeight) enemy.active = false
     
-    // 敌人射击
-    if (Math.random() < 0.01 && Date.now() - enemy.lastShot > 1000) {
-      enemyBullets.push({
-        x: enemy.x + enemy.width / 2 - 2,
-        y: enemy.y + enemy.height,
-        width: 4,
-        height: 8,
-        vx: 0,
-        vy: 4,
-        color: '#ff8800',
-        active: true
-      })
-      enemy.lastShot = Date.now()
+    // 根据敌人类型决定射击行为
+    if (enemy.type === 'normal' || enemy.type === 'spread') {
+      const shootChance = enemy.type === 'spread' ? 0.015 : 0.01 // 扩散弹型射击更频繁
+      const shootInterval = enemy.type === 'spread' ? 800 : 1000
+      
+      if (Math.random() < shootChance && Date.now() - enemy.lastShot > shootInterval) {
+        if (enemy.type === 'spread') {
+          // 扩散弹型：发射会扩散的子弹
+          const spreadBullet: SpreadBullet = {
+            x: enemy.x + enemy.width / 2 - 2,
+            y: enemy.y + enemy.height,
+            width: 4,
+            height: 8,
+            vx: 0,
+            vy: enemyBulletSpeed,
+            color: '#cc00ff',
+            active: true,
+            parentBullet: true,
+            spreadTime: Date.now(),
+            hasSpread: false,
+            spreadDistance: 0
+          }
+          enemyBullets.push(spreadBullet)
+        } else {
+          // 普通型：发射普通子弹
+          enemyBullets.push({
+            x: enemy.x + enemy.width / 2 - 2,
+            y: enemy.y + enemy.height,
+            width: 4,
+            height: 8,
+            vx: 0,
+            vy: enemyBulletSpeed,
+            color: '#ff8800',
+            active: true
+          })
+        }
+        enemy.lastShot = Date.now()
+      }
     }
+    // 高速型敌人不射击，只是飞得很快
   })
   enemies = enemies.filter(enemy => enemy.active)
   
   // 更新敌人子弹
   enemyBullets.forEach(bullet => {
+    const spreadBullet = bullet as SpreadBullet
+    
+    // 处理扩散弹逻辑
+    if (spreadBullet.parentBullet && !spreadBullet.hasSpread) {
+      spreadBullet.spreadDistance = (spreadBullet.spreadDistance || 0) + Math.abs(spreadBullet.vy)
+      
+      // 当子弹飞行一定距离后扩散
+      if (spreadBullet.spreadDistance > 100) {
+        spreadBullet.hasSpread = true
+        
+        // 生成5个方向的扩散子弹
+        const angles = [-0.8, -0.4, 0, 0.4, 0.8]
+        angles.forEach(angle => {
+          enemyBullets.push({
+            x: spreadBullet.x,
+            y: spreadBullet.y,
+            width: 3,
+            height: 6,
+            vx: angle * 1.5,
+            vy: enemyBulletSpeed * 0.4,
+            color: '#ff00cc',
+            active: true
+          })
+        })
+        
+        // 移除原始子弹
+        spreadBullet.active = false
+      }
+    }
+    
+    bullet.x += bullet.vx
     bullet.y += bullet.vy
-    if (bullet.y > gameHeight) bullet.active = false
+    if (bullet.y > gameHeight || bullet.x < 0 || bullet.x > gameWidth) bullet.active = false
   })
   enemyBullets = enemyBullets.filter(bullet => bullet.active)
 }
@@ -529,7 +621,7 @@ function render() {
   
   // 绘制敌人飞机
   enemies.forEach(enemy => {
-    drawEnemyShip(enemy.x, enemy.y, enemy.width, enemy.height)
+    drawEnemyShip(enemy.x, enemy.y, enemy.width, enemy.height, enemy.type)
   })
   
   // 绘制敌人子弹
@@ -723,11 +815,33 @@ function drawPlayerShip(x: number, y: number, width: number, height: number) {
 /**
  * 绘制敌人飞船
  */
-function drawEnemyShip(x: number, y: number, width: number, height: number) {
+function drawEnemyShip(x: number, y: number, width: number, height: number, type: 'normal' | 'fast' | 'spread') {
   ctx.save()
   
-  // 飞机主体（红色三角形，倒置，更大更详细）
-  ctx.fillStyle = '#ff0000'
+  // 根据敌人类型设置颜色
+  let primaryColor = '#ff0000'
+  let secondaryColor = '#cc0000'
+  let strokeColor = '#880000'
+  
+  switch (type) {
+    case 'fast':
+      primaryColor = '#ff8800' // 橙色 - 高速型
+      secondaryColor = '#cc6600'
+      strokeColor = '#884400'
+      break
+    case 'spread':
+      primaryColor = '#8800ff' // 紫色 - 扩散弹型
+      secondaryColor = '#6600cc'
+      strokeColor = '#440088'
+      break
+    case 'normal':
+    default:
+      // 保持默认红色
+      break
+  }
+  
+  // 飞机主体（三角形，倒置，颜色根据类型变化）
+  ctx.fillStyle = primaryColor
   ctx.beginPath()
   ctx.moveTo(x + width / 2, y + height) // 底部顶点
   ctx.lineTo(x + width * 0.15, y) // 左上
@@ -735,8 +849,8 @@ function drawEnemyShip(x: number, y: number, width: number, height: number) {
   ctx.closePath()
   ctx.fill()
   
-  // 机翼（深红色，更大更明显）
-  ctx.fillStyle = '#cc0000'
+  // 机翼（深色，更大更明显）
+  ctx.fillStyle = secondaryColor
   ctx.beginPath()
   ctx.moveTo(x + width * 0.05, y + height * 0.4)
   ctx.lineTo(x - width * 0.1, y + height * 0.1)
@@ -752,7 +866,7 @@ function drawEnemyShip(x: number, y: number, width: number, height: number) {
   ctx.fill()
   
   // 机身装饰线条
-  ctx.strokeStyle = '#880000'
+  ctx.strokeStyle = strokeColor
   ctx.lineWidth = 2
   ctx.beginPath()
   ctx.moveTo(x + width * 0.3, y + height * 0.1)
@@ -764,7 +878,25 @@ function drawEnemyShip(x: number, y: number, width: number, height: number) {
   ctx.lineTo(x + width * 0.55, y + height * 0.8)
   ctx.stroke()
   
-  // 敌人飞船没有任何红点标记
+  // 特殊类型的特效
+  if (type === 'fast') {
+    // 高速型：添加速度线条效果
+    ctx.strokeStyle = 'rgba(255, 136, 0, 0.6)'
+    ctx.lineWidth = 1
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath()
+      ctx.moveTo(x + width * 0.2 + i * width * 0.2, y - 5 - i * 3)
+      ctx.lineTo(x + width * 0.25 + i * width * 0.2, y + height * 0.3 - i * 3)
+      ctx.stroke()
+    }
+  } else if (type === 'spread') {
+    // 扩散弹型：添加能量光晕效果
+    const pulseIntensity = 0.3 + Math.sin(Date.now() * 0.01) * 0.3
+    ctx.fillStyle = `rgba(136, 0, 255, ${pulseIntensity})`
+    ctx.beginPath()
+    ctx.arc(x + width / 2, y + height * 0.3, 8, 0, Math.PI * 2)
+    ctx.fill()
+  }
   
   ctx.restore()
 }
