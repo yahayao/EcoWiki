@@ -71,7 +71,7 @@
         <div class="status-content">
           <div v-if="!gameStarted" class="start-screen">
             <h3>太空射击</h3>
-            <p>使用WASD移动，鼠标左键射击</p>
+            <p>使用WASD移动飞船，飞船自动射击</p>
             <p style="font-size: 0.9rem; color: #ffa500;">💡 只有击中红色中心点才会减少生命</p>
             <p style="font-size: 0.8rem; color: #00ffff;">🎁 拾取蓝色增益球获得自动散弹射击</p>
             <p style="font-size: 0.8rem; color: #ffff00;">🛡️ 拾取金色护盾抵挡一次伤害</p>
@@ -272,6 +272,7 @@ function initGame() {
   hasShield.value = false
   shieldWaves.length = 0
   powerUpPickupEffects.length = 0 // 重置道具拾取特效
+  killEffects.length = 0 // 重置击杀特效
   
   // 清空玩家轨迹
   playerTrail = []
@@ -345,10 +346,6 @@ function handleKeyDown(event: KeyboardEvent) {
     case 'ArrowRight':
       keys.value.d = true
       break
-    case 'Space':
-      keys.value.space = true
-      event.preventDefault()
-      break
     case 'Escape':
       togglePause()
       break
@@ -373,27 +370,20 @@ function handleKeyUp(event: KeyboardEvent) {
     case 'ArrowRight':
       keys.value.d = false
       break
-    case 'Space':
-      keys.value.space = false
-      break
   }
 }
 
 /**
- * 鼠标事件处理
+ * 鼠标事件处理（保留用于UI交互，但不再用于射击）
  */
 function handleMouseDown(event: MouseEvent) {
-  if (event.button === 0) { // 左键
-    mousePressed.value = true
-    event.preventDefault()
-  }
+  // 移除射击功能，鼠标只用于UI交互
+  event.preventDefault()
 }
 
 function handleMouseUp(event: MouseEvent) {
-  if (event.button === 0) { // 左键
-    mousePressed.value = false
-    event.preventDefault()
-  }
+  // 移除射击功能，鼠标只用于UI交互
+  event.preventDefault()
 }
 
 /**
@@ -472,17 +462,16 @@ function updatePlayer() {
     finishReload()
   }
   
-  // 增益状态下的自动射击
+  // 增益状态下的自动散弹射击
   if (powerUpActive.value && Date.now() < powerUpEndTime.value) {
     if (Date.now() - player.lastShot > 150) { // 自动射击间隔150ms，让散弹效果更明显
       shootWithPowerUp()
     }
-  }
-  
-  // 手动射击 - 使用鼠标左键（增益状态下禁止手动射击）
-  if (mousePressed.value && !isReloading.value && !powerUpActive.value && Date.now() - player.lastShot > 200) {
-    // 只有非增益状态下才能手动射击
-    shoot()
+  } else {
+    // 普通状态下的自动射击
+    if (!isReloading.value && Date.now() - player.lastShot > 250) { // 普通自动射击间隔250ms
+      shoot()
+    }
   }
   
   // 检查增益是否过期
@@ -879,6 +868,9 @@ function checkCollisions() {
         enemy.active = false
         score.value += 10
         
+        // 创建击杀特效
+        createKillEffect(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, enemy.type)
+        
         // 击毁敌机后有概率掉落道具
         createPowerUpFromEnemy(enemy.x, enemy.y, enemy.type)
       }
@@ -1003,6 +995,9 @@ function render() {
   // 绘制护盾冲击波
   drawShieldWaves()
   
+  // 绘制击杀特效
+  drawKillEffects()
+  
   // 绘制道具拾取特效
   drawPowerUpPickupEffects()
   
@@ -1012,6 +1007,182 @@ function render() {
   drawPowerUpIndicator()
   drawGameTimer() // 添加游戏计时器
   drawSpeedIndicator() // 添加速度指示器
+}
+
+/**
+ * 击杀特效数组
+ */
+let killEffects: {
+  x: number,
+  y: number,
+  particles: Array<{
+    x: number,
+    y: number,
+    vx: number,
+    vy: number,
+    life: number,
+    maxLife: number,
+    size: number,
+    color: string,
+    rotation: number,
+    rotationSpeed: number
+  }>,
+  startTime: number,
+  enemyType: 'normal' | 'fast' | 'spread'
+}[] = []
+
+/**
+ * 创建击杀特效
+ */
+function createKillEffect(x: number, y: number, enemyType: 'normal' | 'fast' | 'spread') {
+  const particleCount = 25
+  const particles = []
+  
+  // 根据敌机类型设置特效颜色
+  let colors = ['#ff4444', '#ff8800', '#ffaa00'] // 普通敌机：红橙色
+  if (enemyType === 'fast') {
+    colors = ['#ff8800', '#ffaa00', '#ffcc44'] // 高速敌机：橙黄色
+  } else if (enemyType === 'spread') {
+    colors = ['#8800ff', '#aa44ff', '#cc66ff'] // 扩散弹敌机：紫色
+  }
+  
+  // 生成爆炸粒子
+  for (let i = 0; i < particleCount; i++) {
+    const angle = (i / particleCount) * Math.PI * 2 + Math.random() * 0.5
+    const speed = 2 + Math.random() * 8
+    const life = 600 + Math.random() * 800
+    
+    particles.push({
+      x: x,
+      y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: life,
+      maxLife: life,
+      size: 1 + Math.random() * 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: Math.random() * Math.PI * 2,
+      rotationSpeed: (Math.random() - 0.5) * 0.2
+    })
+  }
+  
+  // 添加金属碎片效果
+  for (let i = 0; i < 8; i++) {
+    const angle = Math.random() * Math.PI * 2
+    const speed = 1 + Math.random() * 3
+    const life = 1000 + Math.random() * 500
+    
+    particles.push({
+      x: x,
+      y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: life,
+      maxLife: life,
+      size: 2 + Math.random() * 3,
+      color: '#cccccc',
+      rotation: Math.random() * Math.PI * 2,
+      rotationSpeed: (Math.random() - 0.5) * 0.3
+    })
+  }
+  
+  killEffects.push({
+    x: x,
+    y: y,
+    particles: particles,
+    startTime: Date.now(),
+    enemyType: enemyType
+  })
+}
+
+/**
+ * 更新击杀特效
+ */
+function updateKillEffects() {
+  killEffects.forEach(effect => {
+    effect.particles.forEach(particle => {
+      // 更新粒子位置
+      particle.x += particle.vx
+      particle.y += particle.vy
+      
+      // 添加重力和阻力
+      particle.vy += 0.15 // 重力
+      particle.vx *= 0.98 // 阻力
+      particle.vy *= 0.98
+      
+      // 更新旋转
+      particle.rotation += particle.rotationSpeed
+      
+      // 减少生命值
+      particle.life -= 16
+    })
+    
+    // 移除死亡粒子
+    effect.particles = effect.particles.filter(particle => particle.life > 0)
+  })
+  
+  // 移除没有粒子的特效
+  killEffects = killEffects.filter(effect => effect.particles.length > 0)
+}
+
+/**
+ * 绘制击杀特效
+ */
+function drawKillEffects() {
+  ctx.save()
+  
+  killEffects.forEach(effect => {
+    effect.particles.forEach(particle => {
+      const alpha = particle.life / particle.maxLife
+      const size = particle.size * (0.5 + alpha * 0.5)
+      
+      ctx.save()
+      ctx.translate(particle.x, particle.y)
+      ctx.rotate(particle.rotation)
+      
+      // 创建粒子渐变
+      const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 2)
+      gradient.addColorStop(0, `${particle.color}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`)
+      gradient.addColorStop(1, `${particle.color}00`)
+      
+      ctx.fillStyle = gradient
+      
+      if (particle.color === '#cccccc') {
+        // 金属碎片 - 矩形
+        ctx.fillRect(-size/2, -size/2, size, size)
+      } else {
+        // 火焰粒子 - 圆形
+        ctx.beginPath()
+        ctx.arc(0, 0, size, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      
+      ctx.restore()
+    })
+    
+    // 绘制爆炸中心闪光
+    const elapsed = Date.now() - effect.startTime
+    if (elapsed < 200) {
+      const flashAlpha = 1 - (elapsed / 200)
+      const flashSize = 15 + (elapsed / 200) * 25
+      
+      const flashGradient = ctx.createRadialGradient(
+        effect.x, effect.y, 0,
+        effect.x, effect.y, flashSize
+      )
+      
+      flashGradient.addColorStop(0, `rgba(255, 255, 255, ${flashAlpha})`)
+      flashGradient.addColorStop(0.5, `rgba(255, 200, 100, ${flashAlpha * 0.6})`)
+      flashGradient.addColorStop(1, 'rgba(255, 100, 50, 0)')
+      
+      ctx.fillStyle = flashGradient
+      ctx.beginPath()
+      ctx.arc(effect.x, effect.y, flashSize, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  })
+  
+  ctx.restore()
 }
 
 /**
@@ -2330,6 +2501,7 @@ function gameLoop() {
   updateGameObjects()
   updateShieldWaves()
   updatePowerUpPickupEffects() // 更新道具拾取特效
+  updateKillEffects() // 更新击杀特效
   checkCollisions()
   render()
   
