@@ -37,7 +37,6 @@
         <h2>太空射击游戏</h2>
         <div class="game-controls">
           <div class="score">分数: {{ score }}</div>
-          <div class="lives">生命: {{ lives }}</div>
           <div class="shield" v-if="hasShield" style="color: #00ffff;">🛡️ 护盾</div>
           <div class="game-time" :class="{ 'time-warning': gameTimeSeconds >= 75 && gameTimeSeconds < 90 }">
             时间: {{ Math.floor(gameTimeSeconds) }}s
@@ -65,6 +64,24 @@
           </button>
           <button @click="closeGame" class="close-btn">×</button>
         </div>
+      </div>
+      
+      <!-- 血量条 -->
+      <div class="health-bar-container" :class="{ 'shake': isShaking }">
+        <div class="health-bar">
+          <div 
+            v-for="(segment, index) in maxLives" 
+            :key="index"
+            class="health-segment"
+            :class="{ 
+              'active': index < lives, 
+              'damaged': index >= lives,
+              'critical': lives <= 1 && index < lives
+            }"
+          >
+          </div>
+        </div>
+        <div class="health-text">生命值: {{ lives }}/{{ maxLives }}</div>
       </div>
       
       <!-- 游戏画布 -->
@@ -169,6 +186,8 @@ const isPaused = ref(false)
 const gameOver = ref(false)
 const score = ref(0)
 const lives = ref(3)
+const maxLives = 3 // 最大生命值
+const isShaking = ref(false) // 受伤震感状态
 
 /**
  * 弹夹系统
@@ -308,7 +327,8 @@ function initGame() {
   enemyBullets = []
   powerUps = []
   score.value = 0
-  lives.value = 3
+  lives.value = maxLives
+  isShaking.value = false
   lastEnemySpawn = 0
   lastPowerUpSpawn = 0
   gameStartTime.value = Date.now()
@@ -992,6 +1012,7 @@ function checkCollisions() {
         } else {
           // 没有护盾，正常扣血
           lives.value--
+          triggerShakeEffect() // 触发震感效果
           if (lives.value <= 0) {
             gameOver.value = true
           }
@@ -1023,6 +1044,7 @@ function checkCollisions() {
         } else {
           // 没有护盾，正常扣血
           lives.value--
+          triggerShakeEffect() // 触发震感效果
           if (lives.value <= 0) {
             gameOver.value = true
           }
@@ -1422,6 +1444,18 @@ function createShieldWave(x: number, y: number) {
     opacity: 1,
     startTime: Date.now()
   })
+}
+
+/**
+ * 触发受伤震感效果
+ */
+function triggerShakeEffect() {
+  isShaking.value = true
+  
+  // 使用定时器在500ms后停止震感
+  setTimeout(() => {
+    isShaking.value = false
+  }, 500)
 }
 
 /**
@@ -2723,6 +2757,80 @@ onUnmounted(() => {
 @keyframes pulse-red {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+/* 血量条样式 */
+.health-bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 8px;
+  margin: 0 1rem;
+  transition: transform 0.1s ease;
+}
+
+.health-bar-container.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.health-bar {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.health-segment {
+  width: 40px;
+  height: 12px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.health-segment.active {
+  background: linear-gradient(45deg, #00ff88, #00cc66);
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+}
+
+.health-segment.active.critical {
+  background: linear-gradient(45deg, #ff4444, #cc0000);
+  box-shadow: 0 0 12px rgba(255, 68, 68, 0.8);
+  animation: pulse-critical 0.8s infinite;
+}
+
+.health-segment.damaged {
+  background: rgba(100, 100, 100, 0.3);
+  box-shadow: none;
+}
+
+.health-text {
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  10% { transform: translateX(-8px) rotate(-2deg); }
+  20% { transform: translateX(8px) rotate(2deg); }
+  30% { transform: translateX(-6px) rotate(-1deg); }
+  40% { transform: translateX(6px) rotate(1deg); }
+  50% { transform: translateX(-4px) rotate(-0.5deg); }
+  60% { transform: translateX(4px) rotate(0.5deg); }
+  70% { transform: translateX(-2px) rotate(-0.2deg); }
+  80% { transform: translateX(2px) rotate(0.2deg); }
+  90% { transform: translateX(-1px) rotate(-0.1deg); }
+}
+
+@keyframes pulse-critical {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
 }
 
 .ammo {
