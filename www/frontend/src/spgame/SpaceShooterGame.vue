@@ -39,6 +39,12 @@
           <div class="score">分数: {{ score }}</div>
           <div class="lives">生命: {{ lives }}</div>
           <div class="difficulty">难度: {{ Math.floor((currentTime - gameStartTime) / 1000 / 10) + 1 }}</div>
+          <div class="ammo" :class="{ 'low-ammo': currentAmmo <= 5 && !powerUpActive }">
+            弹夹: 
+            <span v-if="powerUpActive" class="infinite-ammo">∞/∞</span>
+            <span v-else>{{ currentAmmo }}/{{ maxAmmo }}</span>
+            <span v-if="isReloading && !powerUpActive" class="reloading">(换弹中)</span>
+          </div>
           <button @click="togglePause" class="pause-btn">
             {{ isPaused ? '继续' : '暂停' }}
           </button>
@@ -66,6 +72,7 @@
             <h3>太空射击</h3>
             <p>使用WASD移动，鼠标左键射击</p>
             <p style="font-size: 0.9rem; color: #ffa500;">💡 只有击中红色中心点才会减少生命</p>
+            <p style="font-size: 0.8rem; color: #00ffff;">🎁 拾取蓝色增益球获得自动散弹射击</p>
             <button @click="startGame" class="start-btn">开始游戏</button>
           </div>
           
@@ -114,6 +121,22 @@ const score = ref(0)
 const lives = ref(3)
 
 /**
+ * 弹夹系统
+ */
+const currentAmmo = ref(30)
+const maxAmmo = 30
+const isReloading = ref(false)
+const reloadStartTime = ref(0)
+const reloadDuration = 2000 // 换弹时间2秒
+
+/**
+ * 增益系统
+ */
+const powerUpActive = ref(false)
+const powerUpEndTime = ref(0)
+const powerUpDuration = 8000 // 增益持续8秒
+
+/**
  * 游戏难度和时间管理
  */
 const gameStartTime = ref(0)
@@ -160,6 +183,13 @@ interface SpreadBullet extends Bullet {
   spreadDistance?: number
 }
 
+interface PowerUp extends GameObject {
+  active: boolean
+  type: 'spreadShot'
+  floatOffset: number
+  curveSpeed: number
+}
+
 /**
  * 游戏对象
  */
@@ -169,7 +199,9 @@ let player: Player
 let bullets: Bullet[] = []
 let enemies: Enemy[] = []
 let enemyBullets: Bullet[] = []
+let powerUps: PowerUp[] = []
 let lastEnemySpawn = 0
+let lastPowerUpSpawn = 0
 
 /**
  * 输入控制
@@ -209,11 +241,18 @@ function initGame() {
   bullets = []
   enemies = []
   enemyBullets = []
+  powerUps = []
   score.value = 0
   lives.value = 3
   lastEnemySpawn = 0
+  lastPowerUpSpawn = 0
   gameStartTime.value = Date.now()
   currentTime.value = Date.now()
+  
+  // 重置弹夹和增益状态
+  currentAmmo.value = maxAmmo
+  isReloading.value = false
+  powerUpActive.value = false
 }
 
 /**
@@ -346,25 +385,121 @@ function updatePlayer() {
   if (keys.value.a && player.x > 0) player.x -= speed
   if (keys.value.d && player.x < gameWidth - player.width) player.x += speed
   
-  // 射击 - 使用鼠标左键
-  if (mousePressed.value && Date.now() - player.lastShot > 200) {
+  // 检查是否需要自动换弹（增益状态下不换弹）
+  if (currentAmmo.value <= 0 && !isReloading.value && !powerUpActive.value) {
+    startReload()
+  }
+  
+  // 检查换弹是否完成
+  if (isReloading.value && Date.now() - reloadStartTime.value >= reloadDuration) {
+    finishReload()
+  }
+  
+  // 增益状态下的自动射击
+  if (powerUpActive.value && Date.now() < powerUpEndTime.value) {
+    if (Date.now() - player.lastShot > 150) { // 自动射击间隔150ms，让散弹效果更明显
+      shootWithPowerUp()
+    }
+  }
+  
+  // 手动射击 - 使用鼠标左键（增益状态下禁止手动射击）
+  if (mousePressed.value && !isReloading.value && !powerUpActive.value && Date.now() - player.lastShot > 200) {
+    // 只有非增益状态下才能手动射击
+    shoot()
+  }
+  
+  // 检查增益是否过期
+  if (powerUpActive.value && Date.now() >= powerUpEndTime.value) {
+    powerUpActive.value = false
+  }
+}
+
+/**
+ * 开始换弹
+ */
+function startReload() {
+  isReloading.value = true
+  reloadStartTime.value = Date.now()
+}
+
+/**
+ * 完成换弹
+ */
+function finishReload() {
+  isReloading.value = false
+  currentAmmo.value = maxAmmo
+}
+
+/**
+ * 射击函数（普通）
+ */
+function shoot() {
+  if (currentAmmo.value <= 0 || isReloading.value) return
+  
+  // 普通射击
+  bullets.push({
+    x: player.x + player.width / 2 - 2,
+    y: player.y,
+    width: 4,
+    height: 10,
+    vx: 0,
+    vy: -8,
+    color: '#ffff00',
+    active: true
+  })
+  
+  currentAmmo.value--
+  player.lastShot = Date.now()
+}
+
+/**
+ * 增益状态下的射击函数（散弹，无限子弹）
+ */
+function shootWithPowerUp() {
+  // 增益状态下不消耗弹夹，不受换弹限制
+  
+  // 散弹射击
+  const angles = [-0.4, -0.2, 0, 0.2, 0.4]
+  angles.forEach(angle => {
     bullets.push({
       x: player.x + player.width / 2 - 2,
       y: player.y,
       width: 4,
       height: 10,
-      vx: 0,
+      vx: angle * 6, // 增加水平速度，让扩散更明显
       vy: -8,
-      color: '#ffff00',
+      color: '#ffaa00',
       active: true
     })
-    player.lastShot = Date.now()
-  }
+  })
+  
+  player.lastShot = Date.now()
 }
 
 /**
- * 生成敌人
+ * 生成增益道具
  */
+function spawnPowerUp() {
+  currentTime.value = Date.now()
+  
+  // 每20秒生成一个增益道具
+  if (currentTime.value - lastPowerUpSpawn > 20000) {
+    powerUps.push({
+      x: Math.random() * (gameWidth - 30),
+      y: -30,
+      width: 30,
+      height: 30,
+      vx: 0,
+      vy: 2,
+      color: '#00ffff',
+      active: true,
+      type: 'spreadShot',
+      floatOffset: Math.random() * Math.PI * 2,
+      curveSpeed: 0.02 + Math.random() * 0.02
+    })
+    lastPowerUpSpawn = currentTime.value
+  }
+}
 function spawnEnemy() {
   currentTime.value = Date.now()
   const gameTimeSeconds = (currentTime.value - gameStartTime.value) / 1000
@@ -430,8 +565,9 @@ function updateGameObjects() {
   
   // 更新玩家子弹
   bullets.forEach(bullet => {
+    bullet.x += bullet.vx // 添加水平移动更新
     bullet.y += bullet.vy
-    if (bullet.y < 0) bullet.active = false
+    if (bullet.y < 0 || bullet.x < 0 || bullet.x > gameWidth) bullet.active = false
   })
   bullets = bullets.filter(bullet => bullet.active)
   
@@ -520,6 +656,17 @@ function updateGameObjects() {
     if (bullet.y > gameHeight || bullet.x < 0 || bullet.x > gameWidth) bullet.active = false
   })
   enemyBullets = enemyBullets.filter(bullet => bullet.active)
+  
+  // 更新增益道具
+  powerUps.forEach(powerUp => {
+    // 曲线飘落运动
+    powerUp.floatOffset += powerUp.curveSpeed
+    powerUp.x += Math.sin(powerUp.floatOffset) * 2
+    powerUp.y += powerUp.vy
+    
+    if (powerUp.y > gameHeight) powerUp.active = false
+  })
+  powerUps = powerUps.filter(powerUp => powerUp.active)
 }
 
 /**
@@ -590,6 +737,23 @@ function checkCollisions() {
       }
     }
   })
+  
+  // 玩家拾取增益道具
+  powerUps.forEach(powerUp => {
+    if (powerUp.active) {
+      const distance = Math.sqrt(
+        Math.pow(powerUp.x + powerUp.width / 2 - playerCenterX, 2) + 
+        Math.pow(powerUp.y + powerUp.height / 2 - playerCenterY, 2)
+      )
+      
+      if (distance <= 20) {
+        powerUp.active = false
+        // 激活增益效果
+        powerUpActive.value = true
+        powerUpEndTime.value = Date.now() + powerUpDuration
+      }
+    }
+  })
 }
 
 /**
@@ -629,6 +793,16 @@ function render() {
     ctx.fillStyle = bullet.color
     ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height)
   })
+  
+  // 绘制增益道具
+  powerUps.forEach(powerUp => {
+    drawPowerUp(powerUp.x, powerUp.y, powerUp.width, powerUp.height)
+  })
+  
+  // 绘制UI元素
+  drawAmmoDisplay()
+  drawReloadAnimation()
+  drawPowerUpIndicator()
 }
 
 /**
@@ -902,6 +1076,149 @@ function drawEnemyShip(x: number, y: number, width: number, height: number, type
 }
 
 /**
+ * 绘制增益道具
+ */
+function drawPowerUp(x: number, y: number, width: number, height: number) {
+  ctx.save()
+  
+  // 半透明球体效果
+  const gradient = ctx.createRadialGradient(
+    x + width / 2, y + height / 2, 0,
+    x + width / 2, y + height / 2, width / 2
+  )
+  gradient.addColorStop(0, 'rgba(0, 255, 255, 0.8)')
+  gradient.addColorStop(0.7, 'rgba(0, 200, 255, 0.4)')
+  gradient.addColorStop(1, 'rgba(0, 150, 255, 0.1)')
+  
+  ctx.fillStyle = gradient
+  ctx.beginPath()
+  ctx.arc(x + width / 2, y + height / 2, width / 2, 0, Math.PI * 2)
+  ctx.fill()
+  
+  // 内部发光效果
+  const pulseIntensity = 0.5 + Math.sin(Date.now() * 0.01) * 0.3
+  ctx.fillStyle = `rgba(255, 255, 255, ${pulseIntensity})`
+  ctx.beginPath()
+  ctx.arc(x + width / 2, y + height / 2, width / 4, 0, Math.PI * 2)
+  ctx.fill()
+  
+  // 散弹图标
+  ctx.fillStyle = '#ffffff'
+  ctx.font = '12px Arial'
+  ctx.textAlign = 'center'
+  ctx.fillText('散', x + width / 2, y + height / 2 + 4)
+  
+  ctx.restore()
+}
+
+/**
+ * 绘制弹夹显示
+ */
+function drawAmmoDisplay() {
+  ctx.save()
+  
+  // 弹夹背景
+  const ammoX = gameWidth - 120
+  const ammoY = gameHeight - 60
+  
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
+  ctx.fillRect(ammoX, ammoY, 100, 40)
+  
+  ctx.strokeStyle = '#ffffff'
+  ctx.lineWidth = 2
+  ctx.strokeRect(ammoX, ammoY, 100, 40)
+  
+  // 弹夹文字
+  ctx.fillStyle = '#ffffff'
+  ctx.font = '14px Arial'
+  ctx.textAlign = 'left'
+  ctx.fillText('弹夹:', ammoX + 5, ammoY + 18)
+  
+  // 子弹数量
+  if (powerUpActive.value) {
+    ctx.fillStyle = '#00ff00'
+    ctx.font = 'bold 16px Arial'
+    ctx.textAlign = 'right'
+    ctx.fillText('∞/∞', ammoX + 95, ammoY + 35)
+  } else {
+    const ammoColor = currentAmmo.value <= 5 ? '#ff6666' : '#ffffff'
+    ctx.fillStyle = ammoColor
+    ctx.font = 'bold 16px Arial'
+    ctx.textAlign = 'right'
+    ctx.fillText(`${currentAmmo.value}/${maxAmmo}`, ammoX + 95, ammoY + 35)
+  }
+  
+  ctx.restore()
+}
+
+/**
+ * 绘制换弹动画
+ */
+function drawReloadAnimation() {
+  if (!isReloading.value) return
+  
+  ctx.save()
+  
+  const progress = (Date.now() - reloadStartTime.value) / reloadDuration
+  const centerX = gameWidth / 2
+  const centerY = gameHeight / 2
+  
+  // 换弹进度环
+  ctx.strokeStyle = '#ffaa00'
+  ctx.lineWidth = 8
+  ctx.beginPath()
+  ctx.arc(centerX, centerY, 50, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2)
+  ctx.stroke()
+  
+  // 换弹文字
+  ctx.fillStyle = '#ffffff'
+  ctx.font = 'bold 20px Arial'
+  ctx.textAlign = 'center'
+  ctx.fillText('换弹中...', centerX, centerY + 5)
+  
+  // 进度百分比
+  ctx.font = '16px Arial'
+  ctx.fillText(`${Math.floor(progress * 100)}%`, centerX, centerY + 25)
+  
+  ctx.restore()
+}
+
+/**
+ * 绘制增益指示器
+ */
+function drawPowerUpIndicator() {
+  if (!powerUpActive.value) return
+  
+  ctx.save()
+  
+  const timeLeft = powerUpEndTime.value - Date.now()
+  const progress = timeLeft / powerUpDuration
+  
+  // 增益背景
+  const indicatorX = 20
+  const indicatorY = gameHeight - 80
+  
+  ctx.fillStyle = 'rgba(255, 165, 0, 0.8)'
+  ctx.fillRect(indicatorX, indicatorY, 150, 30)
+  
+  ctx.strokeStyle = '#ffffff'
+  ctx.lineWidth = 2
+  ctx.strokeRect(indicatorX, indicatorY, 150, 30)
+  
+  // 增益文字
+  ctx.fillStyle = '#ffffff'
+  ctx.font = 'bold 14px Arial'
+  ctx.textAlign = 'left'
+  ctx.fillText('散弹增益 [自动射击]', indicatorX + 5, indicatorY + 20)
+  
+  // 时间条
+  ctx.fillStyle = '#00ff00'
+  ctx.fillRect(indicatorX + 5, indicatorY + 25, (150 - 10) * progress, 3)
+  
+  ctx.restore()
+}
+
+/**
  * 游戏主循环
  */
 function gameLoop() {
@@ -912,6 +1229,7 @@ function gameLoop() {
   
   updatePlayer()
   spawnEnemy()
+  spawnPowerUp()
   updateGameObjects()
   checkCollisions()
   render()
@@ -1009,9 +1327,33 @@ onUnmounted(() => {
   color: #cbd5e0;
 }
 
-.score, .lives, .difficulty {
+.score, .lives, .difficulty, .ammo {
   font-weight: bold;
   font-size: 0.9rem;
+}
+
+.ammo {
+  transition: color 0.3s;
+}
+
+.ammo.low-ammo {
+  color: #ff6b6b;
+  animation: pulse 1s infinite;
+}
+
+.reloading {
+  color: #ffa500;
+  font-style: italic;
+}
+
+.infinite-ammo {
+  color: #00ff00;
+  font-weight: bold;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .pause-btn, .close-btn {
