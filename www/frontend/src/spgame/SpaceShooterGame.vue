@@ -1081,10 +1081,8 @@ function render() {
   // 绘制玩家轨迹
   drawPlayerTrail()
   
-  // 绘制玩家飞机或爆炸效果
-  if (playerExploding.value) {
-    drawPlayerExplosion(player.x, player.y, player.width, player.height)
-  } else {
+  // 绘制玩家飞机（爆炸时不绘制，只显示爆炸特效）
+  if (!playerExploding.value) {
     drawPlayerShip(player.x, player.y, player.width, player.height)
   }
   
@@ -1473,11 +1471,94 @@ function triggerPlayerExplosion() {
   playerExploding.value = true
   explosionStartTime.value = Date.now()
   
-  // 2秒后结束爆炸动画并显示游戏结束
+  // 创建超级剧烈的玩家爆炸特效
+  createPlayerKillEffect(player.x + player.width / 2, player.y + player.height / 2)
+  
+  // 2.5秒后结束爆炸动画并显示游戏结束
   setTimeout(() => {
     playerExploding.value = false
     gameOver.value = true
-  }, 2000)
+  }, 2500)
+}
+
+/**
+ * 创建玩家爆炸特效（比敌人爆炸更剧烈）
+ */
+function createPlayerKillEffect(x: number, y: number) {
+  const particleCount = 80 // 比敌人的25个多很多
+  const particles = []
+  
+  // 玩家爆炸使用更多彩的颜色
+  const colors = ['#ff0000', '#ff4444', '#ff8800', '#ffaa00', '#ffff00', '#ffffff']
+  
+  // 生成大量爆炸粒子
+  for (let i = 0; i < particleCount; i++) {
+    const angle = (i / particleCount) * Math.PI * 2 + Math.random() * 1.0 // 更大的随机角度
+    const speed = 3 + Math.random() * 15 // 更高的速度范围
+    const life = 800 + Math.random() * 1200 // 更长的生命周期
+    
+    particles.push({
+      x: x,
+      y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: life,
+      maxLife: life,
+      size: 2 + Math.random() * 8, // 更大的粒子
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: Math.random() * Math.PI * 2,
+      rotationSpeed: (Math.random() - 0.5) * 0.4 // 更快的旋转
+    })
+  }
+  
+  // 添加更多金属碎片效果
+  for (let i = 0; i < 25; i++) { // 比敌人的8个多很多
+    const angle = Math.random() * Math.PI * 2
+    const speed = 2 + Math.random() * 10 // 更高的碎片速度
+    const life = 1500 + Math.random() * 1000 // 更长的碎片生命
+    
+    particles.push({
+      x: x,
+      y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: life,
+      maxLife: life,
+      size: 3 + Math.random() * 6, // 更大的碎片
+      color: '#cccccc',
+      rotation: Math.random() * Math.PI * 2,
+      rotationSpeed: (Math.random() - 0.5) * 0.5 // 更快的碎片旋转
+    })
+  }
+  
+  // 添加特殊的火花效果
+  for (let i = 0; i < 30; i++) {
+    const angle = Math.random() * Math.PI * 2
+    const speed = 5 + Math.random() * 12
+    const life = 400 + Math.random() * 600
+    
+    particles.push({
+      x: x,
+      y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: life,
+      maxLife: life,
+      size: 1 + Math.random() * 3,
+      color: '#ffff00', // 黄色火花
+      rotation: 0,
+      rotationSpeed: 0
+    })
+  }
+  
+  // 使用现有的击杀特效系统
+  killEffects.push({
+    x: x,
+    y: y,
+    particles: particles,
+    startTime: Date.now(),
+    enemyType: 'normal' // 这个参数对玩家爆炸不重要
+  })
 }
 
 /**
