@@ -553,31 +553,43 @@ function shootWithPowerUp() {
 }
 
 /**
- * 生成增益道具
+ * 击毁敌机后生成道具
  */
-function spawnPowerUp() {
-  currentTime.value = Date.now()
+function createPowerUpFromEnemy(enemyX: number, enemyY: number, enemyType: 'normal' | 'fast' | 'spread') {
+  // 根据敌机类型调整掉落概率
+  let dropChance = 0.15 // 默认15%掉落概率
   
-  // 每20秒生成一个增益道具
-  if (currentTime.value - lastPowerUpSpawn > 20000) {
-    // 随机选择道具类型：70%散弹，30%护盾
-    const powerUpType = Math.random() < 0.7 ? 'spreadShot' : 'shield'
+  if (enemyType === 'fast') {
+    dropChance = 0.3 // 高速敌机25%掉落概率
+  } else if (enemyType === 'spread') {
+    dropChance = 0.25 // 扩散弹敌机30%掉落概率
+  }
+  
+  if (Math.random() < dropChance) {
+    // 随机选择道具类型：60%散弹，40%护盾
+    const powerUpType = Math.random() < 0.6 ? 'spreadShot' : 'shield'
     
     powerUps.push({
-      x: Math.random() * (gameWidth - 30),
-      y: -30,
-      width: 30, // 增大尺寸
-      height: 30, // 增大尺寸
-      vx: 0,
-      vy: 2,
-      color: powerUpType === 'spreadShot' ? '#00ffff' : '#ffff00', // 护盾道具是金色
+      x: enemyX + Math.random() * 20 - 10, // 在敌机位置附近随机生成
+      y: enemyY,
+      width: 30,
+      height: 30,
+      vx: (Math.random() - 0.5) * 2, // 随机初始水平速度
+      vy: 1.5, // 较慢的下落速度
+      color: powerUpType === 'spreadShot' ? '#00ffff' : '#ffff00',
       active: true,
       type: powerUpType,
       floatOffset: Math.random() * Math.PI * 2,
       curveSpeed: 0.02 + Math.random() * 0.02
     })
-    lastPowerUpSpawn = currentTime.value
   }
+}
+
+/**
+ * 生成增益道具（已弃用，改为击毁敌机掉落）
+ */
+function spawnPowerUp() {
+  // 这个函数不再使用，道具现在通过击毁敌机掉落
 }
 function spawnEnemy() {
   currentTime.value = Date.now()
@@ -806,13 +818,23 @@ function updateGameObjects() {
     } else {
       // 正常的曲线飘落运动
       powerUp.floatOffset += powerUp.curveSpeed
-      powerUp.vx = Math.sin(powerUp.floatOffset) * 2
+      powerUp.vx = Math.sin(powerUp.floatOffset) * 1.5 // 减小水平移动幅度
       if (!powerUp.vy) powerUp.vy = 2 // 确保有基础下落速度
     }
     
     // 更新位置
     powerUp.x += powerUp.vx
     powerUp.y += powerUp.vy
+    
+    // 防止道具飘出左右屏幕
+    if (powerUp.x < 0) {
+      powerUp.x = 0
+      powerUp.vx = Math.abs(powerUp.vx) // 反弹向右
+    }
+    if (powerUp.x + powerUp.width > gameWidth) {
+      powerUp.x = gameWidth - powerUp.width
+      powerUp.vx = -Math.abs(powerUp.vx) // 反弹向左
+    }
     
     if (powerUp.y > gameHeight) powerUp.active = false
   })
@@ -834,6 +856,9 @@ function checkCollisions() {
         bullet.active = false
         enemy.active = false
         score.value += 10
+        
+        // 击毁敌机后有概率掉落道具
+        createPowerUpFromEnemy(enemy.x, enemy.y, enemy.type)
       }
     })
   })
@@ -1611,7 +1636,7 @@ function drawEnemyShip(x: number, y: number, width: number, height: number, type
 }
 
 /**
- * 绘制增益道具
+ * 绘制增益道具 - 科幻风格，包含粒子特效、能量场和动态光效
  */
 function drawPowerUp(x: number, y: number, width: number, height: number, powerUpType: 'spreadShot' | 'shield' = 'spreadShot') {
   ctx.save()
@@ -1629,93 +1654,215 @@ function drawPowerUp(x: number, y: number, width: number, height: number, powerU
   
   const attractRange = 120
   const isInAttractRange = distance <= attractRange
+  const time = Date.now() * 0.01
   
-  // 外部吸附光圈效果
-  if (isInAttractRange) {
-    const attractionFactor = (attractRange - distance) / attractRange
-    const circleRadius = width / 2 + 10 + attractionFactor * 15
+  // 根据道具类型设置颜色和特效参数
+  let baseColor, secondaryColor, pulseSpeed, iconSymbol
+  if (powerUpType === 'shield') {
+    baseColor = { r: 255, g: 215, b: 0 }     // 金色
+    secondaryColor = { r: 255, g: 165, b: 0 } // 橙金色
+    pulseSpeed = 0.006
+    iconSymbol = '🛡️'
+  } else {
+    baseColor = { r: 0, g: 255, b: 255 }     // 青色
+    secondaryColor = { r: 0, g: 150, b: 255 } // 蓝青色
+    pulseSpeed = 0.008
+    iconSymbol = '⚡'
+  }
+  
+  // 外部能量场 - 多层光圈
+  for (let i = 3; i >= 1; i--) {
+    const ringRadius = (width / 2) + (15 * i) + Math.sin(time * 2 + i) * 5
+    const alpha = (0.15 - i * 0.03) * (isInAttractRange ? 2 : 1)
     
-    const attractGradient = ctx.createRadialGradient(
-      powerUpCenterX, powerUpCenterY, 0,
-      powerUpCenterX, powerUpCenterY, circleRadius
+    const ringGradient = ctx.createRadialGradient(
+      powerUpCenterX, powerUpCenterY, ringRadius * 0.8,
+      powerUpCenterX, powerUpCenterY, ringRadius
     )
-    attractGradient.addColorStop(0, 'rgba(255, 255, 0, 0)')
-    attractGradient.addColorStop(0.7, `rgba(255, 255, 0, ${attractionFactor * 0.3})`)
-    attractGradient.addColorStop(1, 'rgba(255, 255, 0, 0)')
+    ringGradient.addColorStop(0, `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0)`)
+    ringGradient.addColorStop(0.8, `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, ${alpha})`)
+    ringGradient.addColorStop(1, `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0)`)
     
-    ctx.fillStyle = attractGradient
+    ctx.fillStyle = ringGradient
     ctx.beginPath()
-    ctx.arc(powerUpCenterX, powerUpCenterY, circleRadius, 0, Math.PI * 2)
+    ctx.arc(powerUpCenterX, powerUpCenterY, ringRadius, 0, Math.PI * 2)
     ctx.fill()
   }
   
-  // 根据道具类型设置颜色
-  let baseColor, iconText
-  if (powerUpType === 'shield') {
-    baseColor = { r: 255, g: 255, b: 0 } // 金色
-    iconText = '🛡️'
-  } else {
-    baseColor = { r: 0, g: 255, b: 255 } // 青色
-    iconText = '散'
+  // 吸附效果 - 能量流束
+  if (isInAttractRange) {
+    const attractionFactor = (attractRange - distance) / attractRange
+    const streamCount = 8
+    
+    for (let i = 0; i < streamCount; i++) {
+      const angle = (i / streamCount) * Math.PI * 2 + time * 0.5
+      const streamLength = 30 + attractionFactor * 20
+      const startX = powerUpCenterX + Math.cos(angle) * (width / 2 + 5)
+      const startY = powerUpCenterY + Math.sin(angle) * (height / 2 + 5)
+      const endX = startX + Math.cos(angle) * streamLength
+      const endY = startY + Math.sin(angle) * streamLength
+      
+      const streamGradient = ctx.createLinearGradient(startX, startY, endX, endY)
+      streamGradient.addColorStop(0, `rgba(255, 255, 100, ${attractionFactor * 0.8})`)
+      streamGradient.addColorStop(1, 'rgba(255, 255, 100, 0)')
+      
+      ctx.strokeStyle = streamGradient
+      ctx.lineWidth = 2 + attractionFactor * 2
+      ctx.beginPath()
+      ctx.moveTo(startX, startY)
+      ctx.lineTo(endX, endY)
+      ctx.stroke()
+    }
   }
   
-  // 主体球体效果 - 更大更亮
-  const gradient = ctx.createRadialGradient(
-    x + width / 2, y + height / 2, 0,
-    x + width / 2, y + height / 2, width / 2
-  )
-  gradient.addColorStop(0, `rgba(${Math.min(baseColor.r + 100, 255)}, ${baseColor.g}, ${baseColor.b}, 0.9)`)
-  gradient.addColorStop(0.5, `rgba(${Math.floor(baseColor.r * 0.8)}, ${Math.floor(baseColor.g * 0.8)}, ${Math.floor(baseColor.b * 0.8)}, 0.7)`)
-  gradient.addColorStop(0.8, `rgba(${Math.floor(baseColor.r * 0.6)}, ${Math.floor(baseColor.g * 0.6)}, ${Math.floor(baseColor.b * 0.6)}, 0.5)`)
-  gradient.addColorStop(1, `rgba(${Math.floor(baseColor.r * 0.4)}, ${Math.floor(baseColor.g * 0.4)}, ${Math.floor(baseColor.b * 0.4)}, 0.2)`)
+  // 六边形外框 - 科幻风格
+  const hexRadius = width / 2 + 8
+  const hexPoints = []
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2 + time * 0.3
+    hexPoints.push({
+      x: powerUpCenterX + Math.cos(angle) * hexRadius,
+      y: powerUpCenterY + Math.sin(angle) * hexRadius
+    })
+  }
   
-  ctx.fillStyle = gradient
+  ctx.strokeStyle = isInAttractRange ? '#ffff00' : `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0.8)`
+  ctx.lineWidth = 2
+  ctx.setLineDash([5, 3])
+  ctx.lineDashOffset = time * 2
   ctx.beginPath()
-  ctx.arc(x + width / 2, y + height / 2, width / 2, 0, Math.PI * 2)
+  ctx.moveTo(hexPoints[0].x, hexPoints[0].y)
+  for (let i = 1; i < hexPoints.length; i++) {
+    ctx.lineTo(hexPoints[i].x, hexPoints[i].y)
+  }
+  ctx.closePath()
+  ctx.stroke()
+  ctx.setLineDash([])
+  
+  // 主体核心 - 立体球体
+  const coreGradient = ctx.createRadialGradient(
+    powerUpCenterX - width * 0.15, powerUpCenterY - height * 0.15, 0,
+    powerUpCenterX, powerUpCenterY, width / 2
+  )
+  coreGradient.addColorStop(0, `rgba(255, 255, 255, 0.9)`)
+  coreGradient.addColorStop(0.3, `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0.8)`)
+  coreGradient.addColorStop(0.7, `rgba(${secondaryColor.r}, ${secondaryColor.g}, ${secondaryColor.b}, 0.6)`)
+  coreGradient.addColorStop(1, `rgba(${Math.floor(baseColor.r * 0.3)}, ${Math.floor(baseColor.g * 0.3)}, ${Math.floor(baseColor.b * 0.3)}, 0.4)`)
+  
+  ctx.fillStyle = coreGradient
+  ctx.beginPath()
+  ctx.arc(powerUpCenterX, powerUpCenterY, width / 2, 0, Math.PI * 2)
   ctx.fill()
   
-  // 外边框
-  ctx.strokeStyle = isInAttractRange ? '#ffff00' : '#ffffff'
-  ctx.lineWidth = isInAttractRange ? 3 : 2
-  ctx.beginPath()
-  ctx.arc(x + width / 2, y + height / 2, width / 2 - 2, 0, Math.PI * 2)
-  ctx.stroke()
+  // 内部旋转能量环
+  const ringCount = 3
+  for (let ring = 0; ring < ringCount; ring++) {
+    const ringRadius = (width / 4) + ring * 3
+    const rotationSpeed = (ring + 1) * 0.02
+    const segmentCount = 6 + ring * 2
+    
+    for (let seg = 0; seg < segmentCount; seg++) {
+      const angle = (seg / segmentCount) * Math.PI * 2 + time * rotationSpeed
+      const segX = powerUpCenterX + Math.cos(angle) * ringRadius
+      const segY = powerUpCenterY + Math.sin(angle) * ringRadius
+      const segRadius = 2 - ring * 0.3
+      
+      const segmentAlpha = 0.6 - ring * 0.15
+      ctx.fillStyle = `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, ${segmentAlpha})`
+      ctx.beginPath()
+      ctx.arc(segX, segY, segRadius, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
   
-  // 内部脉冲发光效果
-  const pulseIntensity = 0.6 + Math.sin(Date.now() * 0.008) * 0.4
+  // 动态脉冲核心
+  const pulseIntensity = 0.7 + Math.sin(time * pulseSpeed * 100) * 0.3
+  const pulseRadius = width / 4 * pulseIntensity
+  
   const pulseGradient = ctx.createRadialGradient(
-    x + width / 2, y + height / 2, 0,
-    x + width / 2, y + height / 2, width / 3
+    powerUpCenterX, powerUpCenterY, 0,
+    powerUpCenterX, powerUpCenterY, pulseRadius
   )
   pulseGradient.addColorStop(0, `rgba(255, 255, 255, ${pulseIntensity})`)
-  pulseGradient.addColorStop(0.6, `rgba(${Math.floor(baseColor.r * 0.6)}, ${baseColor.g}, ${baseColor.b}, ${pulseIntensity * 0.5})`)
+  pulseGradient.addColorStop(0.5, `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, ${pulseIntensity * 0.6})`)
   pulseGradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
   
   ctx.fillStyle = pulseGradient
   ctx.beginPath()
-  ctx.arc(x + width / 2, y + height / 2, width / 3, 0, Math.PI * 2)
+  ctx.arc(powerUpCenterX, powerUpCenterY, pulseRadius, 0, Math.PI * 2)
   ctx.fill()
   
-  // 道具图标 - 更大更清晰
-  ctx.fillStyle = '#ffffff'
-  if (powerUpType === 'shield') {
-    ctx.font = 'bold 16px Arial'
-    ctx.textAlign = 'center'
-    ctx.fillText('🛡️', x + width / 2, y + height / 2 + 5)
-  } else {
-    ctx.font = 'bold 18px Arial'
-    ctx.textAlign = 'center'
-    ctx.strokeStyle = '#000000'
-    ctx.lineWidth = 1
-    ctx.strokeText('散', x + width / 2, y + height / 2 + 6)
-    ctx.fillText('散', x + width / 2, y + height / 2 + 6)
+  // 粒子特效系统
+  const particleCount = isInAttractRange ? 12 : 8
+  for (let i = 0; i < particleCount; i++) {
+    const particleAngle = (i / particleCount) * Math.PI * 2 + time * 0.8
+    const particleDistance = (width / 2) + 15 + Math.sin(time * 3 + i) * 10
+    const particleX = powerUpCenterX + Math.cos(particleAngle) * particleDistance
+    const particleY = powerUpCenterY + Math.sin(particleAngle) * particleDistance
+    const particleSize = 2 + Math.sin(time * 4 + i * 0.5) * 1
+    
+    const particleGradient = ctx.createRadialGradient(
+      particleX, particleY, 0,
+      particleX, particleY, particleSize * 2
+    )
+    particleGradient.addColorStop(0, `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0.8)`)
+    particleGradient.addColorStop(1, `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0)`)
+    
+    ctx.fillStyle = particleGradient
+    ctx.beginPath()
+    ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2)
+    ctx.fill()
   }
   
-  // 吸附状态提示文字
+  // 科幻图标显示
+  ctx.fillStyle = '#ffffff'
+  ctx.shadowColor = `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0.8)`
+  ctx.shadowBlur = 8
+  
+  if (powerUpType === 'shield') {
+    ctx.font = 'bold 18px Arial'
+    ctx.textAlign = 'center'
+    ctx.fillText(iconSymbol, powerUpCenterX, powerUpCenterY + 6)
+  } else {
+    ctx.font = 'bold 20px Arial'
+    ctx.textAlign = 'center'
+    ctx.strokeStyle = '#000000'
+    ctx.lineWidth = 2
+    ctx.strokeText(iconSymbol, powerUpCenterX, powerUpCenterY + 7)
+    ctx.fillText(iconSymbol, powerUpCenterX, powerUpCenterY + 7)
+  }
+  
+  ctx.shadowBlur = 0
+  
+  // 吸附状态指示器
   if (isInAttractRange) {
-    ctx.fillStyle = '#ffff00'
-    ctx.font = 'bold 12px Arial'
-    ctx.fillText('吸附中...', x + width / 2, y + height + 15)
+    const attractionFactor = (attractRange - distance) / attractRange
+    
+    // 动态吸附文字
+    ctx.fillStyle = `rgba(255, 255, 0, ${0.8 + Math.sin(time * 8) * 0.2})`
+    ctx.font = 'bold 14px Arial'
+    ctx.textAlign = 'center'
+    ctx.shadowColor = 'rgba(255, 255, 0, 0.5)'
+    ctx.shadowBlur = 4
+    ctx.fillText('⚡ 能量锁定 ⚡', powerUpCenterX, powerUpCenterY + height / 2 + 20)
+    
+    // 吸附进度条
+    const barWidth = 60
+    const barHeight = 6
+    const barX = powerUpCenterX - barWidth / 2
+    const barY = powerUpCenterY + height / 2 + 30
+    
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'
+    ctx.fillRect(barX, barY, barWidth, barHeight)
+    
+    ctx.fillStyle = `rgba(255, 255, 0, ${attractionFactor})`
+    ctx.fillRect(barX, barY, barWidth * attractionFactor, barHeight)
+    
+    ctx.strokeStyle = '#ffff00'
+    ctx.lineWidth = 1
+    ctx.strokeRect(barX, barY, barWidth, barHeight)
+    
+    ctx.shadowBlur = 0
   }
   
   ctx.restore()
@@ -2037,7 +2184,7 @@ function gameLoop() {
   
   updatePlayer()
   spawnEnemy()
-  spawnPowerUp()
+  // spawnPowerUp() // 移除定时道具生成，改为击毁敌机掉落
   updateGameObjects()
   updateShieldWaves()
   checkCollisions()
