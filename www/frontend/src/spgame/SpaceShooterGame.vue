@@ -174,6 +174,13 @@ interface Enemy extends GameObject {
   active: boolean
   lastShot: number
   type: 'normal' | 'fast' | 'spread' // 敌人类型：普通、高速、扩散弹
+  movePattern?: {
+    type: 'sine' | 'zigzag'
+    amplitude: number
+    frequency: number
+    phase: number
+    originalX: number
+  }
 }
 
 interface SpreadBullet extends Bullet {
@@ -202,6 +209,7 @@ let enemyBullets: Bullet[] = []
 let powerUps: PowerUp[] = []
 let lastEnemySpawn = 0
 let lastPowerUpSpawn = 0
+let playerTrail: { x: number, y: number, time: number }[] = [] // 玩家轨迹
 
 /**
  * 输入控制
@@ -253,6 +261,9 @@ function initGame() {
   currentAmmo.value = maxAmmo
   isReloading.value = false
   powerUpActive.value = false
+  
+  // 清空玩家轨迹
+  playerTrail = []
 }
 
 /**
@@ -378,12 +389,67 @@ function handleMouseUp(event: MouseEvent) {
  * 更新玩家位置
  */
 function updatePlayer() {
-  const speed = 5
+  const maxSpeed = 1.5 // 最大速度
+  const acceleration = 0.2 // 加速度 (降低让加速更缓慢)
+  const friction = 1.2 // 摩擦力/阻力系数 (进一步提高让减速更缓慢)
   
-  if (keys.value.w && player.y > 0) player.y -= speed
-  if (keys.value.s && player.y < gameHeight - player.height) player.y += speed
-  if (keys.value.a && player.x > 0) player.x -= speed
-  if (keys.value.d && player.x < gameWidth - player.width) player.x += speed
+  // 基于按键输入计算目标速度
+  let targetVx = 0
+  let targetVy = 0
+  
+  if (keys.value.a) targetVx = -maxSpeed
+  if (keys.value.d) targetVx = maxSpeed
+  if (keys.value.w) targetVy = -maxSpeed
+  if (keys.value.s) targetVy = maxSpeed
+  
+  // 应用加速度向目标速度靠近
+  player.vx += (targetVx - player.vx) * acceleration
+  player.vy += (targetVy - player.vy) * acceleration
+  
+  // 应用摩擦力
+  player.vx *= friction
+  player.vy *= friction
+  
+  // 更新位置
+  player.x += player.vx
+  player.y += player.vy
+  
+  // 记录轨迹点（仅当有明显移动时）
+  const totalSpeed = Math.sqrt(player.vx * player.vx + player.vy * player.vy)
+  if (totalSpeed > 0.5) {
+    playerTrail.push({
+      x: player.x + player.width / 2,
+      y: player.y + player.height / 2,
+      time: Date.now()
+    })
+    
+    // 限制轨迹长度和清理旧轨迹
+    const maxTrailLength = 15
+    const maxTrailAge = 300 // 300毫秒
+    const currentTime = Date.now()
+    
+    playerTrail = playerTrail.filter(point => 
+      currentTime - point.time < maxTrailAge
+    ).slice(-maxTrailLength)
+  }
+  
+  // 边界检查
+  if (player.x < 0) {
+    player.x = 0
+    player.vx *= -0.2 // 减少反弹效果
+  }
+  if (player.x > gameWidth - player.width) {
+    player.x = gameWidth - player.width
+    player.vx *= -0.2
+  }
+  if (player.y < 0) {
+    player.y = 0
+    player.vy *= -0.2
+  }
+  if (player.y > gameHeight - player.height) {
+    player.y = gameHeight - player.height
+    player.vy *= -0.2
+  }
   
   // 检查是否需要自动换弹（增益状态下不换弹）
   if (currentAmmo.value <= 0 && !isReloading.value && !powerUpActive.value) {
@@ -573,7 +639,46 @@ function updateGameObjects() {
   
   // 更新敌人
   enemies.forEach(enemy => {
+    // 基础垂直移动
     enemy.y += enemy.vy
+    
+    // 90秒后启用左右移动模式
+    if (gameTimeSeconds > 90) {
+      // 为每个敌人添加左右移动逻辑
+      if (!enemy.movePattern) {
+        // 初始化移动模式
+        enemy.movePattern = {
+          type: Math.random() < 0.5 ? 'sine' : 'zigzag',
+          amplitude: 15 + Math.random() * 25, // 移动幅度 (减小幅度)
+          frequency: 0.008 + Math.random() * 0.012, // 移动频率 (降低频率让移动更慢)
+          phase: Math.random() * Math.PI * 2, // 初始相位
+          originalX: enemy.x // 记录初始X位置
+        }
+      }
+      
+      // 根据移动模式计算水平位置
+      const timeFactor = currentTime.value * enemy.movePattern.frequency + enemy.movePattern.phase
+      
+      if (enemy.movePattern.type === 'sine') {
+        // 正弦波移动
+        enemy.x = enemy.movePattern.originalX + Math.sin(timeFactor) * enemy.movePattern.amplitude
+      } else {
+        // 锯齿波移动
+        const zigzag = ((timeFactor % (Math.PI * 2)) / (Math.PI * 2)) * 2 - 1
+        enemy.x = enemy.movePattern.originalX + zigzag * enemy.movePattern.amplitude
+      }
+      
+      // 边界限制
+      if (enemy.x < 0) {
+        enemy.x = 0
+        enemy.movePattern.originalX = 0
+      }
+      if (enemy.x > gameWidth - enemy.width) {
+        enemy.x = gameWidth - enemy.width
+        enemy.movePattern.originalX = gameWidth - enemy.width
+      }
+    }
+    
     if (enemy.y > gameHeight) enemy.active = false
     
     // 根据敌人类型决定射击行为
@@ -774,6 +879,9 @@ function render() {
     )
   }
   
+  // 绘制玩家轨迹
+  drawPlayerTrail()
+  
   // 绘制玩家飞机（三角形 + 机翼）
   drawPlayerShip(player.x, player.y, player.width, player.height)
   
@@ -803,183 +911,262 @@ function render() {
   drawAmmoDisplay()
   drawReloadAnimation()
   drawPowerUpIndicator()
+  drawGameTimer() // 添加游戏计时器
+  drawSpeedIndicator() // 添加速度指示器
 }
 
 /**
- * 绘制玩家飞船
+ * 绘制玩家飞船 - 高级战斗机设计
  */
 function drawPlayerShip(x: number, y: number, width: number, height: number) {
   ctx.save()
   
-  // 机身外轮廓阴影
-  ctx.fillStyle = 'rgba(0, 100, 0, 0.3)'
+  // 整体阴影效果
+  ctx.fillStyle = 'rgba(0, 60, 120, 0.4)'
   ctx.beginPath()
-  ctx.moveTo(x + width / 2 + 2, y + 2) // 顶点（阴影）
-  ctx.lineTo(x + width * 0.18, y + height + 2) // 左下（阴影）
-  ctx.lineTo(x + width * 0.82, y + height + 2) // 右下（阴影）
+  ctx.moveTo(x + width / 2 + 3, y + 3) // 机头阴影
+  ctx.lineTo(x + width * 0.15 + 3, y + height * 0.4 + 3) // 左机身阴影
+  ctx.lineTo(x - width * 0.2 + 3, y + height * 0.6 + 3) // 左机翼阴影
+  ctx.lineTo(x + width * 0.2 + 3, y + height * 0.8 + 3)
+  ctx.lineTo(x + width * 0.25 + 3, y + height + 3) // 左尾部阴影
+  ctx.lineTo(x + width * 0.75 + 3, y + height + 3) // 右尾部阴影
+  ctx.lineTo(x + width * 0.8 + 3, y + height * 0.8 + 3)
+  ctx.lineTo(x + width * 1.2 + 3, y + height * 0.6 + 3) // 右机翼阴影
+  ctx.lineTo(x + width * 0.85 + 3, y + height * 0.4 + 3) // 右机身阴影
   ctx.closePath()
   ctx.fill()
   
-  // 飞机主体（渐变绿色三角形）
-  const gradient = ctx.createLinearGradient(x, y, x, y + height)
-  gradient.addColorStop(0, '#00ff00')
-  gradient.addColorStop(0.5, '#00cc00')
-  gradient.addColorStop(1, '#008800')
-  ctx.fillStyle = gradient
+  // 主机身 - F22战斗机风格
+  const bodyGradient = ctx.createLinearGradient(x, y, x, y + height)
+  bodyGradient.addColorStop(0, '#1a4d80')
+  bodyGradient.addColorStop(0.3, '#2e6ba8')
+  bodyGradient.addColorStop(0.7, '#1f5588')
+  bodyGradient.addColorStop(1, '#0f3356')
+  ctx.fillStyle = bodyGradient
+  
   ctx.beginPath()
-  ctx.moveTo(x + width / 2, y) // 顶点
-  ctx.lineTo(x + width * 0.2, y + height) // 左下
-  ctx.lineTo(x + width * 0.8, y + height) // 右下
+  ctx.moveTo(x + width / 2, y) // 尖锐机头
+  ctx.lineTo(x + width * 0.15, y + height * 0.4) // 左机身收缩
+  ctx.lineTo(x + width * 0.25, y + height) // 左尾部
+  ctx.lineTo(x + width * 0.75, y + height) // 右尾部
+  ctx.lineTo(x + width * 0.85, y + height * 0.4) // 右机身收缩
   ctx.closePath()
   ctx.fill()
   
-  // 机身高光效果
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
+  // 机身高光线条
+  ctx.strokeStyle = '#4a8bc2'
+  ctx.lineWidth = 2
   ctx.beginPath()
-  ctx.moveTo(x + width / 2, y)
-  ctx.lineTo(x + width * 0.35, y + height * 0.6)
-  ctx.lineTo(x + width * 0.45, y + height * 0.8)
-  ctx.lineTo(x + width * 0.3, y + height)
-  ctx.closePath()
-  ctx.fill()
-  
-  // 主机翼（带渐变和边框）
-  const wingGradient = ctx.createLinearGradient(x, y + height * 0.7, x + width, y + height * 0.7)
-  wingGradient.addColorStop(0, '#66ff66')
-  wingGradient.addColorStop(0.5, '#44dd44')
-  wingGradient.addColorStop(1, '#66ff66')
-  ctx.fillStyle = wingGradient
-  
-  // 左机翼
-  ctx.beginPath()
-  ctx.moveTo(x + width * 0.1, y + height * 0.7)
-  ctx.lineTo(x - width * 0.05, y + height * 0.85)
-  ctx.lineTo(x + width * 0.05, y + height * 0.9)
+  ctx.moveTo(x + width / 2, y + 5)
   ctx.lineTo(x + width * 0.3, y + height * 0.8)
-  ctx.closePath()
-  ctx.fill()
+  ctx.stroke()
   
-  // 右机翼
   ctx.beginPath()
-  ctx.moveTo(x + width * 0.9, y + height * 0.7)
-  ctx.lineTo(x + width * 1.05, y + height * 0.85)
-  ctx.lineTo(x + width * 0.95, y + height * 0.9)
+  ctx.moveTo(x + width / 2, y + 5)
   ctx.lineTo(x + width * 0.7, y + height * 0.8)
+  ctx.stroke()
+  
+  // 左主机翼 - 三角翼设计
+  const leftWingGradient = ctx.createLinearGradient(x - width * 0.2, y + height * 0.6, x + width * 0.3, y + height * 0.6)
+  leftWingGradient.addColorStop(0, '#2d5a9e')
+  leftWingGradient.addColorStop(0.5, '#4470b8')
+  leftWingGradient.addColorStop(1, '#1a4d80')
+  ctx.fillStyle = leftWingGradient
+  
+  ctx.beginPath()
+  ctx.moveTo(x + width * 0.2, y + height * 0.5) // 机翼根部前
+  ctx.lineTo(x - width * 0.2, y + height * 0.6) // 机翼尖端
+  ctx.lineTo(x + width * 0.05, y + height * 0.8) // 机翼根部后
+  ctx.lineTo(x + width * 0.3, y + height * 0.7) // 机身连接点
   ctx.closePath()
   ctx.fill()
   
-  // 机翼边框
-  ctx.strokeStyle = '#00aa00'
+  // 右主机翼
+  const rightWingGradient = ctx.createLinearGradient(x + width * 0.7, y + height * 0.6, x + width * 1.2, y + height * 0.6)
+  rightWingGradient.addColorStop(0, '#1a4d80')
+  rightWingGradient.addColorStop(0.5, '#4470b8')
+  rightWingGradient.addColorStop(1, '#2d5a9e')
+  ctx.fillStyle = rightWingGradient
+  
+  ctx.beginPath()
+  ctx.moveTo(x + width * 0.8, y + height * 0.5) // 机翼根部前
+  ctx.lineTo(x + width * 1.2, y + height * 0.6) // 机翼尖端
+  ctx.lineTo(x + width * 0.95, y + height * 0.8) // 机翼根部后
+  ctx.lineTo(x + width * 0.7, y + height * 0.7) // 机身连接点
+  ctx.closePath()
+  ctx.fill()
+  
+  // 机翼装饰条纹
+  ctx.strokeStyle = '#ffffff'
   ctx.lineWidth = 1
+  ctx.setLineDash([3, 2])
   ctx.beginPath()
-  ctx.moveTo(x + width * 0.1, y + height * 0.7)
-  ctx.lineTo(x - width * 0.05, y + height * 0.85)
-  ctx.lineTo(x + width * 0.05, y + height * 0.9)
-  ctx.lineTo(x + width * 0.3, y + height * 0.8)
-  ctx.closePath()
+  ctx.moveTo(x + width * 0.1, y + height * 0.65)
+  ctx.lineTo(x + width * 0.15, y + height * 0.75)
   ctx.stroke()
   
   ctx.beginPath()
-  ctx.moveTo(x + width * 0.9, y + height * 0.7)
-  ctx.lineTo(x + width * 1.05, y + height * 0.85)
-  ctx.lineTo(x + width * 0.95, y + height * 0.9)
-  ctx.lineTo(x + width * 0.7, y + height * 0.8)
-  ctx.closePath()
+  ctx.moveTo(x + width * 0.9, y + height * 0.65)
+  ctx.lineTo(x + width * 0.85, y + height * 0.75)
   ctx.stroke()
+  ctx.setLineDash([])
   
-  // 尾翼装饰
-  ctx.fillStyle = '#44cc44'
-  ctx.fillRect(x + width * 0.45, y + height * 0.85, width * 0.1, height * 0.1)
+  // 垂直尾翼
+  ctx.fillStyle = '#1a4d80'
+  ctx.fillRect(x + width * 0.47, y + height * 0.2, width * 0.06, height * 0.3)
   
-  // 驾驶舱（多层设计）
-  // 外层驾驶舱
-  ctx.fillStyle = '#88ff88'
+  // 尾翼顶部
   ctx.beginPath()
-  ctx.arc(x + width / 2, y + height * 0.6, 5, 0, Math.PI * 2)
+  ctx.moveTo(x + width * 0.47, y + height * 0.2)
+  ctx.lineTo(x + width / 2, y + height * 0.15)
+  ctx.lineTo(x + width * 0.53, y + height * 0.2)
+  ctx.closePath()
   ctx.fill()
   
-  // 内层驾驶舱
-  ctx.fillStyle = '#aaffaa'
+  // 驾驶舱 - 多层玻璃效果
+  const cockpitGradient = ctx.createRadialGradient(
+    x + width / 2, y + height * 0.3, 0,
+    x + width / 2, y + height * 0.3, 8
+  )
+  cockpitGradient.addColorStop(0, '#87ceeb')
+  cockpitGradient.addColorStop(0.6, '#4682b4')
+  cockpitGradient.addColorStop(1, '#1e3a5f')
+  ctx.fillStyle = cockpitGradient
+  
   ctx.beginPath()
-  ctx.arc(x + width / 2, y + height * 0.6, 3, 0, Math.PI * 2)
+  ctx.ellipse(x + width / 2, y + height * 0.3, 8, 6, 0, 0, Math.PI * 2)
   ctx.fill()
   
   // 驾驶舱反光
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'
   ctx.beginPath()
-  ctx.arc(x + width / 2 - 1, y + height * 0.6 - 1, 2, 0, Math.PI * 2)
+  ctx.ellipse(x + width / 2 - 2, y + height * 0.3 - 2, 4, 3, 0, 0, Math.PI * 2)
   ctx.fill()
   
-  // 机身装饰线条
-  ctx.strokeStyle = '#00aa00'
-  ctx.lineWidth = 1.5
+  // 进气口设计
+  ctx.fillStyle = '#0f2744'
   ctx.beginPath()
-  ctx.moveTo(x + width * 0.4, y + height * 0.2)
-  ctx.lineTo(x + width * 0.45, y + height * 0.9)
-  ctx.stroke()
-  
-  ctx.beginPath()
-  ctx.moveTo(x + width * 0.6, y + height * 0.2)
-  ctx.lineTo(x + width * 0.55, y + height * 0.9)
-  ctx.stroke()
-  
-  // 发动机喷口
-  ctx.fillStyle = '#0066ff'
-  ctx.beginPath()
-  ctx.ellipse(x + width * 0.35, y + height * 0.95, 2, 4, 0, 0, Math.PI * 2)
+  ctx.ellipse(x + width * 0.35, y + height * 0.45, 4, 3, 0, 0, Math.PI * 2)
   ctx.fill()
   
   ctx.beginPath()
-  ctx.ellipse(x + width * 0.65, y + height * 0.95, 2, 4, 0, 0, Math.PI * 2)
+  ctx.ellipse(x + width * 0.65, y + height * 0.45, 4, 3, 0, 0, Math.PI * 2)
   ctx.fill()
   
-  // 发动机火焰效果
-  if (keys.value.w || keys.value.s || keys.value.a || keys.value.d) {
-    const flameIntensity = 0.5 + Math.random() * 0.5
-    ctx.fillStyle = `rgba(255, 100, 0, ${flameIntensity})`
-    ctx.beginPath()
-    ctx.ellipse(x + width * 0.35, y + height + 3, 1, 3, 0, 0, Math.PI * 2)
-    ctx.fill()
+  // 发动机喷口 - 矢量推进器
+  const engineGradient = ctx.createRadialGradient(
+    x + width * 0.3, y + height * 0.95, 0,
+    x + width * 0.3, y + height * 0.95, 6
+  )
+  engineGradient.addColorStop(0, '#ff4500')
+  engineGradient.addColorStop(0.5, '#1e3a5f')
+  engineGradient.addColorStop(1, '#0f1f33')
+  ctx.fillStyle = engineGradient
+  
+  ctx.beginPath()
+  ctx.ellipse(x + width * 0.3, y + height * 0.95, 5, 8, 0, 0, Math.PI * 2)
+  ctx.fill()
+  
+  ctx.beginPath()
+  ctx.ellipse(x + width * 0.7, y + height * 0.95, 5, 8, 0, 0, Math.PI * 2)
+  ctx.fill()
+  
+  // 发动机内环
+  ctx.fillStyle = '#ff6600'
+  ctx.beginPath()
+  ctx.ellipse(x + width * 0.3, y + height * 0.95, 3, 5, 0, 0, Math.PI * 2)
+  ctx.fill()
+  
+  ctx.beginPath()
+  ctx.ellipse(x + width * 0.7, y + height * 0.95, 3, 5, 0, 0, Math.PI * 2)
+  ctx.fill()
+  
+  // 推进器火焰效果 - 基于飞船速度
+  const totalSpeed = Math.sqrt(player.vx * player.vx + player.vy * player.vy)
+  if (totalSpeed > 0.5) { // 只有当速度足够大时才显示火焰
+    const speedFactor = Math.min(totalSpeed / 6, 1) // 标准化速度因子
+    const flameIntensity = (0.4 + Math.random() * 0.4) * speedFactor
+    const flameLength = (6 + Math.random() * 8) * speedFactor
+    
+    // 根据移动方向调整火焰效果
+    const flameOffsetX = -player.vx * 0.8 // 反方向偏移
+    const flameOffsetY = -player.vy * 0.3 // 轻微的垂直偏移
+    
+    // 左推进器火焰
+    const leftFlameGradient = ctx.createLinearGradient(
+      x + width * 0.3, y + height * 0.95,
+      x + width * 0.3 + flameOffsetX, y + height + flameLength + flameOffsetY
+    )
+    leftFlameGradient.addColorStop(0, `rgba(255, 255, 255, ${flameIntensity})`)
+    leftFlameGradient.addColorStop(0.3, `rgba(0, 150, 255, ${flameIntensity})`)
+    leftFlameGradient.addColorStop(0.7, `rgba(255, 100, 0, ${flameIntensity * 0.8})`)
+    leftFlameGradient.addColorStop(1, 'rgba(255, 0, 0, 0)')
+    ctx.fillStyle = leftFlameGradient
     
     ctx.beginPath()
-    ctx.ellipse(x + width * 0.65, y + height + 3, 1, 3, 0, 0, Math.PI * 2)
+    ctx.ellipse(
+      x + width * 0.3 + flameOffsetX * 0.5, 
+      y + height + flameLength / 2 + flameOffsetY * 0.5, 
+      2 + speedFactor, 
+      flameLength / 2, 
+      0, 0, Math.PI * 2
+    )
+    ctx.fill()
+    
+    // 右推进器火焰
+    const rightFlameGradient = ctx.createLinearGradient(
+      x + width * 0.7, y + height * 0.95,
+      x + width * 0.7 + flameOffsetX, y + height + flameLength + flameOffsetY
+    )
+    rightFlameGradient.addColorStop(0, `rgba(255, 255, 255, ${flameIntensity})`)
+    rightFlameGradient.addColorStop(0.3, `rgba(0, 150, 255, ${flameIntensity})`)
+    rightFlameGradient.addColorStop(0.7, `rgba(255, 100, 0, ${flameIntensity * 0.8})`)
+    rightFlameGradient.addColorStop(1, 'rgba(255, 0, 0, 0)')
+    ctx.fillStyle = rightFlameGradient
+    
+    ctx.beginPath()
+    ctx.ellipse(
+      x + width * 0.7 + flameOffsetX * 0.5, 
+      y + height + flameLength / 2 + flameOffsetY * 0.5, 
+      2 + speedFactor, 
+      flameLength / 2, 
+      0, 0, Math.PI * 2
+    )
     ctx.fill()
   }
   
-  // 中心点（红色闪烁圆点，用于碰撞检测）
-  const blinkSpeed = 300 // 闪烁速度（毫秒）
+  // 武器挂载点
+  ctx.fillStyle = '#2a4d6e'
+  ctx.fillRect(x + width * 0.15, y + height * 0.6, 3, 6)
+  ctx.fillRect(x + width * 0.82, y + height * 0.6, 3, 6)
+  
+  // 中心碰撞检测点（隐形雷达效果）
+  const blinkSpeed = 400
   const isVisible = Math.floor(Date.now() / blinkSpeed) % 2 === 0
   
   if (isVisible) {
-    // 中心点外圈发光效果
-    const glowGradient = ctx.createRadialGradient(
+    // 雷达扫描圈
+    const radarGradient = ctx.createRadialGradient(
       x + width / 2, y + height / 2, 0,
-      x + width / 2, y + height / 2, 8
+      x + width / 2, y + height / 2, 12
     )
-    glowGradient.addColorStop(0, 'rgba(255, 100, 100, 0.8)')
-    glowGradient.addColorStop(0.5, 'rgba(255, 100, 100, 0.4)')
-    glowGradient.addColorStop(1, 'rgba(255, 100, 100, 0)')
-    ctx.fillStyle = glowGradient
+    radarGradient.addColorStop(0, 'rgba(0, 255, 100, 0.8)')
+    radarGradient.addColorStop(0.7, 'rgba(0, 255, 100, 0.3)')
+    radarGradient.addColorStop(1, 'rgba(0, 255, 100, 0)')
+    ctx.fillStyle = radarGradient
     ctx.beginPath()
-    ctx.arc(x + width / 2, y + height / 2, 8, 0, Math.PI * 2)
+    ctx.arc(x + width / 2, y + height / 2, 12, 0, Math.PI * 2)
     ctx.fill()
     
-    // 外圈（更亮的红色）
-    ctx.fillStyle = '#ff6666'
+    // 中心点
+    ctx.fillStyle = '#00ff64'
     ctx.beginPath()
-    ctx.arc(x + width / 2, y + height / 2, 4, 0, Math.PI * 2)
+    ctx.arc(x + width / 2, y + height / 2, 3, 0, Math.PI * 2)
     ctx.fill()
     
-    // 内圈（深红色）
-    ctx.fillStyle = '#ff0000'
+    ctx.fillStyle = '#ffffff'
     ctx.beginPath()
-    ctx.arc(x + width / 2, y + height / 2, 2, 0, Math.PI * 2)
-    ctx.fill()
-    
-    // 中心点反光
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'
-    ctx.beginPath()
-    ctx.arc(x + width / 2 - 1, y + height / 2 - 1, 1, 0, Math.PI * 2)
+    ctx.arc(x + width / 2, y + height / 2, 1, 0, Math.PI * 2)
     ctx.fill()
   }
   
@@ -987,88 +1174,269 @@ function drawPlayerShip(x: number, y: number, width: number, height: number) {
 }
 
 /**
- * 绘制敌人飞船
+ * 绘制敌人飞船 - 三种不同设计的战斗机
  */
 function drawEnemyShip(x: number, y: number, width: number, height: number, type: 'normal' | 'fast' | 'spread') {
   ctx.save()
   
-  // 根据敌人类型设置颜色
-  let primaryColor = '#ff0000'
-  let secondaryColor = '#cc0000'
-  let strokeColor = '#880000'
-  
-  switch (type) {
-    case 'fast':
-      primaryColor = '#ff8800' // 橙色 - 高速型
-      secondaryColor = '#cc6600'
-      strokeColor = '#884400'
-      break
-    case 'spread':
-      primaryColor = '#8800ff' // 紫色 - 扩散弹型
-      secondaryColor = '#6600cc'
-      strokeColor = '#440088'
-      break
-    case 'normal':
-    default:
-      // 保持默认红色
-      break
-  }
-  
-  // 飞机主体（三角形，倒置，颜色根据类型变化）
-  ctx.fillStyle = primaryColor
-  ctx.beginPath()
-  ctx.moveTo(x + width / 2, y + height) // 底部顶点
-  ctx.lineTo(x + width * 0.15, y) // 左上
-  ctx.lineTo(x + width * 0.85, y) // 右上
-  ctx.closePath()
-  ctx.fill()
-  
-  // 机翼（深色，更大更明显）
-  ctx.fillStyle = secondaryColor
-  ctx.beginPath()
-  ctx.moveTo(x + width * 0.05, y + height * 0.4)
-  ctx.lineTo(x - width * 0.1, y + height * 0.1)
-  ctx.lineTo(x + width * 0.35, y + height * 0.25)
-  ctx.closePath()
-  ctx.fill()
-  
-  ctx.beginPath()
-  ctx.moveTo(x + width * 0.95, y + height * 0.4)
-  ctx.lineTo(x + width * 1.1, y + height * 0.1)
-  ctx.lineTo(x + width * 0.65, y + height * 0.25)
-  ctx.closePath()
-  ctx.fill()
-  
-  // 机身装饰线条
-  ctx.strokeStyle = strokeColor
-  ctx.lineWidth = 2
-  ctx.beginPath()
-  ctx.moveTo(x + width * 0.3, y + height * 0.1)
-  ctx.lineTo(x + width * 0.45, y + height * 0.8)
-  ctx.stroke()
-  
-  ctx.beginPath()
-  ctx.moveTo(x + width * 0.7, y + height * 0.1)
-  ctx.lineTo(x + width * 0.55, y + height * 0.8)
-  ctx.stroke()
-  
-  // 特殊类型的特效
-  if (type === 'fast') {
-    // 高速型：添加速度线条效果
-    ctx.strokeStyle = 'rgba(255, 136, 0, 0.6)'
-    ctx.lineWidth = 1
-    for (let i = 0; i < 3; i++) {
+  if (type === 'normal') {
+    // 普通型 - 标准拦截机设计（红色）
+    
+    // 阴影效果
+    ctx.fillStyle = 'rgba(120, 20, 20, 0.4)'
+    ctx.beginPath()
+    ctx.moveTo(x + width / 2 + 2, y + height + 2) // 机头阴影
+    ctx.lineTo(x + width * 0.1 + 2, y + 2) // 左机身阴影
+    ctx.lineTo(x + width * 0.9 + 2, y + 2) // 右机身阴影
+    ctx.closePath()
+    ctx.fill()
+    
+    // 主机身
+    const bodyGradient = ctx.createLinearGradient(x, y, x, y + height)
+    bodyGradient.addColorStop(0, '#cc2020')
+    bodyGradient.addColorStop(0.5, '#ff4040')
+    bodyGradient.addColorStop(1, '#aa1010')
+    ctx.fillStyle = bodyGradient
+    
+    ctx.beginPath()
+    ctx.moveTo(x + width / 2, y + height) // 尖锐机头
+    ctx.lineTo(x + width * 0.15, y + height * 0.3) // 左机身
+    ctx.lineTo(x + width * 0.1, y) // 左翼根
+    ctx.lineTo(x + width * 0.9, y) // 右翼根
+    ctx.lineTo(x + width * 0.85, y + height * 0.3) // 右机身
+    ctx.closePath()
+    ctx.fill()
+    
+    // 机翼设计
+    ctx.fillStyle = '#990000'
+    // 左机翼
+    ctx.beginPath()
+    ctx.moveTo(x + width * 0.1, y)
+    ctx.lineTo(x - width * 0.15, y + height * 0.2)
+    ctx.lineTo(x + width * 0.05, y + height * 0.4)
+    ctx.lineTo(x + width * 0.25, y + height * 0.3)
+    ctx.closePath()
+    ctx.fill()
+    
+    // 右机翼
+    ctx.beginPath()
+    ctx.moveTo(x + width * 0.9, y)
+    ctx.lineTo(x + width * 1.15, y + height * 0.2)
+    ctx.lineTo(x + width * 0.95, y + height * 0.4)
+    ctx.lineTo(x + width * 0.75, y + height * 0.3)
+    ctx.closePath()
+    ctx.fill()
+    
+    // 武器挂载点
+    ctx.fillStyle = '#660000'
+    ctx.fillRect(x + width * 0.2, y + height * 0.15, 3, 8)
+    ctx.fillRect(x + width * 0.77, y + height * 0.15, 3, 8)
+    
+    // 驾驶舱
+    ctx.fillStyle = '#ff6666'
+    ctx.beginPath()
+    ctx.arc(x + width / 2, y + height * 0.6, 4, 0, Math.PI * 2)
+    ctx.fill()
+    
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
+    ctx.beginPath()
+    ctx.arc(x + width / 2 - 1, y + height * 0.6 - 1, 2, 0, Math.PI * 2)
+    ctx.fill()
+    
+  } else if (type === 'fast') {
+    // 高速型 - 流线型战斗机设计（橙色）
+    
+    // 阴影效果
+    ctx.fillStyle = 'rgba(140, 80, 20, 0.4)'
+    ctx.beginPath()
+    ctx.moveTo(x + width / 2 + 2, y + height + 2)
+    ctx.lineTo(x + width * 0.2 + 2, y + height * 0.4 + 2)
+    ctx.lineTo(x + width * 0.05 + 2, y + 2)
+    ctx.lineTo(x + width * 0.95 + 2, y + 2)
+    ctx.lineTo(x + width * 0.8 + 2, y + height * 0.4 + 2)
+    ctx.closePath()
+    ctx.fill()
+    
+    // 主机身 - 更加流线型
+    const speedGradient = ctx.createLinearGradient(x, y, x, y + height)
+    speedGradient.addColorStop(0, '#ff8800')
+    speedGradient.addColorStop(0.3, '#ffaa44')
+    speedGradient.addColorStop(0.7, '#ff6600')
+    speedGradient.addColorStop(1, '#cc4400')
+    ctx.fillStyle = speedGradient
+    
+    ctx.beginPath()
+    ctx.moveTo(x + width / 2, y + height) // 尖锐机头
+    ctx.lineTo(x + width * 0.2, y + height * 0.4) // 左机身收缩
+    ctx.lineTo(x + width * 0.05, y) // 左后部
+    ctx.lineTo(x + width * 0.95, y) // 右后部
+    ctx.lineTo(x + width * 0.8, y + height * 0.4) // 右机身收缩
+    ctx.closePath()
+    ctx.fill()
+    
+    // 小型前掠翼
+    ctx.fillStyle = '#dd5500'
+    // 左翼
+    ctx.beginPath()
+    ctx.moveTo(x + width * 0.25, y + height * 0.25)
+    ctx.lineTo(x - width * 0.05, y + height * 0.1)
+    ctx.lineTo(x + width * 0.15, y + height * 0.15)
+    ctx.closePath()
+    ctx.fill()
+    
+    // 右翼
+    ctx.beginPath()
+    ctx.moveTo(x + width * 0.75, y + height * 0.25)
+    ctx.lineTo(x + width * 1.05, y + height * 0.1)
+    ctx.lineTo(x + width * 0.85, y + height * 0.15)
+    ctx.closePath()
+    ctx.fill()
+    
+    // 速度线条特效
+    ctx.strokeStyle = 'rgba(255, 200, 100, 0.7)'
+    ctx.lineWidth = 2
+    for (let i = 0; i < 4; i++) {
+      const offset = i * width * 0.15
       ctx.beginPath()
-      ctx.moveTo(x + width * 0.2 + i * width * 0.2, y - 5 - i * 3)
-      ctx.lineTo(x + width * 0.25 + i * width * 0.2, y + height * 0.3 - i * 3)
+      ctx.moveTo(x + width * 0.3 + offset, y - 8 - i * 4)
+      ctx.lineTo(x + width * 0.35 + offset, y + height * 0.2 - i * 2)
       ctx.stroke()
     }
-  } else if (type === 'spread') {
-    // 扩散弹型：添加能量光晕效果
-    const pulseIntensity = 0.3 + Math.sin(Date.now() * 0.01) * 0.3
-    ctx.fillStyle = `rgba(136, 0, 255, ${pulseIntensity})`
+    
+    // 推进器
+    ctx.fillStyle = '#ff4400'
     ctx.beginPath()
-    ctx.arc(x + width / 2, y + height * 0.3, 8, 0, Math.PI * 2)
+    ctx.ellipse(x + width * 0.35, y, 3, 6, 0, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.ellipse(x + width * 0.65, y, 3, 6, 0, 0, Math.PI * 2)
+    ctx.fill()
+    
+    // 推进器内核
+    ctx.fillStyle = '#ffaa00'
+    ctx.beginPath()
+    ctx.ellipse(x + width * 0.35, y, 1, 3, 0, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.ellipse(x + width * 0.65, y, 1, 3, 0, 0, Math.PI * 2)
+    ctx.fill()
+    
+    // 小型驾驶舱
+    ctx.fillStyle = '#ffbb66'
+    ctx.beginPath()
+    ctx.arc(x + width / 2, y + height * 0.5, 3, 0, Math.PI * 2)
+    ctx.fill()
+    
+  } else if (type === 'spread') {
+    // 扩散弹型 - 重型轰炸机设计（紫色）
+    
+    // 阴影效果
+    ctx.fillStyle = 'rgba(80, 20, 120, 0.4)'
+    ctx.beginPath()
+    ctx.moveTo(x + width / 2 + 2, y + height + 2)
+    ctx.lineTo(x + width * 0.05 + 2, y + height * 0.2 + 2)
+    ctx.lineTo(x + width * 0.15 + 2, y + 2)
+    ctx.lineTo(x + width * 0.85 + 2, y + 2)
+    ctx.lineTo(x + width * 0.95 + 2, y + height * 0.2 + 2)
+    ctx.closePath()
+    ctx.fill()
+    
+    // 主机身 - 更厚重的设计
+    const heavyGradient = ctx.createLinearGradient(x, y, x, y + height)
+    heavyGradient.addColorStop(0, '#6644cc')
+    heavyGradient.addColorStop(0.3, '#8866ff')
+    heavyGradient.addColorStop(0.7, '#5533aa')
+    heavyGradient.addColorStop(1, '#441188')
+    ctx.fillStyle = heavyGradient
+    
+    ctx.beginPath()
+    ctx.moveTo(x + width / 2, y + height) // 机头
+    ctx.lineTo(x + width * 0.05, y + height * 0.2) // 左机身
+    ctx.lineTo(x + width * 0.15, y) // 左后部
+    ctx.lineTo(x + width * 0.85, y) // 右后部
+    ctx.lineTo(x + width * 0.95, y + height * 0.2) // 右机身
+    ctx.closePath()
+    ctx.fill()
+    
+    // 大型机翼
+    ctx.fillStyle = '#553399'
+    // 左大翼
+    ctx.beginPath()
+    ctx.moveTo(x + width * 0.2, y + height * 0.4)
+    ctx.lineTo(x - width * 0.2, y + height * 0.15)
+    ctx.lineTo(x - width * 0.1, y + height * 0.05)
+    ctx.lineTo(x + width * 0.1, y + height * 0.25)
+    ctx.lineTo(x + width * 0.3, y + height * 0.5)
+    ctx.closePath()
+    ctx.fill()
+    
+    // 右大翼
+    ctx.beginPath()
+    ctx.moveTo(x + width * 0.8, y + height * 0.4)
+    ctx.lineTo(x + width * 1.2, y + height * 0.15)
+    ctx.lineTo(x + width * 1.1, y + height * 0.05)
+    ctx.lineTo(x + width * 0.9, y + height * 0.25)
+    ctx.lineTo(x + width * 0.7, y + height * 0.5)
+    ctx.closePath()
+    ctx.fill()
+    
+    // 能量核心脉动效果
+    const pulseTime = Date.now() * 0.005
+    const pulseIntensity = 0.4 + Math.sin(pulseTime) * 0.3
+    const coreGradient = ctx.createRadialGradient(
+      x + width / 2, y + height * 0.3, 0,
+      x + width / 2, y + height * 0.3, 12
+    )
+    coreGradient.addColorStop(0, `rgba(200, 100, 255, ${pulseIntensity})`)
+    coreGradient.addColorStop(0.6, `rgba(150, 50, 255, ${pulseIntensity * 0.6})`)
+    coreGradient.addColorStop(1, 'rgba(100, 0, 200, 0)')
+    ctx.fillStyle = coreGradient
+    ctx.beginPath()
+    ctx.arc(x + width / 2, y + height * 0.3, 12, 0, Math.PI * 2)
+    ctx.fill()
+    
+    // 能量核心
+    ctx.fillStyle = '#aa66ff'
+    ctx.beginPath()
+    ctx.arc(x + width / 2, y + height * 0.3, 6, 0, Math.PI * 2)
+    ctx.fill()
+    
+    ctx.fillStyle = '#cc88ff'
+    ctx.beginPath()
+    ctx.arc(x + width / 2, y + height * 0.3, 3, 0, Math.PI * 2)
+    ctx.fill()
+    
+    // 多管武器系统
+    ctx.fillStyle = '#442288'
+    for (let i = 0; i < 3; i++) {
+      const weaponX = x + width * (0.25 + i * 0.25)
+      ctx.fillRect(weaponX - 1, y + height * 0.6, 2, 12)
+    }
+    
+    // 装甲板纹理
+    ctx.strokeStyle = '#7755bb'
+    ctx.lineWidth = 1
+    ctx.setLineDash([2, 2])
+    ctx.beginPath()
+    ctx.moveTo(x + width * 0.2, y + height * 0.1)
+    ctx.lineTo(x + width * 0.8, y + height * 0.1)
+    ctx.stroke()
+    
+    ctx.beginPath()
+    ctx.moveTo(x + width * 0.25, y + height * 0.7)
+    ctx.lineTo(x + width * 0.75, y + height * 0.7)
+    ctx.stroke()
+    ctx.setLineDash([])
+    
+    // 大型驾驶舱
+    ctx.fillStyle = '#9966dd'
+    ctx.beginPath()
+    ctx.ellipse(x + width / 2, y + height * 0.5, 6, 4, 0, 0, Math.PI * 2)
+    ctx.fill()
+    
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
+    ctx.beginPath()
+    ctx.ellipse(x + width / 2 - 2, y + height * 0.5 - 1, 3, 2, 0, 0, Math.PI * 2)
     ctx.fill()
   }
   
@@ -1214,6 +1582,204 @@ function drawPowerUpIndicator() {
   // 时间条
   ctx.fillStyle = '#00ff00'
   ctx.fillRect(indicatorX + 5, indicatorY + 25, (150 - 10) * progress, 3)
+  
+  ctx.restore()
+}
+
+/**
+ * 绘制游戏计时器和90秒警告
+ */
+function drawGameTimer() {
+  ctx.save()
+  
+  const gameTimeSeconds = (currentTime.value - gameStartTime.value) / 1000
+  const minutes = Math.floor(gameTimeSeconds / 60)
+  const seconds = Math.floor(gameTimeSeconds % 60)
+  
+  // 游戏时间显示
+  const timerX = gameWidth / 2 - 50
+  const timerY = 30
+  
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'
+  ctx.fillRect(timerX - 20, timerY - 20, 140, 35)
+  
+  ctx.strokeStyle = '#ffffff'
+  ctx.lineWidth = 1
+  ctx.strokeRect(timerX - 20, timerY - 20, 140, 35)
+  
+  ctx.fillStyle = '#ffffff'
+  ctx.font = '16px Arial'
+  ctx.textAlign = 'center'
+  ctx.fillText(`时间: ${minutes}:${seconds.toString().padStart(2, '0')}`, timerX + 50, timerY)
+  
+  // 90秒警告显示
+  if (gameTimeSeconds >= 85 && gameTimeSeconds < 95) {
+    // 闪烁警告
+    const blinkIntensity = Math.sin(Date.now() * 0.01) * 0.5 + 0.5
+    const warningY = timerY + 50
+    
+    ctx.fillStyle = `rgba(255, 100, 100, ${0.8 * blinkIntensity})`
+    ctx.fillRect(timerX - 40, warningY - 20, 180, 40)
+    
+    ctx.strokeStyle = '#ff0000'
+    ctx.lineWidth = 2
+    ctx.strokeRect(timerX - 40, warningY - 20, 180, 40)
+    
+    ctx.fillStyle = '#ffffff'
+    ctx.font = 'bold 14px Arial'
+    ctx.fillText('警告：敌机即将启动机动模式！', timerX + 50, warningY - 5)
+    
+    const timeToActivation = Math.max(0, 90 - gameTimeSeconds)
+    ctx.fillText(`倒计时: ${timeToActivation.toFixed(1)}秒`, timerX + 50, warningY + 10)
+  } else if (gameTimeSeconds >= 90) {
+    // 已激活提示
+    const statusY = timerY + 50
+    
+    ctx.fillStyle = 'rgba(255, 150, 0, 0.8)'
+    ctx.fillRect(timerX - 30, statusY - 15, 160, 25)
+    
+    ctx.strokeStyle = '#ff8800'
+    ctx.lineWidth = 2
+    ctx.strokeRect(timerX - 30, statusY - 15, 160, 25)
+    
+    ctx.fillStyle = '#ffffff'
+    ctx.font = 'bold 12px Arial'
+    ctx.fillText('敌机机动模式已激活！', timerX + 50, statusY)
+  }
+  
+  ctx.restore()
+}
+
+/**
+ * 绘制速度指示器
+ */
+function drawSpeedIndicator() {
+  ctx.save()
+  
+  const totalSpeed = Math.sqrt(player.vx * player.vx + player.vy * player.vy)
+  const maxIndicatorSpeed = 7 // 对应最大速度
+  const speedPercent = Math.min(totalSpeed / maxIndicatorSpeed, 1)
+  
+  // 速度计位置
+  const indicatorX = 20
+  const indicatorY = 60
+  const indicatorSize = 80
+  
+  // 背景圆环
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.arc(indicatorX + indicatorSize / 2, indicatorY + indicatorSize / 2, indicatorSize / 2 - 5, 0, Math.PI * 2)
+  ctx.stroke()
+  
+  // 速度弧线
+  const startAngle = -Math.PI / 2 // 从顶部开始
+  const endAngle = startAngle + (Math.PI * 2 * speedPercent)
+  
+  // 根据速度设置颜色
+  let speedColor = '#00ff00' // 绿色 - 低速
+  if (speedPercent > 0.5) speedColor = '#ffff00' // 黄色 - 中速
+  if (speedPercent > 0.8) speedColor = '#ff6600' // 橙色 - 高速
+  
+  ctx.strokeStyle = speedColor
+  ctx.lineWidth = 4
+  ctx.beginPath()
+  ctx.arc(indicatorX + indicatorSize / 2, indicatorY + indicatorSize / 2, indicatorSize / 2 - 5, startAngle, endAngle)
+  ctx.stroke()
+  
+  // 方向指针
+  if (totalSpeed > 0.1) {
+    const angle = Math.atan2(player.vy, player.vx)
+    const centerX = indicatorX + indicatorSize / 2
+    const centerY = indicatorY + indicatorSize / 2
+    const arrowLength = indicatorSize / 2 - 10
+    
+    ctx.strokeStyle = '#ffffff'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(centerX, centerY)
+    ctx.lineTo(
+      centerX + Math.cos(angle) * arrowLength,
+      centerY + Math.sin(angle) * arrowLength
+    )
+    ctx.stroke()
+    
+    // 箭头头部
+    const arrowHeadLength = 8
+    const arrowHeadAngle = 0.5
+    const arrowTipX = centerX + Math.cos(angle) * arrowLength
+    const arrowTipY = centerY + Math.sin(angle) * arrowLength
+    
+    ctx.beginPath()
+    ctx.moveTo(arrowTipX, arrowTipY)
+    ctx.lineTo(
+      arrowTipX - Math.cos(angle - arrowHeadAngle) * arrowHeadLength,
+      arrowTipY - Math.sin(angle - arrowHeadAngle) * arrowHeadLength
+    )
+    ctx.moveTo(arrowTipX, arrowTipY)
+    ctx.lineTo(
+      arrowTipX - Math.cos(angle + arrowHeadAngle) * arrowHeadLength,
+      arrowTipY - Math.sin(angle + arrowHeadAngle) * arrowHeadLength
+    )
+    ctx.stroke()
+  }
+  
+  // 文字标签
+  ctx.fillStyle = '#ffffff'
+  ctx.font = '12px Arial'
+  ctx.textAlign = 'center'
+  ctx.fillText('速度', indicatorX + indicatorSize / 2, indicatorY + indicatorSize + 15)
+  
+  // 数值显示
+  ctx.font = '10px Arial'
+  ctx.fillText(`${(totalSpeed * 10).toFixed(1)}`, indicatorX + indicatorSize / 2, indicatorY + indicatorSize + 30)
+  
+  ctx.restore()
+}
+
+/**
+ * 绘制玩家飞船轨迹
+ */
+function drawPlayerTrail() {
+  if (playerTrail.length < 2) return
+  
+  ctx.save()
+  
+  const currentTime = Date.now()
+  
+  // 绘制轨迹线条
+  for (let i = 1; i < playerTrail.length; i++) {
+    const point = playerTrail[i]
+    const prevPoint = playerTrail[i - 1]
+    const age = currentTime - point.time
+    const alpha = Math.max(0, 1 - age / 300) // 随时间淡化
+    
+    // 计算线条粗细（越新越粗）
+    const thickness = 1 + alpha * 2
+    
+    ctx.strokeStyle = `rgba(100, 200, 255, ${alpha * 0.8})`
+    ctx.lineWidth = thickness
+    ctx.lineCap = 'round'
+    
+    ctx.beginPath()
+    ctx.moveTo(prevPoint.x, prevPoint.y)
+    ctx.lineTo(point.x, point.y)
+    ctx.stroke()
+  }
+  
+  // 绘制轨迹粒子效果
+  playerTrail.forEach((point, index) => {
+    const age = currentTime - point.time
+    const alpha = Math.max(0, 1 - age / 300)
+    const size = 1 + alpha * 2
+    
+    if (index % 2 === 0) { // 每隔一个点绘制粒子
+      ctx.fillStyle = `rgba(150, 220, 255, ${alpha * 0.6})`
+      ctx.beginPath()
+      ctx.arc(point.x, point.y, size, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  })
   
   ctx.restore()
 }
