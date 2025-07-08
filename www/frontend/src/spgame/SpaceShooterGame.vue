@@ -220,7 +220,7 @@ let lastPowerUpSpawn = 0
 let playerTrail: { x: number, y: number, time: number }[] = [] // 玩家轨迹
 
 /**
- * 输入控制
+ *
  */
 const keys = ref({
   w: false,
@@ -271,6 +271,7 @@ function initGame() {
   powerUpActive.value = false
   hasShield.value = false
   shieldWaves.length = 0
+  powerUpPickupEffects.length = 0 // 重置道具拾取特效
   
   // 清空玩家轨迹
   playerTrail = []
@@ -800,21 +801,42 @@ function updateGameObjects() {
       Math.pow(powerUpCenterY - playerCenterY, 2)
     )
     
-    // 自动吸附功能
-    const attractRange = 120 // 吸附范围
-    const attractStrength = 0.15 // 吸附强度
+    // 强力自动吸附和直接拾取系统
+    const strongAttractRange = 80  // 强力吸附范围
+    const autoPickupRange = 45     // 自动拾取范围
     
-    if (distance <= attractRange && distance > 0) {
-      // 计算吸附方向
+    if (distance <= autoPickupRange) {
+      // 在拾取范围内直接触发拾取效果
+      powerUp.active = false
+      
+      // 创建拾取特效
+      createPowerUpPickupEffect(powerUpCenterX, powerUpCenterY, powerUp.type)
+      
+      if (powerUp.type === 'spreadShot') {
+        // 激活散弹增益效果
+        powerUpActive.value = true
+        powerUpEndTime.value = Date.now() + powerUpDuration
+      } else if (powerUp.type === 'shield') {
+        // 激活护盾效果
+        hasShield.value = true
+      }
+    } else if (distance <= strongAttractRange && distance > 0) {
+      // 强力吸附模式：快速向玩家移动
       const dx = playerCenterX - powerUpCenterX
       const dy = playerCenterY - powerUpCenterY
       
-      // 应用吸附力，距离越近吸引力越强
-      const attractionFactor = (attractRange - distance) / attractRange
-      const attractForce = attractStrength * attractionFactor
+      // 更强的吸附力，距离越近速度越快
+      const attractionFactor = (strongAttractRange - distance) / strongAttractRange
+      const attractSpeed = 8 + attractionFactor * 12  // 基础速度8，最高20
       
-      powerUp.vx = dx / distance * attractForce * 5
-      powerUp.vy = Math.max(powerUp.vy * 0.7, dy / distance * attractForce * 5) // 保持一定的下落速度
+      // 直线吸附到玩家位置
+      powerUp.vx = (dx / distance) * attractSpeed
+      powerUp.vy = (dy / distance) * attractSpeed
+      
+      // 添加轻微的振动效果增强视觉
+      const vibration = Math.sin(Date.now() * 0.05) * 2 * attractionFactor
+      powerUp.vx += vibration
+      powerUp.vy += vibration * 0.5
     } else {
       // 正常的曲线飘落运动
       powerUp.floatOffset += powerUp.curveSpeed
@@ -929,28 +951,7 @@ function checkCollisions() {
     }
   })
   
-  // 玩家拾取增益道具
-  powerUps.forEach(powerUp => {
-    if (powerUp.active) {
-      const distance = Math.sqrt(
-        Math.pow(powerUp.x + powerUp.width / 2 - playerCenterX, 2) + 
-        Math.pow(powerUp.y + powerUp.height / 2 - playerCenterY, 2)
-      )
-      
-      if (distance <= 35) { // 增大拾取范围，适应更大的道具
-        powerUp.active = false
-        
-        if (powerUp.type === 'spreadShot') {
-          // 激活散弹增益效果
-          powerUpActive.value = true
-          powerUpEndTime.value = Date.now() + powerUpDuration
-        } else if (powerUp.type === 'shield') {
-          // 激活护盾效果
-          hasShield.value = true
-        }
-      }
-    }
-  })
+  // 玩家拾取增益道具的逻辑已移至updateGameObjects中的道具更新部分
 }
 
 /**
@@ -1002,12 +1003,153 @@ function render() {
   // 绘制护盾冲击波
   drawShieldWaves()
   
+  // 绘制道具拾取特效
+  drawPowerUpPickupEffects()
+  
   // 绘制UI元素
   drawAmmoDisplay()
   drawReloadAnimation()
   drawPowerUpIndicator()
   drawGameTimer() // 添加游戏计时器
   drawSpeedIndicator() // 添加速度指示器
+}
+
+/**
+ * 道具拾取特效数组
+ */
+let powerUpPickupEffects: { 
+  x: number, 
+  y: number, 
+  particles: Array<{
+    x: number, 
+    y: number, 
+    vx: number, 
+    vy: number, 
+    life: number, 
+    maxLife: number,
+    size: number,
+    color: string
+  }>, 
+  startTime: number,
+  type: 'spreadShot' | 'shield'
+}[] = []
+
+/**
+ * 创建道具拾取特效
+ */
+function createPowerUpPickupEffect(x: number, y: number, type: 'spreadShot' | 'shield') {
+  const particleCount = 20
+  const particles = []
+  
+  const baseColor = type === 'shield' ? '#ffff00' : '#00ffff'
+  
+  // 生成粒子
+  for (let i = 0; i < particleCount; i++) {
+    const angle = (i / particleCount) * Math.PI * 2
+    const speed = 3 + Math.random() * 4
+    const life = 800 + Math.random() * 400
+    
+    particles.push({
+      x: x,
+      y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: life,
+      maxLife: life,
+      size: 2 + Math.random() * 3,
+      color: baseColor
+    })
+  }
+  
+  powerUpPickupEffects.push({
+    x: x,
+    y: y,
+    particles: particles,
+    startTime: Date.now(),
+    type: type
+  })
+}
+
+/**
+ * 更新道具拾取特效
+ */
+function updatePowerUpPickupEffects() {
+  const currentTime = Date.now()
+  
+  powerUpPickupEffects.forEach(effect => {
+    effect.particles.forEach(particle => {
+      // 更新粒子位置
+      particle.x += particle.vx
+      particle.y += particle.vy
+      
+      // 添加重力效果
+      particle.vy += 0.1
+      
+      // 减少生命值
+      particle.life -= 16 // 约60FPS下每帧减少16ms
+      
+      // 添加阻力
+      particle.vx *= 0.98
+      particle.vy *= 0.98
+    })
+    
+    // 移除死亡粒子
+    effect.particles = effect.particles.filter(particle => particle.life > 0)
+  })
+  
+  // 移除没有粒子的特效
+  powerUpPickupEffects = powerUpPickupEffects.filter(effect => effect.particles.length > 0)
+}
+
+/**
+ * 绘制道具拾取特效
+ */
+function drawPowerUpPickupEffects() {
+  ctx.save()
+  
+  powerUpPickupEffects.forEach(effect => {
+    effect.particles.forEach(particle => {
+      const alpha = particle.life / particle.maxLife
+      const size = particle.size * alpha
+      
+      // 创建粒子渐变
+      const gradient = ctx.createRadialGradient(
+        particle.x, particle.y, 0,
+        particle.x, particle.y, size * 2
+      )
+      gradient.addColorStop(0, `${particle.color}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`)
+      gradient.addColorStop(1, `${particle.color}00`)
+      
+      ctx.fillStyle = gradient
+      ctx.beginPath()
+      ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2)
+      ctx.fill()
+    })
+    
+    // 绘制中心闪光效果
+    const elapsed = Date.now() - effect.startTime
+    if (elapsed < 300) {
+      const flashAlpha = 1 - (elapsed / 300)
+      const flashSize = 20 + (elapsed / 300) * 30
+      
+      const flashGradient = ctx.createRadialGradient(
+        effect.x, effect.y, 0,
+        effect.x, effect.y, flashSize
+      )
+      
+      const flashColor = effect.type === 'shield' ? '255,255,0' : '0,255,255'
+      flashGradient.addColorStop(0, `rgba(${flashColor}, ${flashAlpha})`)
+      flashGradient.addColorStop(0.5, `rgba(255,255,255, ${flashAlpha * 0.8})`)
+      flashGradient.addColorStop(1, `rgba(${flashColor}, 0)`)
+      
+      ctx.fillStyle = flashGradient
+      ctx.beginPath()
+      ctx.arc(effect.x, effect.y, flashSize, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  })
+  
+  ctx.restore()
 }
 
 /**
@@ -2187,6 +2329,7 @@ function gameLoop() {
   // spawnPowerUp() // 移除定时道具生成，改为击毁敌机掉落
   updateGameObjects()
   updateShieldWaves()
+  updatePowerUpPickupEffects() // 更新道具拾取特效
   checkCollisions()
   render()
   
