@@ -45,7 +45,7 @@
   @example
   <!-- 在路由中使用 -->
   <!-- 新建文章：/edit/new -->
-  <!-- 编辑文章：/edit/文章标题 -->
+  <!-- 编辑文章：/edit/文章标题 --
   <ArticleEdit />
 -->
 <template>
