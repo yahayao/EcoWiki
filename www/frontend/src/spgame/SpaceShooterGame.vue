@@ -39,6 +39,15 @@
           <div class="score">分数: {{ score }}</div>
           <div class="lives">生命: {{ lives }}</div>
           <div class="shield" v-if="hasShield" style="color: #00ffff;">🛡️ 护盾</div>
+          <div class="game-time" :class="{ 'time-warning': gameTimeSeconds >= 75 && gameTimeSeconds < 90 }">
+            时间: {{ Math.floor(gameTimeSeconds) }}s
+            <span v-if="gameTimeSeconds >= 75 && gameTimeSeconds < 90" class="intensity-warning">
+              ⚠️ {{ 90 - Math.floor(gameTimeSeconds) }}s后进入高强度模式!
+            </span>
+            <span v-else-if="gameTimeSeconds >= 90" class="intensity-active">
+              🔥 高强度模式！
+            </span>
+          </div>
           <div class="difficulty">
             {{ selectedDifficulty === 'easy' ? '简单模式' : '困难模式' }}
           </div>
@@ -132,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
 
 /**
  * 组件属性定义
@@ -190,6 +199,14 @@ const gameStartTime = ref(0)
 const currentTime = ref(0)
 
 /**
+ * 计算游戏时间（秒）
+ */
+const gameTimeSeconds = computed(() => {
+  if (!gameStarted.value || gameStartTime.value === 0) return 0
+  return (currentTime.value - gameStartTime.value) / 1000
+})
+
+/**
  * 游戏尺寸配置
  */
 const gameWidth = 800
@@ -221,13 +238,6 @@ interface Enemy extends GameObject {
   active: boolean
   lastShot: number
   type: 'normal' | 'fast' | 'spread' // 敌人类型：普通、高速、扩散弹
-  movePattern?: {
-    type: 'sine' | 'zigzag'
-    amplitude: number
-    frequency: number
-    phase: number
-    originalX: number
-  }
 }
 
 interface SpreadBullet extends Bullet {
@@ -495,22 +505,22 @@ function updatePlayer() {
     ).slice(-maxTrailLength)
   }
   
-  // 边界检查
+  // 边界检查 - 去掉反弹效果，直接停在边界
   if (player.x < 0) {
     player.x = 0
-    player.vx *= -0.2 // 减少反弹效果
+    player.vx = 0 // 直接停止，不反弹
   }
   if (player.x > gameWidth - player.width) {
     player.x = gameWidth - player.width
-    player.vx *= -0.2
+    player.vx = 0 // 直接停止，不反弹
   }
   if (player.y < 0) {
     player.y = 0
-    player.vy *= -0.2
+    player.vy = 0 // 直接停止，不反弹
   }
   if (player.y > gameHeight - player.height) {
     player.y = gameHeight - player.height
-    player.vy *= -0.2
+    player.vy = 0 // 直接停止，不反弹
   }
   
   // 检查是否需要自动换弹（仅困难模式有弹夹系统）
@@ -676,13 +686,28 @@ function spawnEnemy() {
   
   // 根据难度调整基础速度和难度递增
   const baseDifficultyMultiplier = selectedDifficulty.value === 'easy' ? 0.7 : 1.2 // 简单模式更慢，困难模式更快
-  const difficultyMultiplier = baseDifficultyMultiplier + gameTimeSeconds / 30 // 每30秒增加难度
-  const baseSpeed = selectedDifficulty.value === 'easy' ? 1.5 : 2.5 // 简单模式基础速度更慢
-  const enemySpeed = baseSpeed * Math.min(difficultyMultiplier, selectedDifficulty.value === 'easy' ? 3 : 5) // 简单模式最大3倍，困难模式最大5倍
+  let difficultyMultiplier = baseDifficultyMultiplier + gameTimeSeconds / 30 // 每30秒增加难度
   
-  // 根据难度调整敌人生成频率
-  const baseSpawnInterval = selectedDifficulty.value === 'easy' ? 1200 : 800 // 简单模式生成更慢
-  const spawnInterval = Math.max(selectedDifficulty.value === 'easy' ? 300 : 150, baseSpawnInterval / difficultyMultiplier)
+  // 在1分30秒（90秒）后大幅加速
+  if (gameTimeSeconds > 90) {
+    const extraTime = gameTimeSeconds - 90
+    difficultyMultiplier = baseDifficultyMultiplier + 3 + extraTime / 15 // 90秒后基础倍率+3，并且每15秒再增加
+  }
+  
+  const baseSpeed = selectedDifficulty.value === 'easy' ? 1.5 : 2.5 // 简单模式基础速度更慢
+  const enemySpeed = baseSpeed * Math.min(difficultyMultiplier, selectedDifficulty.value === 'easy' ? 6 : 8) // 提高最大速度上限
+  
+  // 根据难度调整敌人生成频率，90秒后大幅增加敌人数量
+  let baseSpawnInterval = selectedDifficulty.value === 'easy' ? 1200 : 800 // 简单模式生成更慢
+  let minSpawnInterval = selectedDifficulty.value === 'easy' ? 300 : 150
+  
+  // 90秒后敌人生成频率大幅提升
+  if (gameTimeSeconds > 90) {
+    baseSpawnInterval = selectedDifficulty.value === 'easy' ? 600 : 400 // 基础生成间隔减半
+    minSpawnInterval = selectedDifficulty.value === 'easy' ? 120 : 80 // 最小间隔也显著降低
+  }
+  
+  const spawnInterval = Math.max(minSpawnInterval, baseSpawnInterval / difficultyMultiplier)
   
   if (currentTime.value - lastEnemySpawn > spawnInterval) {
     // 敌人尺寸更大
@@ -696,8 +721,14 @@ function spawnEnemy() {
     
     const advancedEnemyStartTime = selectedDifficulty.value === 'easy' ? 30 : 20 // 简单模式延迟出现高级敌人
     if (gameTimeSeconds > advancedEnemyStartTime) {
-      const fastChance = selectedDifficulty.value === 'easy' ? 0.15 : 0.25 // 简单模式减少高速敌人
-      const spreadChance = selectedDifficulty.value === 'easy' ? 0.25 : 0.4 // 简单模式减少扩散弹敌人
+      let fastChance = selectedDifficulty.value === 'easy' ? 0.15 : 0.25 // 简单模式减少高速敌人
+      let spreadChance = selectedDifficulty.value === 'easy' ? 0.25 : 0.4 // 简单模式减少扩散弹敌人
+      
+      // 90秒后大幅增加高级敌人出现概率
+      if (gameTimeSeconds > 90) {
+        fastChance = selectedDifficulty.value === 'easy' ? 0.35 : 0.45 // 显著增加高速敌人
+        spreadChance = selectedDifficulty.value === 'easy' ? 0.65 : 0.75 // 显著增加扩散弹敌人
+      }
       
       if (random < fastChance) { // 高速型
         enemyType = 'fast'
@@ -750,43 +781,6 @@ function updateGameObjects() {
   enemies.forEach(enemy => {
     // 基础垂直移动
     enemy.y += enemy.vy
-    
-    // 90秒后启用左右移动模式
-    if (gameTimeSeconds > 90) {
-      // 为每个敌人添加左右移动逻辑
-      if (!enemy.movePattern) {
-        // 初始化移动模式
-        enemy.movePattern = {
-          type: Math.random() < 0.5 ? 'sine' : 'zigzag',
-          amplitude: 15 + Math.random() * 25, // 移动幅度 (减小幅度)
-          frequency: 0.008 + Math.random() * 0.012, // 移动频率 (降低频率让移动更慢)
-          phase: Math.random() * Math.PI * 2, // 初始相位
-          originalX: enemy.x // 记录初始X位置
-        }
-      }
-      
-      // 根据移动模式计算水平位置
-      const timeFactor = currentTime.value * enemy.movePattern.frequency + enemy.movePattern.phase
-      
-      if (enemy.movePattern.type === 'sine') {
-        // 正弦波移动
-        enemy.x = enemy.movePattern.originalX + Math.sin(timeFactor) * enemy.movePattern.amplitude
-      } else {
-        // 锯齿波移动
-        const zigzag = ((timeFactor % (Math.PI * 2)) / (Math.PI * 2)) * 2 - 1
-        enemy.x = enemy.movePattern.originalX + zigzag * enemy.movePattern.amplitude
-      }
-      
-      // 边界限制
-      if (enemy.x < 0) {
-        enemy.x = 0
-        enemy.movePattern.originalX = 0
-      }
-      if (enemy.x > gameWidth - enemy.width) {
-        enemy.x = gameWidth - enemy.width
-        enemy.movePattern.originalX = gameWidth - enemy.width
-      }
-    }
     
     if (enemy.y > gameHeight) enemy.active = false
     
@@ -2692,9 +2686,43 @@ onUnmounted(() => {
   color: #cbd5e0;
 }
 
-.score, .lives, .difficulty, .ammo {
+.score, .lives, .difficulty, .ammo, .game-time {
   font-weight: bold;
   font-size: 0.9rem;
+}
+
+.game-time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.game-time.time-warning {
+  color: #ffa500;
+}
+
+.intensity-warning {
+  color: #ff6b6b;
+  font-size: 0.8rem;
+  animation: blink 1s infinite;
+}
+
+.intensity-active {
+  color: #ff4444;
+  font-size: 0.8rem;
+  font-weight: bold;
+  animation: pulse-red 0.8s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes pulse-red {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
 }
 
 .ammo {
