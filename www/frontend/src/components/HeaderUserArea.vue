@@ -53,11 +53,24 @@
     <!-- 已登录状态 - 显示用户信息和操作按钮 -->
     <template v-if="isAuthenticated">
       <!-- 用户信息展示 -->
-      <div class="user-info">
+      <!-- <div class="user-info">
         <div class="user-avatar-wrapper">
           <img :src="userAvatar" alt="用户头像" class="user-avatar" />
         </div>
         <span class="username">{{ user?.username }}</span>
+      </div> -->
+      <div class="avatar-dropdown" @mouseenter="showMenu = true" @mouseleave="showMenu = false">
+        <div class="avatar-container">
+          <img :src="userAvatar" alt="用户头像" class="user-avatar" />
+          <span class="username">{{ user?.username }}</span>
+        </div>
+        <transition name="fade">
+          <div v-if="showMenu" class="menu">
+            <div class="menu-item">个人主页</div>
+            <div class="menu-item">消息通知</div>
+            <div class="menu-item">登出</div>
+          </div>
+        </transition>
       </div>
       
       <!-- 管理员设置按钮（仅管理员可见） -->
@@ -90,7 +103,7 @@
  * 集成全局认证状态，提供动态的用户界面。
  */
 
-import { computed } from 'vue'
+import { computed, ref, defineEmits } from 'vue'
 import { useAuth } from '../composables/useAuth'
 import { userApi } from '../api/user'
 
@@ -135,6 +148,7 @@ const hasAdminPermission = computed(() => {
   const adminRoles = ['admin', 'superadmin']
   return adminRoles.includes(user.value.userGroup?.toLowerCase() || '')
 })
+const showMenu = ref(false)
 </script>
 
 <style scoped>
@@ -277,5 +291,58 @@ const hasAdminPermission = computed(() => {
     width: 100%;
     text-align: center;
   }
+}
+/* -----------------头像下拉菜单----------------- */
+.avatar-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.avatar-container {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 8px 0;
+  z-index: 1000;
+}
+
+.menu-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>
