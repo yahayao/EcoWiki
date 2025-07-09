@@ -16,6 +16,11 @@
         <div class="status-info">
           <p>状态: {{ status }}</p>
           <p>验证次数: {{ attemptCount }}</p>
+          <p v-if="debugInfo.trackWidth">轨道宽度: {{ debugInfo.trackWidth }}px</p>
+          <p v-if="debugInfo.maxPosition">最大位置: {{ debugInfo.maxPosition }}px</p>
+          <p v-if="debugInfo.buttonSize">按钮大小: {{ debugInfo.buttonSize }}px</p>
+          <p v-if="debugInfo.currentPosition">当前位置: {{ debugInfo.currentPosition }}px</p>
+          <p v-if="debugInfo.fillWidth">填充宽度: {{ debugInfo.fillWidth }}px</p>
         </div>
         
         <div class="button-group">
@@ -66,6 +71,13 @@ const modalSliderRef = ref<InstanceType<typeof SliderCaptcha> | null>(null)
 const status = ref('等待验证')
 const attemptCount = ref(0)
 const showModal = ref(false)
+const debugInfo = ref({
+  trackWidth: 0,
+  maxPosition: 0,
+  buttonSize: 0,
+  currentPosition: 0,
+  fillWidth: 0
+})
 
 const handleSuccess = () => {
   status.value = '验证成功！'

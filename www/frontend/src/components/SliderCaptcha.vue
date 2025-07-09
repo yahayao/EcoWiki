@@ -77,15 +77,29 @@ const calculateDimensions = () => {
   
   currentButtonSize = getCurrentButtonSize()
   trackWidth = sliderTrack.value.offsetWidth
-  maxPosition = trackWidth - currentButtonSize - (trackPadding * 2)
   
-  console.log('Track dimensions:', { trackWidth, maxPosition, currentButtonSize })
+  // 精确计算最大位置：
+  // 滑块初始位置在left: 2px，要让滑块右边缘贴合轨道右边缘(减去2px边距)
+  // 所以最大位置 = 轨道宽度 - 按钮宽度 - 4px(左右边距各2px)
+  maxPosition = trackWidth - currentButtonSize - 4
+  
+  // 为了让用户更容易完成验证，成功阈值设为maxPosition的95%
+  // 但实际显示时会snap到真正的maxPosition
 }
 
 // 更新填充宽度 - 实时填充滑过的区域
 const updateFillWidth = (position: number) => {
-  // 填充宽度 = 按钮左边缘位置 + 按钮宽度，这样滑过的部分立即变蓝
-  fillWidth.value = position + currentButtonSize
+  // 由于CSS中.slider-fill已经设置了left: 2px，
+  // 这里填充宽度就是按钮位置 + 按钮宽度
+  let newFillWidth = position + currentButtonSize
+  
+  // 确保填充宽度不超出轨道边界
+  const maxFillWidth = trackWidth - 2 // 减去右边距
+  if (newFillWidth > maxFillWidth) {
+    newFillWidth = maxFillWidth
+  }
+  
+  fillWidth.value = newFillWidth
 }
 
 // 鼠标按下事件
@@ -93,6 +107,7 @@ const handleMouseDown = (e: MouseEvent) => {
   if (isCompleted.value || isResetting.value) return
   
   e.preventDefault()
+  
   isDragging.value = true
   startX = e.clientX
   startPosition = buttonPosition.value
@@ -107,6 +122,7 @@ const handleTouchStart = (e: TouchEvent) => {
   if (isCompleted.value || isResetting.value) return
   
   e.preventDefault()
+  
   isDragging.value = true
   startX = e.touches[0].clientX
   startPosition = buttonPosition.value
@@ -130,6 +146,8 @@ const handleTouchMove = (e: TouchEvent) => {
 
 // 统一的移动处理 - 直接同步更新，无延迟
 const handleMove = (clientX: number) => {
+  if (isCompleted.value) return // 已完成则不再处理移动
+  
   const deltaX = clientX - startX
   let newPosition = startPosition + deltaX
   
@@ -141,22 +159,25 @@ const handleMove = (clientX: number) => {
   buttonPosition.value = newPosition
   updateFillWidth(newPosition)
   
-  // 检查是否完成（达到98%就算成功）
-  if (newPosition >= maxPosition * 0.98) {
+  // 检查是否完成（达到95%就算成功，但会snap到100%位置）
+  if (newPosition >= maxPosition * 0.95) {
+    // 立即将滑块snap到最右端位置
+    buttonPosition.value = maxPosition
+    updateFillWidth(maxPosition)
     completeVerification()
   }
 }
 
 // 鼠标释放事件
 const handleMouseUp = () => {
-  if (!isDragging.value) return
+  if (!isDragging.value || isCompleted.value) return // 增加完成状态检查
   
   isDragging.value = false
   document.body.style.userSelect = ''
   document.removeEventListener('mousemove', handleMouseMove)
   document.removeEventListener('mouseup', handleMouseUp)
   
-  // 如果没有完成验证，重置位置
+  // 只有在未完成验证时才重置位置
   if (!isCompleted.value) {
     resetSlider()
   }
@@ -164,14 +185,14 @@ const handleMouseUp = () => {
 
 // 触摸结束事件
 const handleTouchEnd = () => {
-  if (!isDragging.value) return
+  if (!isDragging.value || isCompleted.value) return // 增加完成状态检查
   
   isDragging.value = false
   document.body.style.userSelect = ''
   document.removeEventListener('touchmove', handleTouchMove)
   document.removeEventListener('touchend', handleTouchEnd)
   
-  // 如果没有完成验证，重置位置
+  // 只有在未完成验证时才重置位置
   if (!isCompleted.value) {
     resetSlider()
   }
@@ -179,13 +200,16 @@ const handleTouchEnd = () => {
 
 // 完成验证
 const completeVerification = () => {
+  if (isCompleted.value) return // 防止重复调用
+  
   isCompleted.value = true
   isDragging.value = false
   
-  // 保持滑块在当前位置，不强制移动到最右端
-  // buttonPosition.value 保持当前值
-  fillWidth.value = trackWidth // 完全填充整个轨道
+  // 确保滑块精确位置在最右端
+  buttonPosition.value = maxPosition
+  fillWidth.value = trackWidth - 2 // 完全填充到轨道右边缘
   
+  // 立即清理所有事件监听器，防止后续的重置
   document.body.style.userSelect = ''
   document.removeEventListener('mousemove', handleMouseMove)
   document.removeEventListener('mouseup', handleMouseUp)
@@ -197,7 +221,7 @@ const completeVerification = () => {
 
 // 重置滑块
 const resetSlider = () => {
-  if (isResetting.value) return
+  if (isResetting.value || isCompleted.value) return // 防止重复重置和已完成时重置
   
   isResetting.value = true
   const startPos = buttonPosition.value
@@ -206,6 +230,12 @@ const resetSlider = () => {
   const startTime = Date.now()
   
   const animate = () => {
+    // 再次检查完成状态，如果中途完成则停止重置动画
+    if (isCompleted.value) {
+      isResetting.value = false
+      return
+    }
+    
     const elapsed = Date.now() - startTime
     const progress = Math.min(elapsed / duration, 1)
     
@@ -230,6 +260,8 @@ const resetSlider = () => {
 
 // 公开的重置方法
 const reset = () => {
+  if (isResetting.value) return // 防止重复重置
+  
   isCompleted.value = false
   resetSlider()
 }
