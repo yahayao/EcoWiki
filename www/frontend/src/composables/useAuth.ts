@@ -79,6 +79,7 @@ const clearInvalidAuthData = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
   localStorage.removeItem('refreshToken')
+  localStorage.removeItem('rememberMe')
   user.value = null
   token.value = null
 }
@@ -120,6 +121,7 @@ const clearUser = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
   localStorage.removeItem('refreshToken')
+  // 注意：不清除"记住我"设置，因为这是用户的偏好设置
   
   console.log('清除用户认证状态:', username)
 }

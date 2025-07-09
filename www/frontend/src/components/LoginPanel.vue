@@ -162,7 +162,7 @@
  * 支持邮箱或用户名两种登录方式，并提供完整的用户体验功能。
  */
 
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { userApi } from '../api/user'
 import { useAuth } from '../composables/useAuth'
@@ -198,8 +198,22 @@ const formData = reactive({
   /** 用户密码 */
   password: '',
   /** 是否记住用户登录状态 */
-  rememberMe: false
+  rememberMe: localStorage.getItem('rememberMe') === 'true' || false
 })
+
+/**
+ * 监听"记住我"状态变化，实时保存用户偏好设置
+ */
+watch(
+  () => formData.rememberMe,
+  (newValue) => {
+    if (newValue) {
+      localStorage.setItem('rememberMe', 'true')
+    } else {
+      localStorage.removeItem('rememberMe')
+    }
+  }
+)
 
 /**
  * 切换密码显示状态
