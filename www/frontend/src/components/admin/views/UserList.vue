@@ -18,29 +18,137 @@
       </div>
     </div>
 
+    <!-- 搜索和筛选区域 -->
+    <div class="search-and-filter">
+      <div class="search-box">
+        <input
+          ref="searchInput"
+          type="text"
+          v-model="searchQuery"
+          placeholder="搜索用户（用户名、邮箱、姓名）- 按 Ctrl+F 快速搜索"
+          class="search-input"
+          @keydown.esc="clearSearch"
+        >
+        <button class="clear-search-btn" @click="clearSearch" v-if="searchQuery">
+          ✕
+        </button>
+      </div>
+      
+      <div class="filter-controls">
+        <div class="sort-control">
+          <label>排序方式：</label>
+          <select v-model="sortBy" class="sort-select">
+            <option value="userId">用户ID</option>
+            <option value="username">用户名</option>
+            <option value="email">邮箱</option>
+            <option value="userGroup">角色</option>
+            <option value="active">状态</option>
+            <option value="createdAt">注册时间</option>
+          </select>
+          <button 
+            @click="toggleSortOrder" 
+            class="sort-order-btn"
+            :title="sortOrder === 'asc' ? '升序' : '降序'"
+          >
+            {{ sortOrder === 'asc' ? '↑' : '↓' }}
+          </button>
+        </div>
+        
+        <div class="role-filter">
+          <label>角色筛选：</label>
+          <select v-model="roleFilter" class="role-filter-select">
+            <option value="">全部角色</option>
+            <option v-for="role in roles" :key="role" :value="role">
+              {{ getRoleDisplayName(role) }}
+            </option>
+          </select>
+        </div>
+        
+        <div class="status-filter">
+          <label>状态筛选：</label>
+          <select v-model="statusFilter" class="status-filter-select">
+            <option value="">全部状态</option>
+            <option value="true">正常</option>
+            <option value="false">已禁用</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <!-- 加载状态显示 -->
     <div v-if="loading" class="loading">加载中...</div>
     <!-- 错误状态显示 -->
     <div v-else-if="error" class="error">{{ error }}</div>
     <!-- 用户列表表格 -->
     <div v-else>
-      <div class="users-table">
+      <!-- 搜索结果统计 -->
+      <div class="search-results-info" v-if="searchQuery || roleFilter || statusFilter">
+        <span class="results-count">
+          找到 {{ filteredAndSortedUsers.length }} 个用户
+          <span v-if="filteredAndSortedUsers.length !== users.length">
+            （共 {{ users.length }} 个用户）
+          </span>
+        </span>
+        <button v-if="searchQuery || roleFilter || statusFilter" @click="clearAllFilters" class="clear-filters-btn">
+          清除所有筛选
+        </button>
+      </div>
+      
+      <!-- 空搜索结果提示 -->
+      <div v-if="filteredAndSortedUsers.length === 0" class="no-results">
+        <div class="no-results-icon">🔍</div>
+        <h4>没有找到匹配的用户</h4>
+        <p>请尝试调整搜索条件或筛选选项</p>
+        <button @click="clearAllFilters" class="clear-filters-btn">清除所有筛选</button>
+      </div>
+      
+      <div class="users-table" v-else>
         <table>
           <thead>
             <tr>
-              <th>用户ID</th>
-              <th>用户名</th>
-              <th>邮箱</th>
+              <th class="sortable-header" @click="setSortBy('userId')">
+                用户ID
+                <span v-if="sortBy === 'userId'" class="sort-indicator">
+                  {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                </span>
+              </th>
+              <th class="sortable-header" @click="setSortBy('username')">
+                用户名
+                <span v-if="sortBy === 'username'" class="sort-indicator">
+                  {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                </span>
+              </th>
+              <th class="sortable-header" @click="setSortBy('email')">
+                邮箱
+                <span v-if="sortBy === 'email'" class="sort-indicator">
+                  {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                </span>
+              </th>
               <th>姓名</th>
-              <th>角色</th>
-              <th>状态</th>
-              <th>注册时间</th>
+              <th class="sortable-header" @click="setSortBy('userGroup')">
+                角色
+                <span v-if="sortBy === 'userGroup'" class="sort-indicator">
+                  {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                </span>
+              </th>
+              <th class="sortable-header" @click="setSortBy('active')">
+                状态
+                <span v-if="sortBy === 'active'" class="sort-indicator">
+                  {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                </span>
+              </th>
+              <th class="sortable-header" @click="setSortBy('createdAt')">
+                注册时间
+                <span v-if="sortBy === 'createdAt'" class="sort-indicator">
+                  {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                </span>
+              </th>
               <th>操作</th>
             </tr>
           </thead>
           <tbody>
             <!-- 用户数据行循环 -->
-            <tr v-for="user in users" :key="user.userId">
+            <tr v-for="user in filteredAndSortedUsers" :key="user.userId">
               <td>{{ user.userId }}</td>
               <td>{{ user.username }}</td>
               <td>{{ user.email }}</td>
@@ -96,7 +204,7 @@
 
 <script setup lang="ts">
 // Vue 3 组合式 API 导入
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, ref, onUnmounted } from 'vue'
 // Pinia 状态管理工具
 import { storeToRefs } from 'pinia'
 // 管理员用户状态管理
@@ -105,6 +213,16 @@ import { useAdminUserStore } from '../../../stores/adminUserStore'
 import { type UserResponse, type UserGroup, adminApi } from '../../../api/user'
 // 消息提示工具
 import toast from '../../../utils/toast'
+
+/**
+ * 搜索和排序相关的响应式变量
+ */
+const searchQuery = ref('')
+const sortBy = ref<keyof UserResponse>('userId')
+const sortOrder = ref<'asc' | 'desc'>('asc')
+const roleFilter = ref('')
+const statusFilter = ref('')
+const searchInput = ref<HTMLInputElement | null>(null)
 
 /**
  * 管理员用户状态管理实例
@@ -183,6 +301,92 @@ const pendingChangesCount = computed(() => {
 })
 
 /**
+ * 过滤和排序后的用户列表
+ * @returns {UserResponse[]} 过滤和排序后的用户列表
+ */
+const filteredAndSortedUsers = computed(() => {
+  let filtered = users.value.filter(user => {
+    // 搜索过滤
+    const searchLower = searchQuery.value.toLowerCase()
+    const matchesSearch = !searchQuery.value || 
+      user.username.toLowerCase().includes(searchLower) ||
+      user.email.toLowerCase().includes(searchLower) ||
+      (user.fullName && user.fullName.toLowerCase().includes(searchLower))
+    
+    // 角色过滤
+    const matchesRole = !roleFilter.value || user.userGroup === roleFilter.value
+    
+    // 状态过滤
+    const matchesStatus = !statusFilter.value || 
+      user.active.toString() === statusFilter.value
+    
+    return matchesSearch && matchesRole && matchesStatus
+  })
+  
+  // 排序
+  filtered.sort((a, b) => {
+    const aValue = a[sortBy.value]
+    const bValue = b[sortBy.value]
+    
+    let comparison = 0
+    
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      comparison = aValue.localeCompare(bValue)
+    } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+      comparison = aValue - bValue
+    } else if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
+      comparison = Number(aValue) - Number(bValue)
+    } else {
+      comparison = String(aValue).localeCompare(String(bValue))
+    }
+    
+    return sortOrder.value === 'asc' ? comparison : -comparison
+  })
+  
+  return filtered
+})
+
+/**
+ * 清空搜索条件
+ */
+const clearSearch = () => {
+  searchQuery.value = ''
+}
+
+/**
+ * 清除所有筛选条件
+ */
+const clearAllFilters = () => {
+  searchQuery.value = ''
+  roleFilter.value = ''
+  statusFilter.value = ''
+  sortBy.value = 'userId'
+  sortOrder.value = 'asc'
+}
+
+/**
+ * 切换排序顺序
+ */
+const toggleSortOrder = () => {
+  sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+}
+
+/**
+ * 设置排序字段
+ * @param {keyof UserResponse} field 排序字段
+ */
+const setSortBy = (field: keyof UserResponse) => {
+  if (sortBy.value === field) {
+    // 如果点击的是当前排序字段，则切换排序顺序
+    toggleSortOrder()
+  } else {
+    // 如果点击的是新字段，则设置为升序
+    sortBy.value = field
+    sortOrder.value = 'asc'
+  }
+}
+
+/**
  * 组件挂载时的初始化逻辑
  * 按顺序加载角色列表、角色详情和用户列表
  */
@@ -190,7 +394,30 @@ onMounted(async () => {
   await loadRoles()       // 先加载角色列表
   await loadRolesDetails() // 加载角色详情
   await loadUsers()       // 再加载用户列表
+  
+  // 添加键盘快捷键监听
+  document.addEventListener('keydown', handleKeyboardShortcuts)
 })
+
+/**
+ * 组件卸载时清理事件监听
+ */
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyboardShortcuts)
+})
+
+/**
+ * 键盘快捷键处理函数
+ * @param {KeyboardEvent} event 键盘事件
+ */
+const handleKeyboardShortcuts = (event: KeyboardEvent) => {
+  // Ctrl+F 或 Cmd+F 聚焦搜索框
+  if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+    event.preventDefault()
+    searchInput.value?.focus()
+    searchInput.value?.select()
+  }
+}
 
 /**
  * 用户角色变更处理函数
@@ -348,6 +575,165 @@ const getRoleDisplayName = (role: string) => {
   min-width: 0;
 }
 
+/* 搜索和筛选区域样式 */
+.search-and-filter {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+/* 搜索框容器样式 */
+.search-box {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+/* 搜索输入框样式 */
+.search-input {
+  width: 100%;
+  padding: 12px 16px;
+  padding-right: 40px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  background: white;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #48bb78;
+  box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.1);
+}
+
+/* 清空搜索按钮样式 */
+.clear-search-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #e2e8f0;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.clear-search-btn:hover {
+  background: #cbd5e0;
+  color: #333;
+}
+
+/* 筛选控件容器样式 */
+.filter-controls {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* 排序控件样式 */
+.sort-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sort-control label {
+  font-size: 0.9rem;
+  color: #4a5568;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sort-select {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  min-width: 120px;
+}
+
+.sort-order-btn {
+  background: #48bb78;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: bold;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sort-order-btn:hover {
+  background: #38a169;
+  transform: translateY(-1px);
+}
+
+/* 角色筛选样式 */
+.role-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-filter label {
+  font-size: 0.9rem;
+  color: #4a5568;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.role-filter-select {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  min-width: 120px;
+}
+
+/* 状态筛选样式 */
+.status-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-filter label {
+  font-size: 0.9rem;
+  color: #4a5568;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-filter-select {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  min-width: 100px;
+}
+
 /* 页面标题样式 */
 .section-header h3 {
   margin: 0;
@@ -472,6 +858,87 @@ const getRoleDisplayName = (role: string) => {
   color: #2d3748;
 }
 
+/* 可排序表头样式 */
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.sortable-header:hover {
+  background: #edf2f7 !important;
+}
+
+/* 排序指示器样式 */
+.sort-indicator {
+  margin-left: 6px;
+  font-size: 0.8rem;
+  color: #48bb78;
+  font-weight: bold;
+}
+
+/* 搜索结果信息样式 */
+.search-results-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+}
+
+.results-count {
+  color: #0369a1;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.clear-filters-btn {
+  background: #0ea5e9;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clear-filters-btn:hover {
+  background: #0284c7;
+  transform: translateY(-1px);
+}
+
+/* 空搜索结果提示样式 */
+.no-results {
+  text-align: center;
+  padding: 60px 20px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 2px dashed #d1d5db;
+}
+
+.no-results-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.no-results h4 {
+  margin: 0 0 8px 0;
+  color: #374151;
+  font-size: 1.2rem;
+}
+
+.no-results p {
+  margin: 0 0 20px 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
 /* 角色选择下拉框样式 */
 .role-select {
   padding: 4px 8px;
@@ -565,13 +1032,49 @@ const getRoleDisplayName = (role: string) => {
     align-items: center;
   }
   
+  .search-and-filter {
+    padding: 16px;
+  }
+  
+  .filter-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .sort-control,
+  .role-filter,
+  .status-filter {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  
+  .sort-control {
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .sort-select,
+  .role-filter-select,
+  .status-filter-select {
+    min-width: auto;
+    width: 100%;
+  }
+  
   .users-table {
     font-size: 0.8rem;
+    overflow-x: scroll;
   }
   
   .users-table th,
   .users-table td {
     padding: 8px 4px;
+    min-width: 80px;
+  }
+  
+  .search-input {
+    font-size: 16px; /* 防止iOS缩放 */
   }
 }
 </style>
