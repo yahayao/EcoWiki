@@ -1,4 +1,4 @@
-  <!--
+<!--
     用户注册面板组件
     
     该组件提供了一个功能完整的用户注册界面，支持实时验证和可用性检查。
@@ -235,42 +235,13 @@
                       </p>
                     </div>
                     
-                    <div class="slider-container">
-                      <div class="slider-track" ref="sliderTrack" 
-                          :class="{ dragging: dragging, completed: sliderVerified }">
-                        <div class="slider-background">
-                          <div class="slider-fill" :style="{width: sliderFillWidth + 'px'}"></div>
-                          <div class="slider-progress-text">{{ sliderProgress }}%</div>
-                        </div>
-                        
-                        <div class="slider-btn" 
-                            :style="{transform: `translateX(${sliderBtnLeft}px)`}"
-                            :class="{ dragging: dragging, completed: sliderVerified }"
-                            @mousedown="onSliderDown"
-                            @touchstart.prevent="onSliderDown">
-                          <div class="slider-btn-inner">
-                            <svg v-if="!sliderVerified" class="slider-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                              <path d="M6 3L11 8L6 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            <svg v-else class="slider-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                              <path d="M13.5 4.5L6 12L2.5 8.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                          </div>
-                          <div class="slider-glow"></div>
-                        </div>
-                        
-                        <div class="slider-track-text" v-if="!sliderVerified">拖动到右侧</div>
-                      </div>
-                      
-                      <div class="verification-status" :class="{ completed: sliderVerified }">
-                        <div class="status-dots">
-                          <span class="dot" :class="{ active: sliderProgress >= 20 }"></span>
-                          <span class="dot" :class="{ active: sliderProgress >= 40 }"></span>
-                          <span class="dot" :class="{ active: sliderProgress >= 60 }"></span>
-                          <span class="dot" :class="{ active: sliderProgress >= 80 }"></span>
-                          <span class="dot" :class="{ active: sliderProgress >= 100 }"></span>
-                        </div>
-                      </div>
+                    <!-- 使用新的滑块组件 -->
+                    <div class="new-slider-container">
+                      <SliderCaptcha 
+                        ref="sliderCaptchaRef"
+                        @success="handleSliderSuccess"
+                        @reset="handleSliderReset"
+                      />
                     </div>
                   </div>
                 </div>
@@ -294,6 +265,7 @@
   import { validateRegisterForm, debounce, type FormErrors } from '../utils/validation'
   import { useAuth } from '../composables/useAuth'
   import toast from '../utils/toast'
+  import SliderCaptcha from './SliderCaptcha.vue'
 
   // 定义 emits
   const emit = defineEmits(['switchToLogin', 'registerSuccess'])
@@ -421,17 +393,10 @@
     }
   }
 
-  // 滑块人机验证相关
+  // 新的滑块验证相关
   const sliderVerified = ref(false)
   const showSliderModal = ref(false)
-  const sliderBtnLeft = ref(0)
-  const sliderFillWidth = ref(0)
-  const sliderProgress = ref(0)
-  const dragging = ref(false)
-  const startX = ref(0)
-  const btnStartLeft = ref(0)
-  const sliderTrack = ref<HTMLElement | null>(null)
-  let maxLeft = 312 // 360 - 48
+  const sliderCaptchaRef = ref<InstanceType<typeof SliderCaptcha> | null>(null)
 
   // 处理遮罩点击
   const handleMaskClick = (e: MouseEvent) => {
@@ -440,51 +405,10 @@
     }
   }
 
-  // 更新滑块进度
-  const updateProgress = (newLeft: number) => {
-    sliderProgress.value = Math.round((newLeft / maxLeft) * 100)
-  }
-
-  // 重置滑块动画
-  const animateReset = () => {
-    const resetDuration = 300
-    const startLeft = sliderBtnLeft.value
-    const startWidth = sliderFillWidth.value
-    const startProgress = sliderProgress.value
-    const startTime = Date.now()
-    
-    const resetAnimation = () => {
-      const elapsed = Date.now() - startTime
-      const progress = Math.min(elapsed / resetDuration, 1)
-      const easeProgress = 1 - Math.pow(1 - progress, 3)
-      
-      sliderBtnLeft.value = startLeft * (1 - easeProgress)
-      sliderFillWidth.value = startWidth * (1 - easeProgress)
-      sliderProgress.value = Math.round(startProgress * (1 - easeProgress))
-      
-      if (progress < 1) {
-        requestAnimationFrame(resetAnimation)
-      } else {
-        // 完全重置
-        sliderBtnLeft.value = 0
-        sliderFillWidth.value = 0
-        sliderProgress.value = 0
-      }
-    }
-    
-    requestAnimationFrame(resetAnimation)
-  }
-
-  // 完成验证
-  const completeVerification = () => {
+  // 滑块验证成功处理
+  const handleSliderSuccess = () => {
     sliderVerified.value = true
-    dragging.value = false
-    document.body.style.userSelect = ''
-    
-    // 完成动画
-    sliderBtnLeft.value = maxLeft
-    sliderFillWidth.value = maxLeft + 20
-    sliderProgress.value = 100
+    console.log('滑块验证成功')
     
     // 延迟关闭弹窗
     setTimeout(() => {
@@ -492,71 +416,40 @@
     }, 1500)
   }
 
-  const onSliderDown = (e: MouseEvent | TouchEvent) => {
-    if (sliderVerified.value) return
-    dragging.value = true
-    startX.value = 'touches' in e ? e.touches[0].clientX : e.clientX
-    btnStartLeft.value = sliderBtnLeft.value
-    document.body.style.userSelect = 'none'
+  // 滑块重置处理
+  const handleSliderReset = () => {
+    console.log('滑块已重置')
   }
 
-  const onSliderMove = (e: MouseEvent | TouchEvent) => {
-    if (!dragging.value || sliderVerified.value) return
-    e.preventDefault()
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
-    let dx = clientX - startX.value
-    let newLeft = btnStartLeft.value + dx
-    if (newLeft < 0) newLeft = 0
-    if (newLeft > maxLeft) newLeft = maxLeft
-    sliderBtnLeft.value = newLeft
-    sliderFillWidth.value = newLeft + 20
-    updateProgress(newLeft)
-    
-    // 完成验证 (98%以上就算完成)
-    if (newLeft >= maxLeft * 0.98) {
-      completeVerification()
-    }
-  }
-
-  const onSliderUp = () => {
-    if (!dragging.value) return
-    if (sliderBtnLeft.value < maxLeft * 0.98) {
-      // 重置动画
-      animateReset()
-    }
-    dragging.value = false
-    document.body.style.userSelect = ''
-  }
-
+  // 关闭滑块弹窗
   const closeSliderModal = () => {
     showSliderModal.value = false
-    // 重置状态
-    sliderBtnLeft.value = 0
-    sliderFillWidth.value = 0
-    sliderProgress.value = 0
-    dragging.value = false
+    // 重置滑块状态
+    if (sliderCaptchaRef.value) {
+      sliderCaptchaRef.value.reset()
+    }
+    sliderVerified.value = false
   }
 
+  // 监听弹窗显示状态，重置滑块
   watch(showSliderModal, (val) => {
-    if (val && sliderTrack.value) {
-      maxLeft = sliderTrack.value.offsetWidth - 47 // 47 = slider button width + margin
-      sliderBtnLeft.value = 0
-      sliderFillWidth.value = 0
-      sliderProgress.value = 0
+    if (val) {
+      // 弹窗打开时重置滑块
+      setTimeout(() => {
+        if (sliderCaptchaRef.value) {
+          sliderCaptchaRef.value.reset()
+        }
+        sliderVerified.value = false
+      }, 100)
     }
   })
 
   onMounted(() => {
-    window.addEventListener('mousemove', onSliderMove)
-    window.addEventListener('mouseup', onSliderUp)
-    window.addEventListener('touchmove', onSliderMove)
-    window.addEventListener('touchend', onSliderUp)
+    // 移除旧的事件监听器，新滑块组件自己处理
   })
+  
   onBeforeUnmount(() => {
-    window.removeEventListener('mousemove', onSliderMove)
-    window.removeEventListener('mouseup', onSliderUp)
-    window.removeEventListener('touchmove', onSliderMove)
-    window.removeEventListener('touchend', onSliderUp)
+    // 清理工作
   })
   </script>
 
@@ -1101,235 +994,7 @@
     100% { transform: scale(1); }
   }
 
-  .slider-container {
-    width: 100%;
-    margin: 0 auto;
-  }
 
-  .slider-track {
-    position: relative;
-    width: 100%;
-    height: 50px;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    border-radius: 25px;
-    margin-bottom: 20px;
-    border: 2px solid rgba(102, 126, 234, 0.1);
-    box-shadow: 
-      0 4px 12px rgba(102, 126, 234, 0.08),
-      0 0 0 1px rgba(255, 255, 255, 0.5) inset;
-    overflow: hidden;
-    transition: all 0.3s ease;
-  }
-
-  .slider-track.dragging {
-    border-color: rgba(102, 126, 234, 0.3);
-    box-shadow: 
-      0 4px 20px rgba(102, 126, 234, 0.15),
-      0 0 0 1px rgba(255, 255, 255, 0.5) inset,
-      0 0 0 3px rgba(102, 126, 234, 0.1);
-  }
-
-  .slider-track.completed {
-    border-color: rgba(16, 185, 129, 0.4);
-    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-    box-shadow: 
-      0 4px 20px rgba(16, 185, 129, 0.2),
-      0 0 0 1px rgba(255, 255, 255, 0.8) inset,
-      0 0 0 3px rgba(16, 185, 129, 0.1);
-  }
-
-  .slider-background {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 23px;
-    overflow: hidden;
-  }
-
-  .slider-fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 23px 8px 8px 23px;
-    transition: all 0.2s ease;
-    z-index: 1;
-  }
-
-  .slider-track.completed .slider-fill {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  }
-
-  .slider-progress-text {
-    position: absolute;
-    top: 50%;
-    right: 15px;
-    transform: translateY(-50%);
-    font-size: 12px;
-    font-weight: 600;
-    color: #6b7280;
-    z-index: 2;
-    letter-spacing: 0.5px;
-  }
-
-  .slider-btn {
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 44px;
-    height: 44px;
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    border-radius: 50%;
-    cursor: grab;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 3;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 
-      0 4px 12px rgba(102, 126, 234, 0.15),
-      0 2px 4px rgba(0, 0, 0, 0.1),
-      0 0 0 1px rgba(255, 255, 255, 0.8) inset;
-    border: 2px solid rgba(102, 126, 234, 0.1);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .slider-btn:active {
-    cursor: grabbing;
-  }
-
-  .slider-btn.dragging {
-    transform: scale(1.1) !important;
-    box-shadow: 
-      0 8px 25px rgba(102, 126, 234, 0.25),
-      0 4px 12px rgba(0, 0, 0, 0.15),
-      0 0 0 1px rgba(255, 255, 255, 0.8) inset;
-    border-color: rgba(102, 126, 234, 0.3);
-  }
-
-  .slider-btn.completed {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    border-color: rgba(16, 185, 129, 0.3);
-    box-shadow: 
-      0 8px 25px rgba(16, 185, 129, 0.3),
-      0 4px 12px rgba(0, 0, 0, 0.1),
-      0 0 0 1px rgba(255, 255, 255, 0.9) inset;
-    animation: completedBounce 0.6s ease-out;
-  }
-
-  @keyframes completedBounce {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
-  }
-
-  .slider-btn-inner {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .slider-icon {
-    color: #667eea;
-    transition: all 0.3s ease;
-    filter: drop-shadow(0 1px 2px rgba(102, 126, 234, 0.1));
-  }
-
-  .slider-btn.completed .slider-icon {
-    color: white;
-  }
-
-  .slider-glow {
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 50%;
-    opacity: 0;
-    z-index: 1;
-    transition: opacity 0.3s ease;
-    filter: blur(8px);
-  }
-
-  .slider-btn.dragging .slider-glow {
-    opacity: 0.3;
-    animation: glowPulse 2s ease-in-out infinite;
-  }
-
-  @keyframes glowPulse {
-    0%, 100% { opacity: 0.3; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(1.1); }
-  }
-
-  .slider-track-text {
-    position: absolute;
-    top: 50%;
-    left: 60px;
-    transform: translateY(-50%);
-    font-size: 14px;
-    color: #6b7280;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    z-index: 2;
-    transition: all 0.3s ease;
-    pointer-events: none;
-    user-select: none;
-  }
-
-  .verification-status {
-    display: flex;
-    justify-content: center;
-    margin-top: 16px;
-    opacity: 0.8;
-    transition: all 0.3s ease;
-  }
-
-  .verification-status.completed {
-    opacity: 1;
-  }
-
-  .status-dots {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #e2e8f0;
-    transition: all 0.3s ease;
-    position: relative;
-  }
-
-  .dot.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    transform: scale(1.2);
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-  }
-
-  .dot.active::after {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 50%;
-    opacity: 0.3;
-    z-index: -1;
-    filter: blur(4px);
-  }
 
   @media (max-width: 768px) {
     .register-card {
@@ -1373,5 +1038,11 @@
     .content-left {
       padding: 25px 20px;
     }
+  }
+
+  /* 新滑块容器样式 */
+  .new-slider-container {
+    margin: 20px 0;
+    padding: 0;
   }
   </style>
