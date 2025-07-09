@@ -94,6 +94,8 @@
                 class="form-input"
                 placeholder="密码"
                 required
+                @focus="handlePasswordFocus"
+                @input="handlePasswordInput"
               />
               <!-- 密码显示/隐藏切换按钮 -->
               <button
@@ -162,7 +164,7 @@
  * 支持邮箱或用户名两种登录方式，并提供完整的用户体验功能。
  */
 
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { userApi } from '../api/user'
 import { useAuth } from '../composables/useAuth'
@@ -202,6 +204,36 @@ const formData = reactive({
 })
 
 /**
+ * 初始化表单数据
+ * 从localStorage恢复保存的登录信息
+ */
+const initializeFormData = () => {
+  const rememberMe = localStorage.getItem('rememberMe') === 'true'
+  if (rememberMe) {
+    // 恢复保存的账号
+    const savedLoginField = localStorage.getItem('savedLoginField')
+    if (savedLoginField) {
+      formData.loginField = savedLoginField
+    }
+    
+    // 恢复保存的密码（显示为星号）
+    const savedPassword = localStorage.getItem('savedPassword')
+    if (savedPassword) {
+      // 显示星号，长度与实际密码相同
+      formData.password = '*'.repeat(savedPassword.length)
+      // 存储实际密码的引用
+      actualPassword.value = savedPassword
+      isPasswordMasked.value = true
+    }
+  }
+}
+
+// 实际密码存储
+const actualPassword = ref('')
+// 密码是否为掩码状态
+const isPasswordMasked = ref(false)
+
+/**
  * 监听"记住我"状态变化，实时保存用户偏好设置
  */
 watch(
@@ -209,8 +241,52 @@ watch(
   (newValue) => {
     if (newValue) {
       localStorage.setItem('rememberMe', 'true')
+      // 如果勾选记住我，保存当前的账号和密码
+      if (formData.loginField) {
+        localStorage.setItem('savedLoginField', formData.loginField)
+      }
+      if (actualPassword.value || (!isPasswordMasked.value && formData.password)) {
+        const passwordToSave = isPasswordMasked.value ? actualPassword.value : formData.password
+        localStorage.setItem('savedPassword', passwordToSave)
+      }
     } else {
       localStorage.removeItem('rememberMe')
+      localStorage.removeItem('savedLoginField')
+      localStorage.removeItem('savedPassword')
+    }
+  }
+)
+
+/**
+ * 监听密码输入变化
+ */
+watch(
+  () => formData.password,
+  (newValue) => {
+    // 如果用户开始输入密码，清除掩码状态
+    if (isPasswordMasked.value && newValue !== '*'.repeat(actualPassword.value.length)) {
+      isPasswordMasked.value = false
+      actualPassword.value = newValue
+    } else if (!isPasswordMasked.value) {
+      actualPassword.value = newValue
+    }
+    
+    // 如果勾选了记住我，实时保存密码
+    if (formData.rememberMe && !isPasswordMasked.value) {
+      localStorage.setItem('savedPassword', newValue)
+    }
+  }
+)
+
+/**
+ * 监听账号输入变化
+ */
+watch(
+  () => formData.loginField,
+  (newValue) => {
+    // 如果勾选了记住我，实时保存账号
+    if (formData.rememberMe) {
+      localStorage.setItem('savedLoginField', newValue)
     }
   }
 )
@@ -281,28 +357,37 @@ const handleLogin = async () => {
   
   try {
     // 3. 根据输入内容判断登录方式并构建请求数据
+    // 使用实际密码而不是可能被掩码的显示密码
+    const realPassword = isPasswordMasked.value ? actualPassword.value : formData.password
+    
     const loginData = isEmail(formData.loginField) 
       ? {
           email: formData.loginField,
-          password: formData.password,
+          password: realPassword,
           rememberMe: formData.rememberMe
         }
       : {
           username: formData.loginField,
-          password: formData.password,
+          password: realPassword,
           rememberMe: formData.rememberMe
         }
     
     // 4. 调用登录API
     const response = await userApi.login(loginData)
     
-    // 5. 登录成功，保存用户信息和token
+    // 5. 如果勾选了记住我，保存登录信息
+    if (formData.rememberMe) {
+      localStorage.setItem('savedLoginField', formData.loginField)
+      localStorage.setItem('savedPassword', realPassword)
+    }
+    
+    // 6. 登录成功，保存用户信息和token
     setUser(response.user, response.token, response.refreshToken)
     
-    // 6. 显示成功提示
+    // 7. 显示成功提示
     toast.success(`欢迎回来，${response.user.username}！`, '登录成功')
     
-    // 7. 通知父组件登录成功，关闭模态框
+    // 8. 通知父组件登录成功，关闭模态框
     emit('loginSuccess')
     
     // 调试信息
@@ -319,6 +404,33 @@ const handleLogin = async () => {
 }
 const router = useRouter()
 
+/**
+ * 处理密码输入框焦点事件
+ * 当用户点击密码框时，如果是掩码状态则清空显示
+ */
+const handlePasswordFocus = () => {
+  if (isPasswordMasked.value) {
+    formData.password = ''
+    isPasswordMasked.value = false
+  }
+}
+
+/**
+ * 处理密码输入事件
+ * 确保密码输入时正确更新实际密码
+ */
+const handlePasswordInput = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  actualPassword.value = target.value
+  isPasswordMasked.value = false
+}
+
+/**
+ * 组件挂载时初始化表单数据
+ */
+onMounted(() => {
+  initializeFormData()
+})
 </script>
 
 <style scoped>

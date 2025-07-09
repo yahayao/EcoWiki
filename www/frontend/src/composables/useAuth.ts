@@ -80,6 +80,8 @@ const clearInvalidAuthData = () => {
   localStorage.removeItem('user')
   localStorage.removeItem('refreshToken')
   localStorage.removeItem('rememberMe')
+  localStorage.removeItem('savedLoginField')
+  localStorage.removeItem('savedPassword')
   user.value = null
   token.value = null
 }
@@ -111,8 +113,9 @@ const setUser = (userData: UserResponse, authToken: string, refreshToken?: strin
 
 /**
  * 清除用户认证状态（登出）
+ * @param clearSavedCredentials 是否清除保存的登录凭据，默认false
  */
-const clearUser = () => {
+const clearUser = (clearSavedCredentials = false) => {
   const username = user.value?.username || 'unknown'
   
   user.value = null
@@ -121,7 +124,13 @@ const clearUser = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
   localStorage.removeItem('refreshToken')
-  // 注意：不清除"记住我"设置，因为这是用户的偏好设置
+  
+  // 可选择是否清除保存的登录信息
+  if (clearSavedCredentials) {
+    localStorage.removeItem('rememberMe')
+    localStorage.removeItem('savedLoginField')
+    localStorage.removeItem('savedPassword')
+  }
   
   console.log('清除用户认证状态:', username)
 }
