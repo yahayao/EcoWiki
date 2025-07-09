@@ -38,12 +38,12 @@
         <div class="sort-control">
           <label>排序方式：</label>
           <select v-model="sortBy" class="sort-select">
+            <option value="createdAt">注册时间</option>
             <option value="userId">用户ID</option>
             <option value="username">用户名</option>
             <option value="email">邮箱</option>
             <option value="userGroup">角色</option>
             <option value="active">状态</option>
-            <option value="createdAt">注册时间</option>
           </select>
           <button 
             @click="toggleSortOrder" 
@@ -218,8 +218,8 @@ import toast from '../../../utils/toast'
  * 搜索和排序相关的响应式变量
  */
 const searchQuery = ref('')
-const sortBy = ref<keyof UserResponse>('userId')
-const sortOrder = ref<'asc' | 'desc'>('asc')
+const sortBy = ref<keyof UserResponse>('createdAt')
+const sortOrder = ref<'asc' | 'desc'>('desc')
 const roleFilter = ref('')
 const statusFilter = ref('')
 const searchInput = ref<HTMLInputElement | null>(null)
@@ -360,8 +360,8 @@ const clearAllFilters = () => {
   searchQuery.value = ''
   roleFilter.value = ''
   statusFilter.value = ''
-  sortBy.value = 'userId'
-  sortOrder.value = 'asc'
+  sortBy.value = 'createdAt'
+  sortOrder.value = 'desc'
 }
 
 /**
