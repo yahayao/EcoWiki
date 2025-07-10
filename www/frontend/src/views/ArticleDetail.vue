@@ -133,11 +133,11 @@
 
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import ArticleContent from '../../components/article/ArticleContent.vue'
-import ArticleComments from '../../components/article/ArticleComments.vue'
-import RelatedArticles from '../../components/article/RelatedArticles.vue'
-import FloatingActionButtons from '../../components/article/FloatingActionButtons.vue'
-import { articleApi, type Article } from '../../api/article'
+import ArticleContent from '../components/article/ArticleContent.vue'
+import ArticleComments from '../components/article/ArticleComments.vue'
+import RelatedArticles from '../components/article/RelatedArticles.vue'
+import FloatingActionButtons from '../components/article/FloatingActionButtons.vue'
+import { articleApi, type Article, type ArticleVersion } from '../api/article'
 
 // 路由实例
 const route = useRoute()
@@ -211,8 +211,7 @@ const handleEdit = () => {
 }
 
 const handleHistory = () => {
-  // 查看文章历史
-  console.log('查看历史')
+  router.push({ name: 'ArticleHistory', params: { title: route.params.title } })
 }
 
 const handleFavorite = () => {
@@ -389,6 +388,30 @@ onMounted(() => {
 
 .related-section {
   margin: 32px 0 0;
+}
+
+/* 模态框样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.modal-container {
+  width: 100%;
+  max-width: 1200px;
+  max-height: 90vh;
+  overflow: hidden;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 
 /* 响应式设计 */

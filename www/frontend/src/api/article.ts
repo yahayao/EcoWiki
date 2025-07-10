@@ -169,6 +169,106 @@ export interface ArticleStatistics {
 }
 
 /**
+ * 文章版本历史相关接口定义
+ */
+
+/**
+ * 文章版本数据接口
+ */
+export interface ArticleVersion {
+  /** 版本ID */
+  versionId: number
+  /** 文章ID */
+  articleId: number
+  /** 版本号 */
+  versionNumber: number
+  /** 版本作者 */
+  author: string
+  /** 创建时间 */
+  createdAt: string
+  /** 存储类型 */
+  storageType: 'FULL_CONTENT' | 'DIFF_FROM_BASE' | 'DIFF_FROM_PREV'
+  /** 是否归档 */
+  isArchived: boolean
+  /** 变更摘要 */
+  changeSummary?: string
+  /** 原始大小 */
+  originalSize?: number
+  /** 压缩大小 */
+  compressedSize?: number
+  /** 压缩比率 */
+  compressionRatio?: number
+}
+
+/**
+ * 版本内容响应
+ */
+export interface VersionContentResponse {
+  /** 版本内容 */
+  content: string
+  /** 版本号 */
+  versionNumber?: number
+}
+
+/**
+ * 版本统计信息
+ */
+export interface ArticleVersionStats {
+  /** 总版本数 */
+  totalVersions: number
+  /** 基础版本数 */
+  baseVersionsCount: number
+  /** 差异版本数 */
+  diffVersionsCount: number
+  /** 归档版本数 */
+  archivedVersionsCount: number
+  /** 总存储大小 */
+  totalStorageSize: number
+  /** 压缩后存储大小 */
+  compressedStorageSize: number
+  /** 压缩比率 */
+  compressionRatio: number
+  /** 访问频率 */
+  accessFrequency: number
+  /** 最后访问时间 */
+  lastAccessedAt?: string
+  /** 最后优化时间 */
+  lastOptimizedAt?: string
+  /** 是否需要优化 */
+  optimizationNeeded: boolean
+  /** 需要优化判断 */
+  needsOptimization: boolean
+}
+
+/**
+ * 创建版本请求
+ */
+export interface CreateVersionRequest {
+  /** 文章内容 */
+  content: string
+  /** 作者 */
+  author: string
+  /** 变更摘要 */
+  changeSummary?: string
+}
+
+/**
+ * 版本历史响应
+ */
+export interface VersionHistoryResponse {
+  /** 版本列表 */
+  versions: ArticleVersion[]
+  /** 总元素数 */
+  totalElements: number
+  /** 总页数 */
+  totalPages: number
+  /** 当前页 */
+  currentPage: number
+  /** 每页大小 */
+  size: number
+}
+
+/**
  * 文章API服务类
  * 
  * 该类封装了所有文章相关的HTTP请求操作，提供了完整的文章管理功能。
@@ -604,6 +704,100 @@ class ArticleApi {
    */
   async getArticleIdByTitle(title: string): Promise<number> {
     const response = await this.api.get<ApiResponse<number>>(`/articles/title/${encodeURIComponent(title)}/id`)
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message)
+    }
+    return response.data.data
+  }
+
+  /**
+   * 获取文章版本历史列表
+   * 
+   * @param {number} articleId - 文章ID
+   * @param {number} page - 页码
+   * @param {number} size - 每页大小
+   * @returns {Promise<VersionHistoryResponse>} 版本历史数据
+   */
+  async getArticleVersions(articleId: number, page = 0, size = 20): Promise<VersionHistoryResponse> {
+    const response = await this.api.get<ApiResponse<VersionHistoryResponse>>(`/articles/${articleId}/versions`, {
+      params: { page, size }
+    })
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message)
+    }
+    return response.data.data
+  }
+
+  /**
+   * 获取指定版本的内容
+   * 
+   * @param {number} articleId - 文章ID
+   * @param {number} versionNumber - 版本号
+   * @returns {Promise<VersionContentResponse>} 版本内容
+   */
+  async getVersionContent(articleId: number, versionNumber: number): Promise<VersionContentResponse> {
+    const response = await this.api.get<ApiResponse<VersionContentResponse>>(`/articles/${articleId}/versions/${versionNumber}`)
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message)
+    }
+    return response.data.data
+  }
+
+  /**
+   * 获取最新版本的内容
+   * 
+   * @param {number} articleId - 文章ID
+   * @returns {Promise<VersionContentResponse>} 最新版本内容
+   */
+  async getLatestVersionContent(articleId: number): Promise<VersionContentResponse> {
+    const response = await this.api.get<ApiResponse<VersionContentResponse>>(`/articles/${articleId}/versions/latest`)
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message)
+    }
+    return response.data.data
+  }
+
+  /**
+   * 创建新版本
+   * 
+   * @param {number} articleId - 文章ID
+   * @param {CreateVersionRequest} request - 创建版本请求
+   * @returns {Promise<ArticleVersion>} 新创建的版本
+   */
+  async createVersion(articleId: number, request: CreateVersionRequest): Promise<ArticleVersion> {
+    const response = await this.api.post<ApiResponse<ArticleVersion>>(`/articles/${articleId}/versions`, request)
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message)
+    }
+    return response.data.data
+  }
+
+  /**
+   * 获取文章版本统计信息
+   * 
+   * @param {number} articleId - 文章ID
+   * @returns {Promise<ArticleVersionStats>} 版本统计信息
+   */
+  async getVersionStats(articleId: number): Promise<ArticleVersionStats> {
+    const response = await this.api.get<ApiResponse<ArticleVersionStats>>(`/articles/${articleId}/versions/stats`)
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message)
+    }
+    return response.data.data
+  }
+
+  /**
+   * 恢复到指定版本
+   * 
+   * @param {number} articleId - 文章ID
+   * @param {number} versionNumber - 版本号
+   * @param {string} author - 恢复操作的作者
+   * @returns {Promise<ArticleVersion>} 恢复后创建的新版本
+   */
+  async restoreToVersion(articleId: number, versionNumber: number, author: string): Promise<ArticleVersion> {
+    const response = await this.api.post<ApiResponse<ArticleVersion>>(`/articles/${articleId}/versions/${versionNumber}/restore`, {
+      author
+    })
     if (response.data.code !== 200) {
       throw new Error(response.data.message)
     }

@@ -62,7 +62,7 @@
         <!-- 页面标题栏 -->
         <div class="edit-header">
           <div class="title-section">
-            <h1>{{ isEditMode ? `编辑 "${articleForm.title || '未命名文章'}"` : '新建文章' }}</h1>
+            <h1>{{ isEditMode ? `编辑 "${articleForm.title || '未命名文章'}"` : `新建"${articleForm.title}"` }}</h1>
             <p class="subtitle">
               {{ isEditMode 
                   ? '您正在编辑此页面的当前版本。请在"摘要"框中描述您的更改摘要，并记录您对各条目的编辑摘要，以帮助其他编辑者和未来的自己了解您的更改。'
@@ -300,11 +300,11 @@ import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 
 // 组件和工具导入
-import WikiEditor from '../../components/edit/WikiEditor.vue'                    // Wiki编辑器组件
-import { articleApi, type Article, type ArticleCreateRequest, type ArticleUpdateRequest } from '../../api/article'  // 文章API
-import { wikiParser } from '../../utils/wikiParser'                        // Wiki语法解析器
-import toast from '../../utils/toast'                                      // 消息提示工具
-import { useAuth } from '../../composables/useAuth'                        // 认证状态管理
+import WikiEditor from '../components/edit/WikiEditor.vue'                    // Wiki编辑器组件
+import { articleApi, type Article, type ArticleCreateRequest, type ArticleUpdateRequest } from '../api/article'  // 文章API
+import { wikiParser } from '../utils/wikiParser'                        // Wiki语法解析器
+import toast from '../utils/toast'                                      // 消息提示工具
+import { useAuth } from '../composables/useAuth'                        // 认证状态管理
 
 // ======================== 路由和认证 ========================
 
@@ -474,6 +474,7 @@ const loadArticle = async () => {
     articleExists.value = false
     // 在创建模式下，设置当前登录用户为作者
     articleForm.value.author = user.value?.username || userDisplayName.value || '未知用户'
+    articleForm.value.title = articleTitle
     loading.value = false
     return
   }

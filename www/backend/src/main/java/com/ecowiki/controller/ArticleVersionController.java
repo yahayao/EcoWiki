@@ -1,0 +1,305 @@
+package com.ecowiki.controller;
+
+import com.ecowiki.entity.ArticleVersion;
+import com.ecowiki.entity.ArticleVersionStats;
+import com.ecowiki.service.ArticleVersionService;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 文章版本控制器
+ * 提供文章版本管理的REST API
+ * 
+ * @author EcoWiki
+ * @version 1.0
+ */
+@RestController
+@RequestMapping("/api/articles/{articleId}/versions")
+@CrossOrigin(origins = "*")
+public class ArticleVersionController {
+    
+    @Autowired
+    private ArticleVersionService versionService;
+    
+    /**
+     * 创建文章新版本
+     */
+    @PostMapping
+    public ResponseEntity<Map<String, Object>> createVersion(
+            @PathVariable @NotNull @Min(1) Long articleId,
+            @RequestBody CreateVersionRequest request) {
+        
+        try {
+            ArticleVersion version = versionService.createVersion(
+                    articleId, 
+                    request.getContent(), 
+                    request.getAuthor()
+            );
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("versionId", version.getVersionId());
+            response.put("versionNumber", version.getVersionNumber());
+            response.put("storageType", version.getStorageType());
+            response.put("createdAt", version.getCreatedAt());
+            response.put("contentHash", version.getContentHash());
+            
+            if (version.getOriginalSize() != null && version.getCompressedSize() != null) {
+                response.put("compressionRatio", version.getCompressionRatio());
+                response.put("originalSize", version.getOriginalSize());
+                response.put("compressedSize", version.getCompressedSize());
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+    
+    /**
+     * 获取指定版本的内容
+     */
+    @GetMapping("/{versionNumber}")
+    public ResponseEntity<Map<String, Object>> getVersionContent(
+            @PathVariable @NotNull @Min(1) Long articleId,
+            @PathVariable @NotNull @Min(1) Integer versionNumber) {
+        
+        try {
+            String content = versionService.getVersionContent(articleId, versionNumber);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("content", content);
+            response.put("versionNumber", versionNumber);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+    
+    /**
+     * 获取最新版本的内容
+     */
+    @GetMapping("/latest")
+    public ResponseEntity<Map<String, Object>> getLatestVersionContent(
+            @PathVariable @NotNull @Min(1) Long articleId) {
+        
+        try {
+            String content = versionService.getLatestVersionContent(articleId);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("content", content);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+    
+    /**
+     * 获取版本历史列表
+     */
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> getVersionHistory(
+            @PathVariable @NotNull @Min(1) Long articleId,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) int size) {
+        
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<ArticleVersion> versionPage = versionService.getVersionHistory(articleId, pageable);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("versions", versionPage.getContent().stream().map(this::convertToVersionSummary));
+            response.put("totalElements", versionPage.getTotalElements());
+            response.put("totalPages", versionPage.getTotalPages());
+            response.put("currentPage", page);
+            response.put("size", size);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+    
+    /**
+     * 获取版本统计信息
+     */
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Object>> getVersionStats(
+            @PathVariable @NotNull @Min(1) Long articleId) {
+        
+        try {
+            ArticleVersionStats stats = versionService.getVersionStats(articleId);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("stats", convertToStatsResponse(stats));
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+    
+    /**
+     * 恢复文章到指定版本
+     */
+    @PostMapping("/{versionNumber}/restore")
+    public ResponseEntity<Map<String, Object>> restoreToVersion(
+            @PathVariable @NotNull @Min(1) Long articleId,
+            @PathVariable @NotNull @Min(1) Integer versionNumber,
+            @RequestBody RestoreVersionRequest request) {
+        
+        try {
+            ArticleVersion restoredVersion = versionService.restoreToVersion(
+                    articleId, versionNumber, request.getAuthor());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "版本恢复成功");
+            response.put("newVersionId", restoredVersion.getVersionId());
+            response.put("newVersionNumber", restoredVersion.getVersionNumber());
+            response.put("restoredFromVersion", versionNumber);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    /**
+     * 转换版本为摘要信息
+     */
+    private Map<String, Object> convertToVersionSummary(ArticleVersion version) {
+        Map<String, Object> summary = new HashMap<>();
+        summary.put("versionId", version.getVersionId());
+        summary.put("versionNumber", version.getVersionNumber());
+        summary.put("author", version.getAuthor());
+        summary.put("createdAt", version.getCreatedAt());
+        summary.put("storageType", version.getStorageType());
+        summary.put("isArchived", version.getIsArchived());
+        summary.put("changeSummary", version.getChangeSummary());
+        
+        if (version.getOriginalSize() != null && version.getCompressedSize() != null) {
+            summary.put("originalSize", version.getOriginalSize());
+            summary.put("compressedSize", version.getCompressedSize());
+            summary.put("compressionRatio", version.getCompressionRatio());
+        }
+        
+        return summary;
+    }
+    
+    /**
+     * 转换统计信息为响应格式
+     */
+    private Map<String, Object> convertToStatsResponse(ArticleVersionStats stats) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("totalVersions", stats.getTotalVersions());
+        response.put("baseVersionsCount", stats.getBaseVersionsCount());
+        response.put("diffVersionsCount", stats.getDiffVersionsCount());
+        response.put("archivedVersionsCount", stats.getArchivedVersionsCount());
+        response.put("totalStorageSize", stats.getTotalStorageSize());
+        response.put("compressedStorageSize", stats.getCompressedStorageSize());
+        response.put("compressionRatio", stats.getCompressionRatio());
+        response.put("accessFrequency", stats.getAccessFrequency());
+        response.put("lastAccessedAt", stats.getLastAccessedAt());
+        response.put("lastOptimizedAt", stats.getLastOptimizedAt());
+        response.put("optimizationNeeded", stats.getOptimizationNeeded());
+        response.put("needsOptimization", stats.needsOptimization());
+        
+        return response;
+    }
+    
+    /**
+     * 创建版本请求DTO
+     */
+    public static class CreateVersionRequest {
+        @NotBlank(message = "Content cannot be blank")
+        private String content;
+        
+        @NotBlank(message = "Author cannot be blank")
+        private String author;
+        
+        private String changeSummary;
+        
+        public String getContent() {
+            return content;
+        }
+        
+        public void setContent(String content) {
+            this.content = content;
+        }
+        
+        public String getAuthor() {
+            return author;
+        }
+        
+        public void setAuthor(String author) {
+            this.author = author;
+        }
+        
+        public String getChangeSummary() {
+            return changeSummary;
+        }
+        
+        public void setChangeSummary(String changeSummary) {
+            this.changeSummary = changeSummary;
+        }
+    }
+
+    /**
+     * 恢复版本请求DTO
+     */
+    public static class RestoreVersionRequest {
+        @NotBlank(message = "Author cannot be blank")
+        private String author;
+        
+        public String getAuthor() {
+            return author;
+        }
+        
+        public void setAuthor(String author) {
+            this.author = author;
+        }
+    }
+}

@@ -108,8 +108,6 @@ const handleEdit = () => {
 
 const handleHistory = () => {
   emit('history')
-  // TODO: 实现历史记录功能
-  console.log('查看文章历史')
 }
 
 const handleFavorite = () => {

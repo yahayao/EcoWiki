@@ -47,6 +47,12 @@ public class ArticleService {
     private ArticleRepository articleRepository;
     
     /**
+     * 文章版本服务接口
+     */
+    @Autowired
+    private ArticleVersionService articleVersionService;
+    
+    /**
      * 标签服务接口
      */
     @Autowired
@@ -76,6 +82,17 @@ public class ArticleService {
         article.setComments(0);
         
         Article savedArticle = articleRepository.save(article);
+        
+        // 为新文章创建初始版本
+        try {
+            articleVersionService.createVersion(savedArticle.getArticleId(), 
+                savedArticle.getContent(), savedArticle.getAuthor());
+        } catch (Exception e) {
+            // 版本创建失败不影响文章创建，只记录日志
+            System.err.println("Failed to create initial version for article " + 
+                savedArticle.getArticleId() + ": " + e.getMessage());
+        }
+        
         return convertToDto(savedArticle);
     }
 
@@ -93,6 +110,12 @@ public class ArticleService {
         }
         
         Article article = optionalArticle.get();
+        
+        // 保存旧内容用于比较
+        String oldContent = article.getContent();
+        String newContent = request.getContent();
+        
+        // 更新文章信息
         article.setTitle(request.getTitle());
         article.setContent(request.getContent());
         article.setCategory(request.getCategory());
@@ -105,6 +128,19 @@ public class ArticleService {
         }
         
         Article savedArticle = articleRepository.save(article);
+        
+        // 如果内容有变化，创建新版本
+        if (!oldContent.equals(newContent)) {
+            try {
+                // 使用文章作者或默认作者创建版本
+                String author = savedArticle.getAuthor() != null ? savedArticle.getAuthor() : "系统";
+                articleVersionService.createVersion(articleId, newContent, author);
+            } catch (Exception e) {
+                // 版本创建失败不影响文章更新，只记录日志
+                System.err.println("Failed to create version for article " + articleId + ": " + e.getMessage());
+            }
+        }
+        
         return convertToDto(savedArticle);
     }
 
