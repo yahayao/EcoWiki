@@ -83,10 +83,10 @@
  */
 
 // 导入子组件
-import AppHeader from '../components/AppHeader.vue'      // 顶部导航栏组件
-import AppSidebar from '../components/AppSidebar.vue'    // 左侧边栏组件
-import AppMainContent from '../components/AppMainContent.vue'  // 主内容区组件
-import AppFooter from '../components/AppFooter.vue'      // 底部信息栏组件
+import AppHeader from '../components/layout/AppHeader.vue'      // 顶部导航栏组件
+import AppSidebar from '../components/layout/AppSidebar.vue'    // 左侧边栏组件
+import AppMainContent from '../components/layout/AppMainContent.vue'  // 主内容区组件
+import AppFooter from '../components/layout/AppFooter.vue'      // 底部信息栏组件
 
 /**
  * 组件事件定义

@@ -261,11 +261,11 @@
 
   <script setup lang="ts">
   import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-  import { userApi } from '../api/user'
-  import { validateRegisterForm, debounce, type FormErrors } from '../utils/validation'
-  import { useAuth } from '../composables/useAuth'
-  import toast from '../utils/toast'
-  import SliderCaptcha from './SliderCaptcha.vue'
+  import { userApi } from '../../api/user'
+  import { validateRegisterForm, debounce, type FormErrors } from '../../utils/validation'
+  import { useAuth } from '../../composables/useAuth'
+  import toast from '../../utils/toast'
+  import SliderCaptcha from '../common/SliderCaptcha.vue'
 
   // 定义 emits
   const emit = defineEmits(['switchToLogin', 'registerSuccess'])

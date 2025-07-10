@@ -104,8 +104,8 @@
  */
 
 import { computed, ref, defineEmits } from 'vue'
-import { useAuth } from '../composables/useAuth'
-import { userApi } from '../api/user'
+import { useAuth } from '../../composables/useAuth'
+import { userApi } from '../../api/user'
 
 /**
  * 组件事件定义

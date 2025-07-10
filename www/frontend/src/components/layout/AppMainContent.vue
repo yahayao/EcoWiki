@@ -76,8 +76,8 @@
  */
 
 // 导入子组件
-import FeaturedArticles from './FeaturedArticles.vue'    // 精选文章组件
-import RecentUpdates from './RecentUpdates.vue'          // 最近更新组件
+import FeaturedArticles from '../home/FeaturedArticles.vue'    // 精选文章组件
+import RecentUpdates from '../home/RecentUpdates.vue'          // 最近更新组件
 
 // 注意：主内容区相关的复杂逻辑应该在具体的子组件中实现
 // 这里保持组件的轻量化和单一职责原则

@@ -181,9 +181,9 @@
 
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { userApi } from '../api/user'
-import { useAuth } from '../composables/useAuth'
-import toast from '../utils/toast'
+import { userApi } from '../../api/user'
+import { useAuth } from '../../composables/useAuth'
+import toast from '../../utils/toast'
 
 /**
  * 组件事件定义

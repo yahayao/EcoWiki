@@ -53,7 +53,7 @@
  */
 
 import { createApp, type App } from 'vue'
-import Toast from '../components/Toast.vue'
+import Toast from '../components/common/Toast.vue'
 
 /**
  * Toast 配置选项接口

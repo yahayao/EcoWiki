@@ -120,9 +120,9 @@
 
 import { computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import LoginPanel from './LoginPanel.vue'
-import RegisterPanel from './RegisterPanel.vue'
-import Forgotpannel from './Forgotpanel.vue'
+import LoginPanel from '../forms/LoginPanel.vue'
+import RegisterPanel from '../forms/RegisterPanel.vue'
+import Forgotpannel from '../forms/ForgotPanel.vue'
 
 // 路由实例，用于管理员界面导航
 const router = useRouter()

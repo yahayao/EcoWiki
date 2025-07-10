@@ -339,7 +339,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { wikiParser } from '../utils/wikiParser'
+import { wikiParser } from '../../utils/wikiParser'
 
 interface Props {
   modelValue: string

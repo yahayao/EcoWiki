@@ -120,9 +120,9 @@
 
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { articleApi, type Article } from '../api/article'
-import { wikiParser } from '../utils/wikiParser'
-import { IconFire, IconCross } from './icons'
+import { articleApi, type Article } from '../../api/article'
+import { wikiParser } from '../../utils/wikiParser'
+import { IconFire, IconCross } from '../icons'
 
 // 路由实例
 const router = useRouter()

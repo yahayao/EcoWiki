@@ -229,7 +229,7 @@
 // === Vue 3 组合式API和相关依赖导入 ===
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { rolePermissionApi } from '@/api/user'  // 角色权限相关API接口
-import Toast from '@/components/Toast.vue'      // 消息提示组件
+import Toast from '../../common/Toast.vue'      // 消息提示组件
 import type { Role, Permission, RolePermission, RoleForm } from '@/types/permission'
 
 // === 核心数据状态管理 ===

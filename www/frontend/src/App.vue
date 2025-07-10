@@ -63,7 +63,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuth } from './composables/useAuth'
-import AuthModals from './components/AuthModals.vue'
+import AuthModals from './components/modals/AuthModals.vue'
 
 /**
  * 获取认证状态管理功能

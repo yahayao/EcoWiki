@@ -133,11 +133,11 @@
 
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import ArticleContent from '../components/article/ArticleContent.vue'
-import ArticleComments from '../components/article/ArticleComments.vue'
-import RelatedArticles from '../components/article/RelatedArticles.vue'
-import FloatingActionButtons from '../components/article/FloatingActionButtons.vue'
-import { articleApi, type Article } from '../api/article'
+import ArticleContent from '../../components/article/ArticleContent.vue'
+import ArticleComments from '../../components/article/ArticleComments.vue'
+import RelatedArticles from '../../components/article/RelatedArticles.vue'
+import FloatingActionButtons from '../../components/article/FloatingActionButtons.vue'
+import { articleApi, type Article } from '../../api/article'
 
 // 路由实例
 const route = useRoute()

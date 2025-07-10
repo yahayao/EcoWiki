@@ -34,8 +34,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 // 导入页面组件
 import DynamicHome from '../views/DynamicHome.vue'
-import ArticleDetail from '../views/ArticleDetail.vue'
-import ArticleEdit from '../views/ArticleEdit.vue'
+import ArticleDetail from '../views/wiki/ArticleDetail.vue'
+import ArticleEdit from '../views/wiki/ArticleEdit.vue'
 
 // 导入用户个人资料组件
 import userProfile from '../components/userhome/userProfile.vue'

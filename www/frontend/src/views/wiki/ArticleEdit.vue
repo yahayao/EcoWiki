@@ -300,11 +300,11 @@ import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 
 // 组件和工具导入
-import WikiEditor from '../components/WikiEditor.vue'                    // Wiki编辑器组件
-import { articleApi, type Article, type ArticleCreateRequest, type ArticleUpdateRequest } from '../api/article'  // 文章API
-import { wikiParser } from '../utils/wikiParser'                        // Wiki语法解析器
-import toast from '../utils/toast'                                      // 消息提示工具
-import { useAuth } from '../composables/useAuth'                        // 认证状态管理
+import WikiEditor from '../../components/edit/WikiEditor.vue'                    // Wiki编辑器组件
+import { articleApi, type Article, type ArticleCreateRequest, type ArticleUpdateRequest } from '../../api/article'  // 文章API
+import { wikiParser } from '../../utils/wikiParser'                        // Wiki语法解析器
+import toast from '../../utils/toast'                                      // 消息提示工具
+import { useAuth } from '../../composables/useAuth'                        // 认证状态管理
 
 // ======================== 路由和认证 ========================
 
