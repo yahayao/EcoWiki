@@ -157,6 +157,7 @@ const error = ref<string | null>(null)
  * 加载文章数据
  * 
  * 先通过文章标题获取文章ID，然后通过ID获取文章详情数据，处理加载状态和错误情况。
+ * 如果文章不存在，自动跳转到编辑页面创建新文章。
  * 支持重试机制，提供良好的用户体验。
  * 
  * @async
@@ -183,7 +184,19 @@ const loadArticle = async () => {
     article.value = await articleApi.getArticleById(articleId)
   } catch (err) {
     console.error('加载文章失败:', err)
-    error.value = err instanceof Error ? err.message : '加载文章失败'
+    
+    // 检查是否是文章不存在的错误
+    const errorMessage = err instanceof Error ? err.message : '加载文章失败'
+    
+    // 如果文章不存在，自动跳转到新建页面
+    if (errorMessage.includes('不存在') || errorMessage.includes('未找到') || errorMessage.includes('404')) {
+      console.log(`文章 "${articleTitle}" 不存在，自动跳转到新建页面`)
+      // 跳转到编辑页面，会自动进入新建模式
+      router.push(`/edit/${articleTitle}`)
+      return
+    }
+    
+    error.value = errorMessage
   } finally {
     loading.value = false
   }
@@ -225,7 +238,7 @@ const handleMore = () => {
 }
 
 // 监听路由变化
-watch(() => route.params.id, () => {
+watch(() => route.params.title, () => {
   loadArticle()
 })
 

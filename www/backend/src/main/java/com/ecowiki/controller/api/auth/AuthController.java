@@ -81,7 +81,7 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "http://localhost:5173")  // 允许前端跨域访问
+@CrossOrigin(originPatterns = "*", allowCredentials = "true")  // 允许任意前端跨域访问
 @Validated  // 启用请求参数验证
 public class AuthController {
     

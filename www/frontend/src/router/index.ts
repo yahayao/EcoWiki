@@ -14,7 +14,7 @@
  * 路由结构：
  * - / : 动态首页（根据用户偏好显示不同风格）
  * - /wiki/:title : 文章详情页（通过标题访问）
- * - /edit/:title : 文章编辑页（编辑现有文章）或 /edit/new（创建新文章）
+ * - /edit/:title : 文章编辑页（编辑现有文章或新建）
  * - /admin : 管理后台布局
  *   - /admin/settings : 系统设置
  *   - /admin/users : 用户管理

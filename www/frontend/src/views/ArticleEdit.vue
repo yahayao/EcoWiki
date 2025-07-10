@@ -62,7 +62,7 @@
         <!-- 页面标题栏 -->
         <div class="edit-header">
           <div class="title-section">
-            <h1>{{ isEditMode ? `编辑 "${articleForm.title || '未命名文章'}"` : `新建"${articleForm.title}"` }}</h1>
+            <h1>{{ isEditMode ? `编辑文章："${currentTitle}"` : `新建 "${currentTitle}"` }}</h1>
             <p class="subtitle">
               {{ isEditMode 
                   ? '您正在编辑此页面的当前版本。请在"摘要"框中描述您的更改摘要，并记录您对各条目的编辑摘要，以帮助其他编辑者和未来的自己了解您的更改。'
@@ -87,22 +87,7 @@
           </div>
         </div>
 
-        <!-- 文章基本信息 -->
-        <div class="article-info-form">
-          <div class="form-row">
-            <div class="form-group title-group">
-              <label for="title">文章标题 *</label>
-              <input
-                id="title"
-                v-model="articleForm.title"
-                type="text"
-                placeholder="请输入文章标题"
-                class="form-input title-input"
-                required
-              />
-            </div>
-          </div>
-        </div>
+
 
         <!-- 编辑工具栏和内容区域 -->
         <div class="editor-container">
@@ -274,7 +259,7 @@
         </div>
         <div class="preview-body">
           <div class="preview-meta">
-            <h1>{{ articleForm.title || '未命名文章' }}</h1>
+            <h1>{{ currentTitle || '未命名文章' }}</h1>
             <div class="meta-info">
               <span>分类：{{ articleForm.category || '未分类' }}</span>
               <span v-if="articleForm.tags">标签：{{ articleForm.tags }}</span>
@@ -431,6 +416,18 @@ const isEditMode = computed(() => {
 })
 
 /**
+ * 当前文章标题
+ * 
+ * 从路由参数获取文章标题，用于页面显示
+ * 
+ * @returns {string} 文章标题或"新文章"
+ */
+const currentTitle = computed(() => {
+  const titleParam = route.params.title as string
+  return titleParam && titleParam !== 'new' ? titleParam : '新文章'
+})
+
+/**
  * 是否可以保存
  * 
  * 检查保存条件：标题、内容非空且用户已登录。
@@ -438,7 +435,7 @@ const isEditMode = computed(() => {
  * @returns {boolean} true表示可以保存，false表示不满足保存条件
  */
 const canSave = computed(() => {
-  return articleForm.value.title.trim() && 
+  return currentTitle.value && currentTitle.value !== '新文章' &&
          articleForm.value.content.trim() && 
          isAuthenticated.value
 })
@@ -472,9 +469,14 @@ const loadArticle = async () => {
   // 验证文章标题的有效性
   if (!articleTitle || articleTitle === 'new') {
     articleExists.value = false
-    // 在创建模式下，设置当前登录用户为作者
-    articleForm.value.author = user.value?.username || userDisplayName.value || '未知用户'
-    articleForm.value.title = articleTitle
+    // 在创建模式下，设置当前登录用户为作者，不设置标题
+    articleForm.value = {
+      title: '', // 不设置标题，因为标题来自路由参数
+      content: '',
+      category: '',
+      tags: '',
+      author: user.value?.username || userDisplayName.value || '未知用户'
+    }
     loading.value = false
     return
   }
@@ -491,7 +493,7 @@ const loadArticle = async () => {
     articleExists.value = true
     
     articleForm.value = {
-      title: article.title,
+      title: '', // 不设置标题，因为标题来自路由参数
       content: article.content || '',
       category: article.category || '',
       tags: article.tags || '',
@@ -504,8 +506,9 @@ const loadArticle = async () => {
     originalArticle.value = null
     
     // 设置默认值，作者使用当前登录用户
+    // 标题从路由参数获取，不在这里设置
     articleForm.value = {
-      title: '',
+      title: '', // 不设置标题，因为标题来自路由参数
       content: '',
       category: '',
       tags: '',
@@ -537,7 +540,7 @@ const handleSave = async () => {
     if (isEditMode.value) {
       // 更新文章
       const updateData: ArticleUpdateRequest = {
-        title: articleForm.value.title.trim(),
+        title: currentTitle.value,
         content: articleForm.value.content.trim(),
         category: articleForm.value.category.trim(),
         tags: articleForm.value.tags.trim()
@@ -550,7 +553,7 @@ const handleSave = async () => {
       
       // 同步更新当前表单，确保完全一致
       articleForm.value = {
-        title: updated.title,
+        title: '', // 不设置标题，因为标题来自路由参数
         content: updated.content || '',
         category: updated.category || '',
         tags: updated.tags || '',
@@ -569,7 +572,7 @@ const handleSave = async () => {
       // 创建文章，确保使用当前登录用户作为作者
       const currentAuthor = user.value?.username || userDisplayName.value || '未知用户'
       const createData: ArticleCreateRequest = {
-        title: articleForm.value.title.trim(),
+        title: currentTitle.value,
         content: articleForm.value.content.trim(),
         category: articleForm.value.category.trim(),
         tags: articleForm.value.tags.trim(),
@@ -631,13 +634,13 @@ const goBack = () => {
 // 检查是否有未保存的更改
 const hasUnsavedChanges = computed(() => {
   if (!isEditMode.value) {
-    return articleForm.value.title || articleForm.value.content
+    // 在新建模式下，只要有内容就算有更改
+    return articleForm.value.content.trim().length > 0
   }
   
   if (!originalArticle.value) return false
   
   return (
-    articleForm.value.title !== originalArticle.value.title ||
     articleForm.value.content !== (originalArticle.value.content || '') ||
     articleForm.value.category !== (originalArticle.value.category || '') ||
     articleForm.value.tags !== (originalArticle.value.tags || '')
@@ -1287,25 +1290,6 @@ const insertTable = () => {
 
 .save-help p {
     margin: 0;
-}
-
-.title-group {
-    width: 100%;
-}
-
-.title-input {
-    font-size: 18px;
-    font-weight: 500;
-    padding: 12px 16px;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    transition: border-color 0.2s ease;
-}
-
-.title-input:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* 响应式设计 */

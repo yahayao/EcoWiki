@@ -42,7 +42,7 @@ import com.ecowiki.service.ArticleService;
  */
 @RestController
 @RequestMapping("/articles")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(originPatterns = "*", allowCredentials = "true")
 @Validated
 public class ArticleController {
     /**

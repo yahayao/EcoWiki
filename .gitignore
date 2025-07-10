@@ -1,0 +1,36 @@
+# Backend (Maven/Java)
+www/backend/target/
+www/backend/.mvn/
+www/backend/*.iml
+
+# Frontend (Node.js/Vue)
+www/frontend/node_modules/
+www/frontend/dist/
+www/frontend/.DS_Store
+www/frontend/*.local
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+temp_*.json
+*.tmp
+
+# Database
+*.db
+*.sqlite
+
+# Backup files
+*.bak
+*.backup

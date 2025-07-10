@@ -1,6 +1,7 @@
 <template>
   <div class="article-history-page">
     <!-- 页面头部 -->
+    <div class="container">
     <header class="page-header">
       <div class="header-content">
         <button @click="goBack" class="back-button">
@@ -153,7 +154,7 @@
           </button>
         </div>
         <div class="viewer-content">
-          <div v-if="viewingVersionContent" class="content-display" v-html="viewingVersionContent"></div>
+          <div v-if="viewingVersionContent" class="content-display">{{ viewingVersionContent }}</div>
           <div v-else class="loading-content">
             <div class="loading-spinner"></div>
             <p>正在加载版本内容...</p>
@@ -175,21 +176,22 @@
           <div class="compare-panels">
             <div class="compare-panel">
               <h4>版本 {{ comparingVersions.oldVersion.versionNumber }} ({{ formatDate(comparingVersions.oldVersion.createdAt) }})</h4>
-              <div class="compare-text" v-html="comparingVersions.oldContent"></div>
+              <div class="compare-text">{{ comparingVersions.oldContent }}</div>
             </div>
             <div class="compare-panel">
               <h4>版本 {{ comparingVersions.newVersion.versionNumber }} ({{ formatDate(comparingVersions.newVersion.createdAt) }})</h4>
-              <div class="compare-text" v-html="comparingVersions.newContent"></div>
+              <div class="compare-text">{{ comparingVersions.newContent }}</div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from 'vue'
+import { defineComponent, ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { articleApi, type ArticleVersion } from '@/api/article'
 
@@ -317,6 +319,7 @@ export default defineComponent({
     
     const closeCompare = () => {
       comparingVersions.value = null
+      selectedVersions.value = []
     }
     
     const restoreVersion = async (version: ArticleVersion) => {
@@ -386,6 +389,14 @@ export default defineComponent({
     onMounted(() => {
       loadVersions()
     })
+
+    // 监听对比模式变化，退出时清除选中状态
+    watch(showCompareMode, (newValue) => {
+      if (!newValue) {
+        // 退出对比模式时清除选中状态
+        selectedVersions.value = []
+      }
+    })
     
     return {
       loading,
@@ -419,42 +430,50 @@ export default defineComponent({
 
 <style scoped>
 .article-history-page {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  background: #f8f9fa;
   min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px 0;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
 }
 
 .page-header {
   background: white;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .header-content {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
 }
 
 .back-button {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #6c757d;
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   border: none;
   padding: 10px 16px;
-  border-radius: 6px;
+  border-radius: 20px;
   cursor: pointer;
-  transition: background 0.3s;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
 }
 
 .back-button:hover {
-  background: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .header-info {
@@ -463,14 +482,16 @@ export default defineComponent({
 
 .page-title {
   margin: 0;
-  font-size: 24px;
-  color: #333;
+  font-size: 1.75rem;
+  color: #1a202c;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 .page-subtitle {
-  margin: 5px 0 0;
-  color: #666;
-  font-size: 14px;
+  margin: 8px 0 0;
+  color: #718096;
+  font-size: 1rem;
 }
 
 .loading-container, .error-container {
@@ -478,17 +499,17 @@ export default defineComponent({
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
+  padding: 80px 20px;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #667eea;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 20px;
@@ -501,28 +522,36 @@ export default defineComponent({
 
 .error-message {
   text-align: center;
-  color: #dc3545;
+  color: #e53e3e;
 }
 
 .error-message i {
-  font-size: 48px;
+  font-size: 3rem;
   margin-bottom: 16px;
+  color: #fc8181;
 }
 
 .retry-button {
-  background: #007bff;
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
+  padding: 12px 24px;
+  border-radius: 25px;
   cursor: pointer;
   margin-top: 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.retry-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .history-content {
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
 
@@ -530,78 +559,102 @@ export default defineComponent({
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
+  padding: 20px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .compare-toggle {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #6c757d;
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 10px 16px;
+  border-radius: 20px;
   cursor: pointer;
-  transition: background 0.3s;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
 }
 
 .compare-toggle:hover,
 .compare-toggle.active {
-  background: #007bff;
+  background: linear-gradient(135deg, #5a67d8, #667eea);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
 }
 
 .sort-select {
-  padding: 8px 12px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
+  padding: 10px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
   background: white;
+  color: #4a5568;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.sort-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .compare-hint {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 20px;
-  background: #d4edda;
-  color: #155724;
-  font-size: 14px;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #f0fff4, #c6f6d5);
+  color: #2f855a;
+  font-size: 0.9rem;
+  border-left: 4px solid #38a169;
 }
 
 .compare-button {
-  background: #28a745;
+  background: linear-gradient(135deg, #38a169, #2f855a);
   color: white;
   border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
+  padding: 8px 16px;
+  border-radius: 20px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.compare-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(56, 161, 105, 0.3);
 }
 
 .versions-list {
-  padding: 20px;
+  padding: 24px;
 }
 
 .version-item {
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   margin-bottom: 16px;
-  padding: 16px;
-  transition: all 0.3s;
+  padding: 20px;
+  transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
+  background: white;
 }
 
 .version-item:hover {
-  border-color: #007bff;
-  box-shadow: 0 2px 8px rgba(0,123,255,0.15);
+  border-color: #667eea;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
 }
 
 .version-item.selected {
-  border-color: #007bff;
-  background: #e3f2fd;
+  border-color: #667eea;
+  background: linear-gradient(135deg, #f7fafc, #edf2f7);
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
 }
 
 .version-item.disabled {
@@ -613,58 +666,58 @@ export default defineComponent({
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .version-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .version-number {
-  font-size: 18px;
-  font-weight: bold;
-  color: #007bff;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #667eea;
 }
 
 .version-type {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
   font-weight: 500;
 }
 
 .version-type.full {
-  background: #d4edda;
-  color: #155724;
+  background: linear-gradient(135deg, #f0fff4, #c6f6d5);
+  color: #2f855a;
 }
 
 .version-type.diff-base {
-  background: #fff3cd;
-  color: #856404;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  color: #d69e2e;
 }
 
 .version-type.diff-prev {
-  background: #f8d7da;
-  color: #721c24;
+  background: linear-gradient(135deg, #fef5e7, #fed7aa);
+  color: #dd6b20;
 }
 
 .version-badge {
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-size: 0.75rem;
   font-weight: 500;
 }
 
 .version-badge.initial {
-  background: #e2e3e5;
-  color: #495057;
+  background: linear-gradient(135deg, #f7fafc, #edf2f7);
+  color: #2c5db3;
 }
 
 .version-badge.latest {
-  background: #d4edda;
-  color: #155724;
+  background: linear-gradient(135deg, #f0fff4, #c6f6d5);
+  color: #2f855a;
 }
 
 .version-actions {
@@ -673,73 +726,87 @@ export default defineComponent({
 }
 
 .action-button {
-  width: 32px;
-  height: 32px;
-  border: 1px solid #dee2e6;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e2e8f0;
   background: white;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
 }
 
 .action-button:hover {
-  background: #f8f9fa;
+  background: #f7fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .action-button.view {
-  color: #007bff;
+  color: #667eea;
+}
+
+.action-button.view:hover {
+  background: linear-gradient(135deg, #f7fafc, #edf2f7);
+  color: #5a67d8;
 }
 
 .action-button.restore {
-  color: #28a745;
+  color: #38a169;
+}
+
+.action-button.restore:hover {
+  background: linear-gradient(135deg, #f0fff4, #c6f6d5);
+  color: #2f855a;
 }
 
 .version-details {
-  color: #666;
-  font-size: 14px;
+  color: #718096;
+  font-size: 0.9rem;
 }
 
 .version-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 8px;
+  gap: 20px;
+  margin-bottom: 12px;
 }
 
 .version-meta span {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .change-summary {
-  margin: 8px 0;
-  padding: 8px 12px;
-  background: #f8f9fa;
-  border-radius: 4px;
+  margin: 12px 0;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f7fafc, #edf2f7);
+  border-radius: 8px;
   font-style: italic;
+  border-left: 3px solid #667eea;
 }
 
 .version-stats {
   display: flex;
-  gap: 12px;
-  margin-top: 8px;
+  gap: 16px;
+  margin-top: 12px;
 }
 
 .compression {
-  color: #6c757d;
+  color: #718096;
 }
 
 .archived {
-  color: #dc3545;
+  color: #e53e3e;
 }
 
 .compressed {
-  color: #28a745;
-  font-size: 12px;
+  color: #38a169;
+  font-size: 0.85rem;
 }
 
 /* 版本查看器样式 */
@@ -749,56 +816,78 @@ export default defineComponent({
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  backdrop-filter: blur(4px);
 }
 
 .version-viewer {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   width: 90%;
-  max-width: 800px;
-  max-height: 80vh;
+  max-width: 900px;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 
 .viewer-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #dee2e6;
+  padding: 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 12px 12px 0 0;
 }
 
 .viewer-header h3 {
   margin: 0;
-  color: #333;
+  color: #1a202c;
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .close-button {
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 1.5rem;
   cursor: pointer;
-  color: #6c757d;
+  color: #718096;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
 .close-button:hover {
-  color: #333;
+  background: #e2e8f0;
+  color: #4a5568;
 }
 
 .viewer-content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 24px;
 }
 
 .content-display {
-  line-height: 1.6;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #374151;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  background: #fafafa;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  max-height: 60vh;
+  overflow-y: auto;
 }
 
 .loading-content {
@@ -816,34 +905,40 @@ export default defineComponent({
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  backdrop-filter: blur(4px);
 }
 
 .version-compare {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   width: 95%;
-  max-width: 1200px;
+  max-width: 1400px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 
 .compare-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #dee2e6;
+  padding: 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 12px 12px 0 0;
 }
 
 .compare-header h3 {
   margin: 0;
-  color: #333;
+  color: #1a202c;
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .compare-content {
@@ -858,35 +953,57 @@ export default defineComponent({
 
 .compare-panel {
   flex: 1;
-  padding: 20px;
+  padding: 24px;
   overflow-y: auto;
 }
 
 .compare-panel:first-child {
-  border-right: 1px solid #dee2e6;
+  border-right: 1px solid #e2e8f0;
 }
 
 .compare-panel h4 {
   margin: 0 0 16px;
-  color: #333;
-  font-size: 16px;
+  color: #1a202c;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .compare-text {
-  line-height: 1.6;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 14px;
+  line-height: 1.5;
+  color: #374151;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  background: #fafafa;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  max-height: 50vh;
+  overflow-y: auto;
 }
 
 /* 响应式设计 */
+@media (max-width: 1200px) {
+  .article-history-page {
+    max-width: 100%;
+    padding: 0 16px;
+  }
+}
+
 @media (max-width: 768px) {
   .article-history-page {
-    padding: 10px;
+    padding: 0 12px;
   }
   
   .header-content {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
   }
   
   .toolbar {
@@ -906,7 +1023,42 @@ export default defineComponent({
   
   .compare-panel:first-child {
     border-right: none;
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid #e2e8f0;
+  }
+}
+
+@media (max-width: 480px) {
+  .article-history-page {
+    padding: 10px 8px;
+  }
+  
+  .page-header,
+  .history-content {
+    border-radius: 8px;
+    padding: 16px;
+  }
+  
+  .versions-list {
+    padding: 16px;
+  }
+  
+  .version-item {
+    padding: 16px;
+  }
+  
+  .version-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .version-actions {
+    align-self: flex-end;
+  }
+  
+  .back-button {
+    padding: 8px 12px;
+    font-size: 0.85rem;
   }
 }
 </style>

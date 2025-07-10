@@ -3,6 +3,7 @@ package com.ecowiki.controller;
 import com.ecowiki.entity.ArticleVersion;
 import com.ecowiki.entity.ArticleVersionStats;
 import com.ecowiki.service.ArticleVersionService;
+import com.ecowiki.dto.ApiResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -17,6 +18,8 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 文章版本控制器
@@ -26,8 +29,8 @@ import java.util.Map;
  * @version 1.0
  */
 @RestController
-@RequestMapping("/api/articles/{articleId}/versions")
-@CrossOrigin(origins = "*")
+@RequestMapping("/articles/{articleId}/versions")
+@CrossOrigin(originPatterns = "*", allowCredentials = "true")
 public class ArticleVersionController {
     
     @Autowired
@@ -37,7 +40,7 @@ public class ArticleVersionController {
      * 创建文章新版本
      */
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createVersion(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> createVersion(
             @PathVariable @NotNull @Min(1) Long articleId,
             @RequestBody CreateVersionRequest request) {
         
@@ -49,7 +52,6 @@ public class ArticleVersionController {
             );
             
             Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
             response.put("versionId", version.getVersionId());
             response.put("versionNumber", version.getVersionNumber());
             response.put("storageType", version.getStorageType());
@@ -62,13 +64,10 @@ public class ArticleVersionController {
                 response.put("compressedSize", version.getCompressedSize());
             }
             
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponse.success(response, "创建版本成功"));
             
         } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
+            return ResponseEntity.badRequest().body(ApiResponse.error("创建版本失败: " + e.getMessage()));
         }
     }
     
@@ -76,7 +75,7 @@ public class ArticleVersionController {
      * 获取指定版本的内容
      */
     @GetMapping("/{versionNumber}")
-    public ResponseEntity<Map<String, Object>> getVersionContent(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getVersionContent(
             @PathVariable @NotNull @Min(1) Long articleId,
             @PathVariable @NotNull @Min(1) Integer versionNumber) {
         
@@ -84,17 +83,13 @@ public class ArticleVersionController {
             String content = versionService.getVersionContent(articleId, versionNumber);
             
             Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
             response.put("content", content);
             response.put("versionNumber", versionNumber);
             
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponse.success(response, "获取版本内容成功"));
             
         } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
+            return ResponseEntity.badRequest().body(ApiResponse.error("获取版本内容失败: " + e.getMessage()));
         }
     }
     
@@ -102,23 +97,19 @@ public class ArticleVersionController {
      * 获取最新版本的内容
      */
     @GetMapping("/latest")
-    public ResponseEntity<Map<String, Object>> getLatestVersionContent(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getLatestVersionContent(
             @PathVariable @NotNull @Min(1) Long articleId) {
         
         try {
             String content = versionService.getLatestVersionContent(articleId);
             
             Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
             response.put("content", content);
             
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponse.success(response, "获取最新版本内容成功"));
             
         } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
+            return ResponseEntity.badRequest().body(ApiResponse.error("获取最新版本内容失败: " + e.getMessage()));
         }
     }
     
@@ -126,7 +117,7 @@ public class ArticleVersionController {
      * 获取版本历史列表
      */
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getVersionHistory(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getVersionHistory(
             @PathVariable @NotNull @Min(1) Long articleId,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) int size) {
@@ -136,20 +127,16 @@ public class ArticleVersionController {
             Page<ArticleVersion> versionPage = versionService.getVersionHistory(articleId, pageable);
             
             Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("versions", versionPage.getContent().stream().map(this::convertToVersionSummary));
+            response.put("versions", versionPage.getContent().stream().map(this::convertToVersionSummary).collect(Collectors.toList()));
             response.put("totalElements", versionPage.getTotalElements());
             response.put("totalPages", versionPage.getTotalPages());
             response.put("currentPage", page);
             response.put("size", size);
             
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponse.success(response, "获取版本历史成功"));
             
         } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
+            return ResponseEntity.badRequest().body(ApiResponse.error("获取版本历史失败: " + e.getMessage()));
         }
     }
     
@@ -157,23 +144,18 @@ public class ArticleVersionController {
      * 获取版本统计信息
      */
     @GetMapping("/stats")
-    public ResponseEntity<Map<String, Object>> getVersionStats(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getVersionStats(
             @PathVariable @NotNull @Min(1) Long articleId) {
         
         try {
             ArticleVersionStats stats = versionService.getVersionStats(articleId);
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("stats", convertToStatsResponse(stats));
+            Map<String, Object> response = convertToStatsResponse(stats);
             
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponse.success(response, "获取版本统计成功"));
             
         } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
+            return ResponseEntity.badRequest().body(ApiResponse.error("获取版本统计失败: " + e.getMessage()));
         }
     }
     
@@ -181,7 +163,7 @@ public class ArticleVersionController {
      * 恢复文章到指定版本
      */
     @PostMapping("/{versionNumber}/restore")
-    public ResponseEntity<Map<String, Object>> restoreToVersion(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> restoreToVersion(
             @PathVariable @NotNull @Min(1) Long articleId,
             @PathVariable @NotNull @Min(1) Integer versionNumber,
             @RequestBody RestoreVersionRequest request) {
@@ -191,19 +173,14 @@ public class ArticleVersionController {
                     articleId, versionNumber, request.getAuthor());
             
             Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "版本恢复成功");
             response.put("newVersionId", restoredVersion.getVersionId());
             response.put("newVersionNumber", restoredVersion.getVersionNumber());
             response.put("restoredFromVersion", versionNumber);
             
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponse.success(response, "版本恢复成功"));
             
         } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
+            return ResponseEntity.badRequest().body(ApiResponse.error("版本恢复失败: " + e.getMessage()));
         }
     }
 

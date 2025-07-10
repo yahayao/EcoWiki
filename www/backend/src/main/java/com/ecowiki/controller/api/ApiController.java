@@ -26,7 +26,7 @@ import com.ecowiki.dto.ApiResponse;
  */
 @RestController
 @RequestMapping("")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(originPatterns = "*", allowCredentials = "true")
 public class ApiController {
     /**
      * 获取API基本信息及主要接口文档
