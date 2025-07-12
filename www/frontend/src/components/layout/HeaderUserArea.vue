@@ -53,13 +53,22 @@
     <!-- 已登录状态 - 显示用户信息和操作按钮 -->
     <template v-if="isAuthenticated">
       <!-- 用户信息展示 -->
-      <!-- <div class="user-info">
-        <div class="user-avatar-wrapper">
-          <img :src="userAvatar" alt="用户头像" class="user-avatar" />
+       <div class="user-menu-wrapper" @mouseenter="showMenu = true" @mouseleave="showMenu = false">
+        <div class="user-info">
+          <div class="user-avatar-wrapper">
+            <img :src="userAvatar" alt="用户头像" class="user-avatar" />
+          </div>
+          <span class="username">{{ user?.username }}</span>
         </div>
-        <span class="username">{{ user?.username }}</span>
-      </div> -->
-      <div class="avatar-dropdown" @mouseenter="showMenu = true" @mouseleave="showMenu = false">
+        <transition name="fade">
+          <div v-if="showMenu" class="menu">
+            <div class="menu-item">个人主页</div>
+            <div class="menu-item">消息通知</div>
+            <div class="menu-item">登出</div>
+          </div>
+        </transition>
+      </div>
+      <!-- <div class="avatar-dropdown" @mouseenter="showMenu = true" @mouseleave="showMenu = false">
         <div class="avatar-container">
           <img :src="userAvatar" alt="用户头像" class="user-avatar" />
           <span class="username">{{ user?.username }}</span>
@@ -71,7 +80,7 @@
             <div class="menu-item">登出</div>
           </div>
         </transition>
-      </div>
+      </div> -->
       
       <!-- 管理员设置按钮（仅管理员可见） -->
       <button 
@@ -293,40 +302,47 @@ const showMenu = ref(false)
   }
 }
 /* -----------------头像下拉菜单----------------- */
-.avatar-dropdown {
+.user-menu-wrapper {
   position: relative;
   display: inline-block;
 }
 
-.avatar-container {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  overflow: hidden;
-  background-color: #f0f0f0;
+.user-info {
+  display: flex;
+  align-items: center;
   cursor: pointer;
 }
 
-.avatar {
+.user-avatar {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
+.username {
+  margin-left: 8px;
+  font-size: 14px;
+  color: #ffffff;
+}
+
 .menu {
   position: absolute;
   top: 100%;
-  right: 0;
-  background-color: #fff;
+  left: 0;
+  margin-top: 0px;
+  background: #fff;
   border: 1px solid #ddd;
   border-radius: 4px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   padding: 8px 0;
   z-index: 1000;
+  min-width: 105px;
 }
 
 .menu-item {
   padding: 8px 16px;
+  font-size: 14px;
+  color: #333;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
@@ -335,6 +351,7 @@ const showMenu = ref(false)
   background-color: #f5f5f5;
 }
 
+/* 过渡动画 */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease, transform 0.3s ease;
