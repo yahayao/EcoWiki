@@ -2,6 +2,7 @@ package com.ecowiki.controller.api.auth;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -219,6 +220,75 @@ public class AuthController {
         result.put("status", "OK");
         result.put("message", "EcoWiki API is running");
         return ResponseEntity.ok(ApiResponse.success(result));
+    }
+    
+    /**
+     * 获取当前用户信息
+     * 
+     * 通过JWT令牌获取当前登录用户的详细信息。
+     * 用于前端获取最新的用户数据，支持用户资料页面等功能。
+     * 
+     * @param request HTTP请求，包含Authorization头部
+     * @return API响应，包含用户详细信息
+     */
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getCurrentUser(jakarta.servlet.http.HttpServletRequest request) {
+        try {
+            String token = extractTokenFromRequest(request);
+            if (token == null) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("未提供认证令牌"));
+            }
+            
+            // 验证令牌
+            if (!jwtUtil.isTokenValid(token)) {
+                return ResponseEntity.status(401)
+                    .body(ApiResponse.error("令牌无效或已过期"));
+            }
+            
+            // 从令牌中提取用户名
+            String username = jwtUtil.extractUsername(token);
+            if (username == null) {
+                return ResponseEntity.status(401)
+                    .body(ApiResponse.error("无法从令牌中获取用户信息"));
+            }
+            
+            // 获取用户信息
+            Optional<User> userOpt = userService.findByUsername(username);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(404)
+                    .body(ApiResponse.error("用户不存在"));
+            }
+            
+            User user = userOpt.get();
+            
+            // 检查用户是否被禁用
+            if (!user.getActive()) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("账户已被禁用"));
+            }
+            
+            // 返回用户信息
+            Map<String, Object> result = createUserResponse(user);
+            return ResponseEntity.ok(ApiResponse.success(result, "获取用户信息成功"));
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                .body(ApiResponse.error("获取用户信息失败: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * 从请求头提取JWT Token
+     * @param request HTTP请求
+     * @return Bearer Token字符串，若无则为null
+     */
+    private String extractTokenFromRequest(jakarta.servlet.http.HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
     
     // 创建用户响应对象（不包含密码等敏感信息）

@@ -137,7 +137,7 @@ import { useRouter } from 'vue-router'
 import LoginPanel from '../forms/LoginPanel.vue'
 import RegisterPanel from '../forms/RegisterPanel.vue'
 import Forgotpannel from '../forms/ForgotPanel.vue'
-import UserProfile from '../userhome/userProfile.vue'
+import UserProfile from '../userhome/UUserProfile.vue'
 
 // 路由实例，用于管理员界面导航
 const router = useRouter()
