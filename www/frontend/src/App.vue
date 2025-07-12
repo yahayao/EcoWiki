@@ -41,6 +41,7 @@
       :showLoginForm="showLoginForm"
       :showRegisterForm="showRegisterForm"
       :showAdminSettings="showAdminSettings"
+      :showUserProfile="showUserProfile"
       :showForgotPassword="showForgotPassword"
       @closeModals="closeModals"
       @switchToRegister="switchToRegister"
@@ -55,6 +56,7 @@
       @show-register="showRegisterModal"
       @show-admin="showAdminModal"
       @show-forgot-password="showForgotPasswordModal"
+      @showUserProfile="showUserProfile"
       @logout="handleLogout"
     />
   </div>
@@ -83,6 +85,10 @@ const showLoginForm = ref(false)
  */
 const showRegisterForm = ref(false)
 
+/**
+ * 控制用户个人资料的显示状态
+ */
+const showUserProfile = ref(false)
 /**
  * 控制管理员设置的显示状态
  */
@@ -131,6 +137,15 @@ const showAdminModal = () => {
   showAdminSettings.value = true
   showLoginForm.value = false
   showRegisterForm.value = false
+}
+
+const showUserProfileModal = () => {
+  console.log("显示用户信息");
+  showUserProfile.value = true
+  showLoginForm.value = false
+  showRegisterForm.value = false
+  showAdminSettings.value = false
+  showForgotPassword.value = false
 }
 
 // 切换到注册

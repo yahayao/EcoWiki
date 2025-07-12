@@ -57,6 +57,7 @@
         @showRegister="$emit('showRegister')"
         @showAdminSettings="$emit('showAdminSettings')"
         @logout="$emit('logout')"
+        @showUserProfile="$emit('showUserProfile')"
       />
     </div>
   </header>
@@ -85,6 +86,8 @@ defineEmits<{
   showRegister: []
   /** 显示管理员设置界面事件 */
   showAdminSettings: []
+  /** 显示用户个人资料事件 */
+  showUserProfile: []
   /** 用户登出事件 */
   logout: []
 }>()

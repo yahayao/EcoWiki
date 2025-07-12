@@ -62,7 +62,7 @@
         </div>
         <transition name="fade">
           <div v-if="showMenu" class="menu">
-            <div class="menu-item">个人主页</div>
+            <div @click="$emit('showUserProfile')" class="menu-item">个人主页</div>
             <div class="menu-item">消息通知</div>
             <div @click="$emit('logout')" class="menu-item">登出</div>
           </div>
@@ -112,6 +112,8 @@ defineEmits<{
   showRegister: []
   /** 显示管理员设置界面事件 */
   showAdminSettings: []
+  /** 显示个人中心界面事件 */
+  showUserProfile: []
   /** 用户登出事件 */
   logout: []
 }>()

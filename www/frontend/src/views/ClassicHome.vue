@@ -55,6 +55,7 @@
       @showLogin="$emit('show-login')"
       @showRegister="$emit('show-register')"
       @showAdminSettings="$emit('show-admin')"
+      @showUserProfile="$emit('showUserProfile')"
       @logout="$emit('logout')"
     />
 
@@ -92,7 +93,7 @@ import AppFooter from '../components/layout/AppFooter.vue'      // 底部信息�
  * 组件事件定义
  * 定义经典首页向父组件发送的事件，与其他首页风格保持一致的接口
  */
-defineEmits(['show-login', 'show-register', 'show-admin', 'logout'])
+defineEmits(['show-login', 'show-register', 'show-admin', 'logout', 'showUserProfile'])
 </script>
 
 <style scoped>

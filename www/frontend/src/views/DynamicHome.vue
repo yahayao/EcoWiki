@@ -47,6 +47,7 @@
     @show-register="emit('show-register')"
     @show-admin="emit('show-admin')"
     @logout="emit('logout')"
+    @showUserProfile="emit('showUserProfile')"
   />
 </template>
 
@@ -66,7 +67,7 @@ import SimpleHome from './SimpleHome.vue'
  * 组件事件定义
  * 定义动态首页组件向父组件发送的事件，与子组件事件保持一致
  */
-const emit = defineEmits(['show-login', 'show-register', 'show-admin', 'logout'])
+const emit = defineEmits(['show-login', 'show-register', 'show-admin', 'logout', 'showUserProfile'])
 
 /**
  * 获取当前首页组件
