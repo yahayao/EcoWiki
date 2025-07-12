@@ -64,23 +64,10 @@
           <div v-if="showMenu" class="menu">
             <div class="menu-item">个人主页</div>
             <div class="menu-item">消息通知</div>
-            <div class="menu-item">登出</div>
+            <div @click="$emit('logout')" class="menu-item">登出</div>
           </div>
         </transition>
       </div>
-      <!-- <div class="avatar-dropdown" @mouseenter="showMenu = true" @mouseleave="showMenu = false">
-        <div class="avatar-container">
-          <img :src="userAvatar" alt="用户头像" class="user-avatar" />
-          <span class="username">{{ user?.username }}</span>
-        </div>
-        <transition name="fade">
-          <div v-if="showMenu" class="menu">
-            <div class="menu-item">个人主页</div>
-            <div class="menu-item">消息通知</div>
-            <div class="menu-item">登出</div>
-          </div>
-        </transition>
-      </div> -->
       
       <!-- 管理员设置按钮（仅管理员可见） -->
       <button 
@@ -92,8 +79,6 @@
         ⚙️ 设置
       </button>
       
-      <!-- 登出按钮 -->
-      <button class="action-button logout-button" @click="$emit('logout')">登出</button>
     </template>
     
     <!-- 未登录状态 - 显示登录和注册按钮 -->
