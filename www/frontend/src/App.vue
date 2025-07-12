@@ -56,7 +56,7 @@
       @show-register="showRegisterModal"
       @show-admin="showAdminModal"
       @show-forgot-password="showForgotPasswordModal"
-      @showUserProfile="showUserProfile"
+      @showUserProfile="showUserProfileModal"
       @logout="handleLogout"
     />
   </div>
@@ -176,6 +176,7 @@ const closeModals = () => {
   showRegisterForm.value = false
   showAdminSettings.value = false
   showForgotPassword.value = false
+  showUserProfile.value = false
 }
 
 // 登出处理

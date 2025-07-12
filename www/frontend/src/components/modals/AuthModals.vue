@@ -100,6 +100,20 @@
       </div>
     </div>
 
+    <!-- 用户个人资料模态框 -->
+    <div 
+      v-if="showUserProfile" 
+      class="auth-modal-overlay" 
+      @click.self="$emit('closeModals')"
+    >
+      <div class="auth-modal">
+        <!-- 用户个人资料组件 -->
+        <UserProfile 
+          @close="$emit('closeModals')"
+        />
+      </div>
+    </div>
+
     <!-- 管理员设置模态框 - 全屏显示 -->
     <div v-if="showAdminSettings" class="auth-modal-overlay admin-overlay">
       <div class="admin-modal">
@@ -123,6 +137,7 @@ import { useRouter } from 'vue-router'
 import LoginPanel from '../forms/LoginPanel.vue'
 import RegisterPanel from '../forms/RegisterPanel.vue'
 import Forgotpannel from '../forms/ForgotPanel.vue'
+import UserProfile from '../userhome/userProfile.vue'
 
 // 路由实例，用于管理员界面导航
 const router = useRouter()
@@ -140,6 +155,8 @@ const props = defineProps<{
   showAdminSettings: boolean
   /** 是否显示忘记密码表单 */
   showForgotPassword: boolean
+  /** 是否显示用户个人资料 */
+  showUserProfile: boolean
 }>()
 
 /**
@@ -166,7 +183,7 @@ const emit = defineEmits<{
  * @returns {boolean} 是否有模态框需要显示
  */
 const showAnyModal = computed(() => {
-  return props.showLoginForm || props.showRegisterForm || props.showAdminSettings || props.showForgotPassword
+  return props.showLoginForm || props.showRegisterForm || props.showAdminSettings || props.showForgotPassword || props.showUserProfile
 })
 
 /**
