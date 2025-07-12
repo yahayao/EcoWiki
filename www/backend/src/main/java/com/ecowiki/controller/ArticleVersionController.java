@@ -89,6 +89,9 @@ public class ArticleVersionController {
             return ResponseEntity.ok(ApiResponse.success(response, "获取版本内容成功"));
             
         } catch (Exception e) {
+            System.err.println("Error getting version content for articleId=" + articleId + 
+                             ", versionNumber=" + versionNumber + ": " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(ApiResponse.error("获取版本内容失败: " + e.getMessage()));
         }
     }
