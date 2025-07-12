@@ -16,6 +16,7 @@
     "@mdi/js": "^7.4.47",
     "@vueuse/core": "^13.4.0",
     "axios": "^1.10.0",
+    "diff": "^8.0.2",
     "dompurify": "^3.2.6",
     "marked": "^16.0.0",
     "parsoid": "github:wikimedia/parsoid",

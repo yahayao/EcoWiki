@@ -55,32 +55,93 @@ public class DiffUtil {
         if (baseText == null) baseText = "";
         
         String[] baseLines = LINE_SPLIT_PATTERN.split(baseText);
-        List<String> resultLines = new ArrayList<>(Arrays.asList(baseLines));
+        List<String> resultLines = new ArrayList<>();
         
-        int offset = 0;
-        for (DiffLine diffLine : diffLines) {
-            int lineNumber = diffLine.getLineNumber() + offset;
+        // 调试日志
+        System.out.println("=== DiffUtil.applyDiff DEBUG ===");
+        System.out.println("Base text lines count: " + baseLines.length);
+        System.out.println("Base text:");
+        for (int i = 0; i < baseLines.length; i++) {
+            System.out.println("  [" + i + "] " + baseLines[i]);
+        }
+        System.out.println("Diff lines count: " + diffLines.size());
+        System.out.println("Diff lines:");
+        for (DiffLine diff : diffLines) {
+            System.out.println("  " + diff.getType().getSymbol() + diff.getLineNumber() + ":" + diff.getContent());
+        }
+        
+        // 将差异按行号分组
+        Map<Integer, List<DiffLine>> diffsByLine = new HashMap<>();
+        for (DiffLine diff : diffLines) {
+            diffsByLine.computeIfAbsent(diff.getLineNumber(), k -> new ArrayList<>()).add(diff);
+        }
+        
+        // 对每行的差异按类型排序：UNCHANGED -> ADDED -> REMOVED
+        for (List<DiffLine> lineDiffs : diffsByLine.values()) {
+            lineDiffs.sort((a, b) -> {
+                int priorityA = a.getType() == DiffType.UNCHANGED ? 0 : 
+                               a.getType() == DiffType.ADDED ? 1 : 2;
+                int priorityB = b.getType() == DiffType.UNCHANGED ? 0 : 
+                               b.getType() == DiffType.ADDED ? 1 : 2;
+                return Integer.compare(priorityA, priorityB);
+            });
+        }
+        
+        // 处理所有行，包括基础行和差异行
+        int maxLine = Math.max(baseLines.length - 1, 
+                               diffLines.stream().mapToInt(DiffLine::getLineNumber).max().orElse(-1));
+        
+        for (int lineNum = 0; lineNum <= maxLine; lineNum++) {
+            List<DiffLine> lineDiffs = diffsByLine.get(lineNum);
             
-            switch (diffLine.getType()) {
-                case ADDED:
-                    if (lineNumber <= resultLines.size()) {
-                        resultLines.add(lineNumber, diffLine.getContent());
-                        offset++;
+            if (lineDiffs == null || lineDiffs.isEmpty()) {
+                // 没有差异，直接复制基础行
+                if (lineNum < baseLines.length) {
+                    resultLines.add(baseLines[lineNum]);
+                    System.out.println("Copying base line [" + lineNum + "]: " + baseLines[lineNum]);
+                }
+            } else {
+                // 先处理UNCHANGED，再处理ADDED
+                List<DiffLine> addedLines = new ArrayList<>();
+                
+                for (DiffLine diff : lineDiffs) {
+                    switch (diff.getType()) {
+                        case UNCHANGED:
+                            if (lineNum < baseLines.length) {
+                                resultLines.add(baseLines[lineNum]);
+                                System.out.println("Unchanged line [" + lineNum + "]: " + baseLines[lineNum]);
+                            }
+                            break;
+                        case ADDED:
+                            addedLines.add(diff);
+                            break;
+                        case REMOVED:
+                            System.out.println("Removing line [" + lineNum + "]: " + diff.getContent());
+                            break;
                     }
-                    break;
-                case REMOVED:
-                    if (lineNumber < resultLines.size()) {
-                        resultLines.remove(lineNumber);
-                        offset--;
-                    }
-                    break;
-                case UNCHANGED:
-                    // 不需要操作
-                    break;
+                }
+                
+                // 添加所有新增的行
+                for (DiffLine addedLine : addedLines) {
+                    resultLines.add(addedLine.getContent());
+                    System.out.println("Adding line after [" + lineNum + "]: " + addedLine.getContent());
+                }
+                
+                // 如果没有UNCHANGED和REMOVED，但是基础行存在，则复制基础行
+                if (lineDiffs.stream().noneMatch(d -> d.getType() == DiffType.UNCHANGED || d.getType() == DiffType.REMOVED) 
+                    && lineNum < baseLines.length) {
+                    resultLines.add(baseLines[lineNum]);
+                    System.out.println("Default copying line [" + lineNum + "]: " + baseLines[lineNum]);
+                }
             }
         }
         
-        return String.join("\n", resultLines);
+        String result = String.join("\n", resultLines);
+        System.out.println("Final result:");
+        System.out.println(result);
+        System.out.println("=== DiffUtil.applyDiff DEBUG END ===");
+        
+        return result;
     }
     
     /**
@@ -160,7 +221,7 @@ public class DiffUtil {
         
         while (oldIndex < oldLines.length || newIndex < newLines.length) {
             if (oldIndex >= oldLines.length) {
-                // 只剩新行，全部标记为添加
+                // 只剩新行，全部标记为添加，行号使用新文本的行号
                 result.add(new DiffLine(DiffType.ADDED, newIndex, newLines[newIndex]));
                 newIndex++;
             } else if (newIndex >= newLines.length) {
@@ -184,15 +245,15 @@ public class DiffUtil {
                         oldIndex++;
                     }
                 } else if (nextMatchNew != -1) {
-                    // 添加新行直到匹配
+                    // 添加新行直到匹配，行号使用插入位置（当前oldIndex）
                     while (newIndex < nextMatchNew) {
-                        result.add(new DiffLine(DiffType.ADDED, newIndex, newLines[newIndex]));
+                        result.add(new DiffLine(DiffType.ADDED, oldIndex, newLines[newIndex]));
                         newIndex++;
                     }
                 } else {
                     // 没有找到匹配，当作修改处理
                     result.add(new DiffLine(DiffType.REMOVED, oldIndex, oldLines[oldIndex]));
-                    result.add(new DiffLine(DiffType.ADDED, newIndex, newLines[newIndex]));
+                    result.add(new DiffLine(DiffType.ADDED, oldIndex, newLines[newIndex]));
                     oldIndex++;
                     newIndex++;
                 }
