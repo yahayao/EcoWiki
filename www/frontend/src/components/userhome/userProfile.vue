@@ -1,260 +1,266 @@
 <template>
-  <div class="user-profile">
-    <div class="profile-header">
-      <h2>用户个人资料</h2>
-      <button @click="$emit('close')" class="close-btn">×</button>
-    </div>
-    <div class="profile-content">
-      <div class="avatar-section">
-        <div class="avatar">
-          <img :src="userInfo.avatar || '/default-avatar.png'" alt="用户头像" />
+  <div class="profile-wrapper">
+    <!-- 页面标题 -->
+    <header class="profile-header">
+      <h1>个人中心</h1>
+    </header>
+
+    <!-- 主要内容区 -->
+    <main class="profile-main">
+      <!-- 左侧资料卡片 -->
+      <section class="profile-card">
+        <div class="avatar-box">
+          <img :src="user.avatar" alt="用户头像" class="avatar" />
+          <button class="upload-btn" @click="triggerUpload">更换头像</button>
+          <input
+            ref="avatarInput"
+            type="file"
+            accept="image/*"
+            style="display: none"
+            @change="handleAvatarChange"
+          />
         </div>
-        <button class="change-avatar-btn">更换头像</button>
+
+        <div class="info-box">
+          <h2>{{ user.username }}</h2>
+          <p class="bio">{{ user.bio || '这个人很酷，什么也没留下。' }}</p>
+          <ul class="meta">
+            <li><strong>邮箱：</strong>{{ user.email }}</li>
+            <li><strong>注册时间：</strong>{{ formatDate(user.createdAt) }}</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 右侧操作区 -->
+      <aside class="action-panel">
+        <h3>快捷操作</h3>
+        <button class="btn primary" @click="editMode = !editMode">
+          {{ editMode ? '取消修改' : '编辑资料' }}
+        </button>
+        <button class="btn secondary" @click="$emit('logout')">安全退出</button>
+      </aside>
+    </main>
+
+    <!-- 资料编辑弹窗 -->
+    <transition name="fade">
+      <div v-if="editMode" class="edit-modal" @click.self="editMode = false">
+        <div class="edit-box">
+          <h3>编辑资料</h3>
+          <label>
+            昵称
+            <input v-model="draft.username" type="text" maxlength="20" />
+          </label>
+          <label>
+            简介
+            <textarea v-model="draft.bio" rows="3" maxlength="140"></textarea>
+          </label>
+          <div class="edit-actions">
+            <button class="btn primary" @click="saveProfile">保存</button>
+            <button class="btn secondary" @click="cancelEdit">取消</button>
+          </div>
+        </div>
       </div>
-      <div class="info-section">
-        <div class="info-item">
-          <label>用户名:</label>
-          <span>{{ userInfo.username || '未设置' }}</span>
-        </div>
-        <div class="info-item">
-          <label>邮箱:</label>
-          <span>{{ userInfo.email || '未设置' }}</span>
-        </div>
-        <div class="info-item">
-          <label>注册时间:</label>
-          <span>{{ formatDate(userInfo.createdAt) }}</span>
-        </div>
-        <div class="info-item">
-          <label>最后更新:</label>
-          <span>{{ formatDate(userInfo.updatedAt) }}</span>
-        </div>
-      </div>
-    </div>
-    <div class="profile-actions">
-      <button class="edit-btn">编辑资料</button>
-      <button class="change-password-btn">修改密码</button>
-    </div>
+    </transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useAuth } from '../../composables/useAuth'
+import { ref, reactive } from 'vue'
 
-// 获取用户认证状态
-const { user } = useAuth()
-
-// 用户信息
-const userInfo = ref({
-  username: '',
-  email: '',
-  avatar: '',
-  createdAt: '',
-  updatedAt: ''
-})
-
-// 定义事件
-const emit = defineEmits<{
-  close: []
+/* ===== 事件声明 ===== */
+defineEmits<{
+  logout: []
 }>()
 
-// 格式化日期
-const formatDate = (dateString: string) => {
-  if (!dateString) return '无'
-  return new Date(dateString).toLocaleString('zh-CN')
+/* ===== 模拟数据 ===== */
+const user = reactive({
+  username: 'EcoUser',
+  email: 'user@ecowiki.com',
+  avatar: 'https://via.placeholder.com/120',
+  bio: '热爱开源的知识分享者',
+  createdAt: new Date('2024-05-01')
+})
+
+/* ===== 工具函数 ===== */
+function formatDate(date: Date) {
+  return date.toLocaleDateString()
 }
 
-// 组件挂载时获取用户信息
-onMounted(() => {
-  if (user.value) {
-    userInfo.value = {
-      username: user.value.username || '',
-      email: user.value.email || '',
-      avatar: user.value.avatar || '',
-      createdAt: user.value.createdAt || '',
-      updatedAt: user.value.updatedAt || ''
-    }
-  }
-})
+/* ===== 头像上传 ===== */
+const avatarInput = ref<HTMLInputElement>()
+function triggerUpload() {
+  avatarInput.value?.click()
+}
+async function handleAvatarChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  // TODO: 真实上传逻辑
+  user.avatar = URL.createObjectURL(file)
+}
+
+/* ===== 编辑资料 ===== */
+const editMode = ref(false)
+const draft = reactive({ username: '', bio: '' })
+function startEdit() {
+  draft.username = user.username
+  draft.bio = user.bio
+  editMode.value = true
+}
+function saveProfile() {
+  user.username = draft.username
+  user.bio = draft.bio
+  editMode.value = false
+}
+function cancelEdit() {
+  editMode.value = false
+}
 </script>
 
 <style scoped>
-.user-profile {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  width: 600px;
-  max-width: 90vw;
-  max-height: 80vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+/* ===== 布局 ===== */
+.profile-wrapper {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 16px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
 }
-
 .profile-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.profile-main {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e2e8f0;
-  background: #f8fafc;
+  flex-wrap: wrap;
+  gap: 32px;
 }
 
-.profile-header h2 {
-  margin: 0;
-  color: #1a202c;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #64748b;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.close-btn:hover {
-  background: #e2e8f0;
-  color: #1a202c;
-}
-
-.profile-content {
-  padding: 24px;
-  display: flex;
-  gap: 24px;
-  flex: 1;
-  overflow-y: auto;
-}
-
-.avatar-section {
+/* ===== 卡片 ===== */
+.profile-card {
+  flex: 1 1 320px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 24px;
 }
-
+.avatar-box {
+  position: relative;
+  margin-bottom: 16px;
+}
 .avatar {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  overflow: hidden;
-  border: 3px solid #e2e8f0;
-}
-
-.avatar img {
-  width: 100%;
-  height: 100%;
   object-fit: cover;
 }
-
-.change-avatar-btn {
-  background: #3b82f6;
-  color: white;
+.upload-btn {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: #667eea;
+  color: #fff;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background 0.2s;
+  font-size: 12px;
+}
+.info-box {
+  text-align: center;
+}
+.bio {
+  color: #666;
+  margin: 8px 0 16px;
+}
+.meta {
+  list-style: none;
+  padding: 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+.meta li + li {
+  margin-top: 4px;
 }
 
-.change-avatar-btn:hover {
-  background: #2563eb;
+/* ===== 侧边栏 ===== */
+.action-panel {
+  flex: 1 1 180px;
+}
+.btn {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.primary {
+  background: #667eea;
+  color: #fff;
+}
+.primary:hover {
+  background: #5a6fd8;
+}
+.secondary {
+  background: #f7fafc;
+  color: #333;
+  border: 1px solid #ddd;
+}
+.secondary:hover {
+  background: #edf2f7;
 }
 
-.info-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.info-item {
+/* ===== 编辑弹窗 ===== */
+.edit-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  z-index: 999;
 }
-
-.info-item label {
-  font-weight: 600;
-  color: #374151;
-  min-width: 80px;
+.edit-box {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
 }
-
-.info-item span {
-  color: #6b7280;
+.edit-box label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
 }
-
-.profile-actions {
-  padding: 20px 24px;
-  border-top: 1px solid #e2e8f0;
+.edit-box input,
+.edit-box textarea {
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+.edit-actions {
   display: flex;
   gap: 12px;
-  justify-content: flex-end;
+  margin-top: 16px;
 }
 
-.edit-btn, .change-password-btn {
-  padding: 10px 20px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s;
-  border: none;
+/* ===== 动画 ===== */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s;
 }
-
-.edit-btn {
-  background: #10b981;
-  color: white;
-}
-
-.edit-btn:hover {
-  background: #059669;
-}
-
-.change-password-btn {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
-}
-
-.change-password-btn:hover {
-  background: #e5e7eb;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .user-profile {
-    width: 95vw;
-    height: 90vh;
-  }
-  
-  .profile-content {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .avatar-section {
-    align-items: center;
-  }
-  
-  .info-item {
-    flex-direction: column;
-    gap: 4px;
-    text-align: center;
-  }
-  
-  .info-item label {
-    min-width: auto;
-  }
-  
-  .profile-actions {
-    flex-direction: column;
-  }
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
