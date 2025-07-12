@@ -39,7 +39,7 @@ import ArticleEdit from '../views/ArticleEdit.vue'
 import ArticleHistory from '../views/ArticleHistory.vue'
 
 // 导入用户个人资料组件
-import UserProfile from '../components/userhome/userProfile.vue'
+import UserProfile from '../components/userhome/UserProfile.vue'
 
 // 导入管理后台组件
 import AdminLayout from '../components/admin/AdminLayout.vue'
@@ -59,7 +59,7 @@ const routes = [
   { path: '/wiki/:title', name: 'ArticleDetail', component: ArticleDetail },
   { path: '/wiki/:title/history', name: 'ArticleHistory', component: ArticleHistory },
   { path: '/edit/:title', name: 'ArticleEdit', component: ArticleEdit },
-  { path: '/userProfile', name: 'userProfile', component: UserProfile },
+  { path: '/userProfile', name: 'UserProfile', component: UserProfile },
   {
     path: '/admin',
     component: AdminLayout,
