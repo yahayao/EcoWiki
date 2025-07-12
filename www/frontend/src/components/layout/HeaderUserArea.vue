@@ -55,7 +55,7 @@
       <!-- 用户信息展示 -->
        <div class="user-menu-wrapper" @mouseenter="showMenu = true" @mouseleave="showMenu = false">
         <div class="user-info">
-          <div class="user-avatar-wrapper">
+          <div>
             <img :src="userAvatar" alt="用户头像" class="user-avatar" />
           </div>
           <span class="username">{{ user?.username }}</span>
@@ -182,11 +182,6 @@ const showMenu = ref(false)
   gap: 8px;                   /* 头像和用户名间距 */
 }
 
-/* 用户头像容器 */
-.user-avatar-wrapper {
-  position: relative;         /* 为将来的状态指示器提供定位基准 */
-}
-
 /* 用户头像样式 */
 .user-avatar {
   width: 36px;                /* 固定头像尺寸 */
@@ -302,29 +297,30 @@ const showMenu = ref(false)
   }
 }
 /* -----------------头像下拉菜单----------------- */
+/* 最外层包裹：定位参照点，确保菜单相对头像+用户名出现 */
 .user-menu-wrapper {
   position: relative;
   display: inline-block;
 }
-
+/* 头像+用户名行：横向排列，鼠标手型提示可点击 */
 .user-info {
   display: flex;
   align-items: center;
   cursor: pointer;
 }
-
+/* 头像图片：填满圆形容器并保持比例 */
 .user-avatar {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-
+/* 用户名文字：左侧留 8px 空隙，白色字体，14px 大小 */
 .username {
   margin-left: 8px;
   font-size: 14px;
   color: #ffffff;
 }
-
+/* 下拉菜单容器：紧贴头像/用户名下方，左对齐，白色背景，圆角阴影 */
 .menu {
   position: absolute;
   top: 100%;
@@ -338,7 +334,7 @@ const showMenu = ref(false)
   z-index: 1000;
   min-width: 105px;
 }
-
+/* 菜单项单行：左右 16px 内边距，14px 深灰字体，hover 高亮 */
 .menu-item {
   padding: 8px 16px;
   font-size: 14px;
@@ -351,7 +347,7 @@ const showMenu = ref(false)
   background-color: #f5f5f5;
 }
 
-/* 过渡动画 */
+/* Vue 过渡动画：淡入淡出 + 向下位移 10px */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease, transform 0.3s ease;
