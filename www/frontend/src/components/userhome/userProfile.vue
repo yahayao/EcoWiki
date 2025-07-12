@@ -38,7 +38,7 @@
             <li><strong>最后更新：</strong>{{ formatDate(user?.updatedAt) }}</li>
             <li><strong>账户状态：</strong>
               <span :class="user?.active ? 'status-active' : 'status-inactive'">
-                {{ user?.active ? '活跃' : '已停用' }}
+                {{ user?.active ? '正常' : '已停用' }}
               </span>
             </li>
           </ul>
