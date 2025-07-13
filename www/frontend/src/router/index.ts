@@ -40,6 +40,11 @@ import ArticleHistory from '../views/ArticleHistory.vue'
 
 // 导入用户个人资料组件
 import UserProfile from '../components/userhome/UserProfile.vue'
+import UserPage from '../components/userhome/UserPage.vue'
+import UserInformation from '../components/userhome/UserInformation.vue'
+import UserContribute from '../components/userhome/UserContribute.vue'
+import UserSecure from '../components/userhome/UserSecure.vue'
+import UserArticle from '@/components/userhome/UserArticle.vue'
 
 // 导入管理后台组件
 import AdminLayout from '../components/admin/AdminLayout.vue'
