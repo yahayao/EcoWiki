@@ -28,3 +28,11 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# Environment files
+.env.local
+.env.*.local
+
+# Keep template environment files but ignore local ones
+.env.development.local
+.env.production.local

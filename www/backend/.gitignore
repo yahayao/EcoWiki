@@ -88,3 +88,8 @@ logs/
 # Temporary files
 *.tmp
 *.temp
+temp_*.json
+
+# JWT Tokens and auth files
+*token*.json
+*login*.json
