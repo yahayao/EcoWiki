@@ -7,7 +7,7 @@
       <div class="info-card">
         <h3>基本信息</h3>
         <div class="avatar-section">
-          <img :src="avatar" alt="用户头像" class="avatar-preview">
+          <img :src="userAvatar" alt="用户头像" class="avatar-preview">
           <button class="btn btn-outline">更换头像</button>
         </div>
         
@@ -15,7 +15,7 @@
           <label>用户名</label>
           <input v-model="username" type="text" class="form-input">
           <button class="btn btn-sm">修改</button>
-        </div>
+        </div>  
         
         <div class="form-group">
           <label>电子邮箱</label>
@@ -68,13 +68,14 @@
 </template>
 
 <script setup lang="ts">
+import { useAuth } from '@/composables/useAuth'
 import { ref } from 'vue'
-
-const avatar = ref('https://via.placeholder.com/150')
+const { userAvatar } = useAuth()
 const username = ref('EcoEditor')
 const email = ref('user@example.com')
 const securityQuestion = ref('您的出生地是？')
 const securityAnswer = ref('Shanghai')
+
 </script>
 
 <style scoped>

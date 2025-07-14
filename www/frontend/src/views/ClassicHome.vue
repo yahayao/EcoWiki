@@ -84,11 +84,42 @@
  */
 
 // 导入子组件
+import { onMounted } from 'vue'
+
 import AppHeader from '../components/layout/AppHeader.vue'      // 顶部导航栏组件
 import AppSidebar from '../components/layout/AppSidebar.vue'    // 左侧边栏组件
 import AppMainContent from '../components/layout/AppMainContent.vue'  // 主内容区组件
 import AppFooter from '../components/layout/AppFooter.vue'      // 底部信息栏组件
+import { useRouter } from 'vue-router';
+const router = useRouter();
+// ✅ 重置状态函数
+const resetHomeState = () => {
+  // 清除本地存储（如首页缓存、临时数据等）
+  localStorage.removeItem('home-cache')
+  localStorage.removeItem('pending-changes')
 
+  // 强制刷新用户状态（从服务器重新获取）
+  // 如果你有 useAuth().fetchUser()，可以在这里调用
+  // useAuth().fetchUser()
+
+  // 重置滚动位置
+  window.scrollTo(0, 0)
+
+  console.log('首页状态已重置')
+}
+
+// ✅ 在首页挂载时执行
+onMounted(() => {
+  resetHomeState()
+})
+
+router.beforeEach((to, from, next) => {
+  if (to.path === '/' && from.path.startsWith('/user-profile')) {
+    window.location.reload();
+  } else {
+    next();
+  }
+});
 /**
  * 组件事件定义
  * 定义经典首页向父组件发送的事件，与其他首页风格保持一致的接口
