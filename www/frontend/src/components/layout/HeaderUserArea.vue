@@ -64,20 +64,18 @@
           <div v-if="showMenu" class="menu">
             <div @click="$emit('showUserProfile')" class="menu-item">个人主页</div>
             <div class="menu-item">消息通知</div>
+            <div 
+              v-if="hasAdminPermission" 
+              @click="$emit('showAdminSettings')" 
+              class="menu-item"
+              title="系统设置"
+            >
+              设置
+            </div>
             <div @click="$emit('logout')" class="menu-item">登出</div>
           </div>
         </transition>
       </div>
-      
-      <!-- 管理员设置按钮（仅管理员可见） -->
-      <button 
-        v-if="hasAdminPermission" 
-        class="action-button settings-button" 
-        @click="$emit('showAdminSettings')"
-        title="系统设置"
-      >
-        ⚙️ 设置
-      </button>
       
     </template>
     
@@ -99,7 +97,7 @@
 
 import { computed, ref, defineEmits } from 'vue'
 import { useAuth } from '../../composables/useAuth'
-import { userApi } from '../../api/user'
+import { userApi, USER_GROUPS } from '../../api/user'
 
 /**
  * 组件事件定义
@@ -129,7 +127,7 @@ const { user, isAuthenticated, userAvatar } = useAuth()
  * 
  * 计算属性，动态检查当前用户是否具有管理员权限。
  * 用于控制管理员设置按钮的显示和隐藏。
- * 通过检查用户角色来判断是否为管理员。
+ * 通过检查用户角色来判断是否为管理员或超级管理员。
  * 
  * @returns {boolean} 是否具有管理员权限
  * 
@@ -140,9 +138,8 @@ const { user, isAuthenticated, userAvatar } = useAuth()
 const hasAdminPermission = computed(() => {
   if (!user.value) return false
   
-  // 检查用户组是否为管理员相关角色
-  const adminRoles = ['admin', 'superadmin']
-  return adminRoles.includes(user.value.userGroup?.toLowerCase() || '')
+  // 使用官方的权限检查函数，确保只有管理员和超级管理员可以看到设置
+  return userApi.isAdmin(user.value)
 })
 const showMenu = ref(false)
 </script>
@@ -257,17 +254,6 @@ const showMenu = ref(false)
 /* 登出按钮悬停效果 */
 .logout-button:hover {
   background-color: rgba(255, 255, 255, 0.2);  /* 悬停时加深背景 */
-}
-
-/* 设置按钮样式 */
-.settings-button {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.settings-button:hover {
-  background-color: rgba(255, 255, 255, 0.2);
 }
 
 /* 响应式设计 */
