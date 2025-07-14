@@ -43,9 +43,9 @@
       </div>
       
       <div class="info-card">
-        <h3>安全设置</h3>
+        <h3>安全验证设置</h3>
         <div class="form-group">
-          <label>安全验证问题</label>
+          <label>安全验证问题（可用于忘记密码时修改密码）</label>
           <!-- {{ user?.securityQuestion || '未设置' }} -->
           <button class="btn btn-sm">修改</button>
         </div>
@@ -56,11 +56,7 @@
           <button class="btn btn-sm">修改</button>
         </div>
         
-        <div class="form-group">
-          <label>密码</label>
-          <input type="password" value="********" class="form-input" readonly>
-          <button class="btn btn-sm">修改密码</button>
-        </div>
+        
       </div>
     </div>
   </div>
