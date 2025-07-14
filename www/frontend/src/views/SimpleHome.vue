@@ -73,6 +73,7 @@
       <button class="nav-btn" @click="$emit('show-login')">登录</button>
       <button class="nav-btn" @click="$emit('show-register')">注册</button>
       <button class="nav-btn" @click="showGame">太空射击</button>
+      <button class="nav-btn" @click="showGameB">横版跑酷</button>
       <button class="nav-btn" @click="$emit('show-admin')">管理设置</button>
     </div>
     
@@ -80,6 +81,12 @@
     <SpaceShooterGame 
       :visible="gameVisible"
       @close="closeGame"
+    />
+
+    <!-- 塔防游戏组件 -->
+    <TowerDefenseGame 
+      :visible="gameVisibleB"
+      @close="closeGameB"
     />
   </div>
 </template>
@@ -94,11 +101,13 @@
 
 import { ref } from 'vue'
 import SpaceShooterGame from '../spgame/SpaceShooterGame.vue'
+import TowerDefenseGame from '../spgame/TowerDefenseGame.vue'
 
 /**
  * 游戏状态管理
  */
 const gameVisible = ref(false)
+const gameVisibleB = ref(false)
 
 /**
  * 显示游戏
@@ -106,12 +115,18 @@ const gameVisible = ref(false)
 function showGame() {
   gameVisible.value = true
 }
+function showGameB() {
+  gameVisibleB.value = true
+}
 
 /**
  * 关闭游戏
  */
 function closeGame() {
   gameVisible.value = false
+}
+function closeGameB() {
+  gameVisibleB.value = false
 }
 
 /**
