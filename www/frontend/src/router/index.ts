@@ -65,7 +65,17 @@ const routes = [
   { path: '/wiki/:title', name: 'ArticleDetail', component: ArticleDetail },
   { path: '/wiki/:title/history', name: 'ArticleHistory', component: ArticleHistory },
   { path: '/edit/:title', name: 'ArticleEdit', component: ArticleEdit },
-  { path: '/UserProfile', name: 'UserProfile', component: UserProfile },
+  { path: '/UserProfile', 
+    component: UserProfile,
+    redirect: '/UserProfile/UserPage',
+    children: [
+      { path: 'UserPage', name: 'UserPage', component: UserPage },
+      { path: 'UserInformation', name: 'UserInformation', component: UserInformation },
+      { path: 'UserContribute', name: 'UserContribute', component: UserContribute },
+      { path: 'UserSecure', name: 'UserSecure', component: UserSecure },
+      { path: 'UserArticle', name: 'UserArticle', component: UserArticle }
+    ]
+   },
   {
     path: '/admin',
     component: AdminLayout,
