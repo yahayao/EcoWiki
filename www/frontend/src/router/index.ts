@@ -44,7 +44,7 @@ import UserPage from '../components/userhome/view/UserPage.vue'
 import UserInformation from '../components/userhome/view/UserInformation.vue'
 import UserContribute from '../components/userhome/view/UserContribute.vue'
 import UserSecure from '../components/userhome/view/UserSecure.vue'
-import UserArticle from '@/components/userhome/view/UserArticle.vue'
+import UserArticle from '../components/userhome/view/UserArticle.vue'
 
 // 导入管理后台组件
 import AdminLayout from '../components/admin/AdminLayout.vue'
@@ -69,11 +69,11 @@ const routes = [
     component: UserProfile,
     redirect: '/UserProfile/Information', // 默认重定向到用户个人资料设置
     children: [
+      { path: 'Information', name: 'UserInformation', component: UserInformation },
       { path: 'UserPage', name: 'UserPage', component: UserPage },
-      { path: 'Information', name: 'Information', component: UserInformation },
-      { path: 'Contribute', name: 'Contribute', component: UserContribute },
-      { path: 'Secure', name: 'Secure', component: UserSecure },
-      { path: 'Article', name: 'Article', component: UserArticle }
+      { path: 'Contribute', name: 'UserContribute', component: UserContribute },
+      { path: 'Article', name: 'UserArticle', component: UserArticle },
+      { path: 'Secure', name: 'UserSecure', component: UserSecure }
     ]
    },
   {

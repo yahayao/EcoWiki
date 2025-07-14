@@ -100,21 +100,7 @@
       </div>
     </div>
 
-    <!-- 用户个人资料模态框 -->
-    <div 
-      v-if="showUserProfile" 
-      class="auth-modal-overlay admin-overlay" 
-      
-    >
-    <!-- @click.self="$emit('closeModals')" -->
-      <div class="admin-modal">
-        <router-view />
-        <!-- 用户个人资料组件 -->
-        <!-- <UserProfile 
-          @close="$emit('closeModals')"
-        /> -->
-      </div>
-    </div>
+    <!-- 用户个人资料不再使用模态框 - 通过路由跳转 -->
 
     <!-- 管理员设置模态框 - 全屏显示 -->
     <div v-if="showAdminSettings" class="auth-modal-overlay admin-overlay">
@@ -139,7 +125,6 @@ import { useRouter } from 'vue-router'
 import LoginPanel from '../forms/LoginPanel.vue'
 import RegisterPanel from '../forms/RegisterPanel.vue'
 import Forgotpannel from '../forms/ForgotPanel.vue'
-import UserProfile from '../userhome/UserProfile.vue'
 
 // 路由实例，用于管理员界面导航
 const router = useRouter()
@@ -196,7 +181,8 @@ const showAnyModal = computed(() => {
  */
 watch(() => props.showUserProfile, (isOpen) => {
   if (isOpen) {
-    // 打开个人中心时，导航到个人中心页面
+    // 关闭模态框并跳转到个人中心路由
+    emit('closeModals')
     router.push('/UserProfile/Information')
   }
 })

@@ -81,36 +81,71 @@
 
       <!-- 右侧内容区域 -->
       <div class="profile-content">
-        <UserInformation v-show="activeSection === 'info'" />
-        <UserPage v-show="activeSection === 'page'" />
-        <UserContribute v-show="activeSection === 'contribute'" />
-        <UserArticle v-show="activeSection === 'articles'" />
-        <UserSecure v-show="activeSection === 'secure'" />
+        <router-view />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import UserInformation from './view/UserInformation.vue'
-import UserPage from './view/UserPage.vue'
-import UserContribute from './view/UserContribute.vue'
-import UserArticle from './view/UserArticle.vue'
-import UserSecure from './view/UserSecure.vue'
+import { ref, computed, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
-const activeSection = ref('info')
+const route = useRoute()
 
+// 根据当前路由计算activeSection
+const activeSection = computed(() => {
+  const currentPath = route.path
+  console.log('当前路径:', currentPath) // 调试日志
+  
+  if (currentPath.includes('/Information')) return 'info'
+  if (currentPath.includes('/UserPage')) return 'page'
+  if (currentPath.includes('/Contribute')) return 'contribute'
+  if (currentPath.includes('/Article')) return 'articles'
+  if (currentPath.includes('/Secure')) return 'secure'
+  
+  // 如果是根路径 /UserProfile，默认显示info
+  if (currentPath === '/UserProfile') return 'info'
+  
+  return 'info' // 默认值
+})
 
 const setActiveSection = (section: string) => {
-  activeSection.value = section
+  console.log('切换到章节:', section) // 调试日志
+  
+  let routePath = '/UserProfile/'
+  switch (section) {
+    case 'info':
+      routePath += 'Information'
+      break
+    case 'page':
+      routePath += 'UserPage'
+      break
+    case 'contribute':
+      routePath += 'Contribute'
+      break
+    case 'articles':
+      routePath += 'Article'
+      break
+    case 'secure':
+      routePath += 'Secure'
+      break
+    default:
+      routePath += 'Information'
+  }
+  
+  console.log('跳转到路径:', routePath) // 调试日志
+  
+  router.push(routePath).catch(err => {
+    console.error('路由跳转失败:', err)
+  })
 }
 
 const goBack = () => {
   router.push('/');
 }
+
 const refreshProfile = () => {
   window.location.reload()
 }
