@@ -15,6 +15,11 @@
         </div>
       </div>
       <div class="header-actions">
+        <button class="btn btn-ghost" @click="refreshProfile">
+          <svg viewBox="0 0 24 24" class="icon">
+            <path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z" />
+          </svg>
+        </button>
         <button class="btn btn-ghost" @click="goBack">
           返回
         </button>
@@ -98,12 +103,16 @@ import UserSecure from './view/UserSecure.vue'
 const router = useRouter()
 const activeSection = ref('info')
 
+
 const setActiveSection = (section: string) => {
   activeSection.value = section
 }
 
 const goBack = () => {
-  router.push('/')
+  router.push('/');
+}
+const refreshProfile = () => {
+  window.location.reload()
 }
 </script>
 
@@ -295,5 +304,27 @@ const goBack = () => {
     border-right: none;
     border-bottom: 1px solid #e9ecef;
   }
+}
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn .icon {
+  width: 16px;
+  height: 16px;
+}
+.btn-ghost {
+  background: transparent;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
 }
 </style>
