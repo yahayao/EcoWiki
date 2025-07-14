@@ -412,6 +412,11 @@ function formatTime(dateString: string): string {
     minute: '2-digit'
   })
 }
+
+// 暴露方法给父组件调用
+defineExpose({
+  refreshData
+})
 </script>
 
 <style scoped>

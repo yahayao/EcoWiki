@@ -147,12 +147,12 @@
 
       <!-- 右侧内容区域 -->
       <div class="admin-content">
-        <!-- 使用 v-show 替代 v-if 来避免组件重新创建和自动刷新 -->
-        <SystemSettings v-show="activeSection === 'settings'" />
-        <ArticleManagement v-show="activeSection === 'articles'" />
-        <UserList v-show="activeSection === 'users'" />
-        <PermissionManagement v-show="activeSection === 'permissions'" />
-        <RolePermissionAssignment v-show="activeSection === 'roles'" />
+        <!-- 使用 v-show 控制显示，ref 控制缓存 -->
+        <SystemSettings v-show="activeSection === 'settings'" ref="systemSettingsRef" />
+        <ArticleManagement v-show="activeSection === 'articles'" ref="articleManagementRef" />
+        <UserList v-show="activeSection === 'users'" ref="userListRef" />
+        <PermissionManagement v-show="activeSection === 'permissions'" ref="permissionManagementRef" />
+        <RolePermissionAssignment v-show="activeSection === 'roles'" ref="rolePermissionAssignmentRef" />
       </div>
     </div>
   </div>
@@ -173,7 +173,7 @@
 // === Vue 3 组合式API导入 ===
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'  // Pinia状态管理
-import { useRouter } from 'vue-router'  // Vue Router路由管理
+import { useRouter, useRoute } from 'vue-router'  // Vue Router路由管理
 
 // === 业务逻辑导入 ===
 import { useAdminUserStore } from '../../stores/adminUserStore'  // 管理用户状态
@@ -188,6 +188,7 @@ import RolePermissionAssignment from './views/RolePermissionAssignment.vue'  // 
 
 // === 实例化依赖 ===
 const router = useRouter()
+const route = useRoute()
 const adminUserStore = useAdminUserStore()
 // 直接访问store属性，避免类型兼容性问题
 const pendingUserChanges = computed(() => adminUserStore.pendingUserChanges)
@@ -195,24 +196,96 @@ const pendingUserChanges = computed(() => adminUserStore.pendingUserChanges)
 // === 组件状态管理 ===
 const applying = ref(false)  // 全局应用按钮的加载状态
 const pendingChangesKey = ref(0)  // 用于强制重新计算待处理变更的响应式键
-const activeSection = ref('settings')  // 当前激活的导航部分，默认为系统设置
+
+// === 子组件 ref 定义 ===
+const systemSettingsRef = ref<any>(null)
+const articleManagementRef = ref<any>(null)
+const userListRef = ref<any>(null)
+const permissionManagementRef = ref<any>(null)
+const rolePermissionAssignmentRef = ref<any>(null)
+
+// 根据当前路由计算当前激活的导航部分
+const activeSection = computed(() => {
+  const path = route.path
+  if (path.includes('/admin/settings')) return 'settings'
+  if (path.includes('/admin/articles')) return 'articles'
+  if (path.includes('/admin/users')) return 'users'
+  if (path.includes('/admin/permissions')) return 'permissions'
+  if (path.includes('/admin/role-permissions')) return 'roles'
+  return 'settings' // 默认
+})
 
 // === 导航切换函数 ===
 /**
  * 设置当前激活的导航部分
- * @param section 导航部分标识符 ('settings' | 'users' | 'permissions' | 'roles')
+ * @param section 导航部分标识符 ('settings' | 'users' | 'permissions' | 'roles' | 'articles')
  */
 const setActiveSection = (section: string) => {
-  activeSection.value = section
+  let routePath = '/admin/'
+  switch (section) {
+    case 'settings':
+      routePath += 'settings'
+      break
+    case 'articles':
+      routePath += 'articles'
+      break
+    case 'users':
+      routePath += 'users'
+      break
+    case 'permissions':
+      routePath += 'permissions'
+      break
+    case 'roles':
+      routePath += 'role-permissions'
+      break
+    default:
+      routePath += 'settings'
+  }
+  
+  if (route.path !== routePath) {
+    router.push(routePath)
+  }
 }
 
 // === 页面刷新函数 ===
 /**
- * 刷新整个管理后台页面
- * 用于解决某些状态不同步的问题
+ * 刷新当前激活的管理页面组件
+ * 通过调用组件的刷新方法来重新加载数据
  */
 const refreshSettings = () => {
-  window.location.reload()
+  const currentSection = activeSection.value
+  
+  // 根据当前激活的section调用对应组件的刷新方法
+  switch (currentSection) {
+    case 'settings':
+      if (systemSettingsRef.value && typeof systemSettingsRef.value.refreshData === 'function') {
+        systemSettingsRef.value.refreshData()
+      }
+      break
+    case 'articles':
+      if (articleManagementRef.value && typeof articleManagementRef.value.refreshData === 'function') {
+        articleManagementRef.value.refreshData()
+      }
+      break
+    case 'users':
+      if (userListRef.value && typeof userListRef.value.loadUsers === 'function') {
+        userListRef.value.loadUsers()
+      }
+      break
+    case 'permissions':
+      if (permissionManagementRef.value && typeof permissionManagementRef.value.refreshData === 'function') {
+        permissionManagementRef.value.refreshData()
+      }
+      break
+    case 'roles':
+      if (rolePermissionAssignmentRef.value && typeof rolePermissionAssignmentRef.value.refreshData === 'function') {
+        rolePermissionAssignmentRef.value.refreshData()
+      }
+      break
+  }
+  
+  // 显示刷新提示
+  toast.success('页面已刷新', '刷新成功')
 }
 
 // === 生命周期钩子 ===

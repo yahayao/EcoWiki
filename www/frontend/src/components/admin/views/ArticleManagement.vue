@@ -267,6 +267,11 @@
 </template>
 
 <script setup lang="ts">
+// 定义组件名称，用于缓存标识
+defineOptions({
+  name: 'ArticleManagement'
+})
+
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { articleApi } from '@/api/article'
@@ -509,9 +514,22 @@ const watchSortBy = () => {
   loadArticles()
 }
 
+/**
+ * 刷新组件数据
+ * 供外部调用以重新加载所有数据
+ */
+const refreshData = async () => {
+  await loadArticles()
+}
+
 // 生命周期
 onMounted(() => {
   loadArticles()
+})
+
+// 暴露方法给父组件调用
+defineExpose({
+  refreshData
 })
 </script>
 

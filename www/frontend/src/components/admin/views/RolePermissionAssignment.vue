@@ -220,6 +220,11 @@
 </template>
 
 <script setup lang="ts">
+// 定义组件名称，用于缓存标识
+defineOptions({
+  name: 'RolePermissionAssignment'
+})
+
 /**
  * 角色权限分配组件
  * 用于管理系统角色和权限的分配关系
@@ -638,6 +643,23 @@ watch(selectedRole, (newRole) => {
   if (newRole) {
     loadRolePermissions(newRole.roleId)
   }
+})
+
+/**
+ * 刷新组件数据
+ * 供外部调用以重新加载所有数据
+ */
+const refreshData = async () => {
+  await loadRoles()
+  await loadPermissions()
+  if (selectedRole.value) {
+    await loadRolePermissions(selectedRole.value.roleId)
+  }
+}
+
+// 暴露方法给父组件调用
+defineExpose({
+  refreshData
 })
 </script>
 
