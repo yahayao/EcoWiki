@@ -215,6 +215,10 @@ export interface UserResponse {
   createdAt: string
   /** 最后更新时间 */
   updatedAt: string
+  /** 安全问题（如果设置） */
+  securityQuestion?: string
+  /** 安全问题答案（如果设置） */
+  securityAnswer?: string
 }
 
 /**

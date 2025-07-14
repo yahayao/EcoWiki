@@ -13,29 +13,32 @@
         
         <div class="form-group">
           <label>用户名</label>
-          <input v-model="username" type="text" class="form-input">
+          {{ user?.username || '未知用户' }}
+          <input type="text" class="form-input" placeholder="请输入新用户名">
           <button class="btn btn-sm">修改</button>
         </div>  
         
         <div class="form-group">
           <label>电子邮箱</label>
-          <input v-model="email" type="email" class="form-input" readonly>
+          {{ user?.email || '未设置' }}
           <span class="badge badge-success">已验证</span>
         </div>
         
         <div class="form-group">
           <label>注册时间</label>
-          <p class="static-info">2023年5月15日</p>
+          {{ formatDate(user?.createdAt) }}
         </div>
         
         <div class="form-group">
           <label>账号权限</label>
-          <p class="static-info">高级编辑者</p>
+          {{ user?.userGroup || '普通用户' }}
         </div>
         
         <div class="form-group">
           <label>账号状态</label>
-          <span class="badge badge-success">正常</span>
+          <span :class="user?.active ? 'status-active' : 'status-inactive'">
+                {{ user?.active ? '正常' : '已停用' }}
+          </span>
         </div>
       </div>
       
@@ -43,11 +46,7 @@
         <h3>安全设置</h3>
         <div class="form-group">
           <label>安全验证问题</label>
-          <select v-model="securityQuestion" class="form-select">
-            <option>您的出生地是？</option>
-            <option>您最喜欢的颜色？</option>
-            <option>您母亲的姓名？</option>
-          </select>
+          <!-- {{ user?.securityQuestion || '未设置' }} -->
           <button class="btn btn-sm">修改</button>
         </div>
         
@@ -69,16 +68,52 @@
 
 <script setup lang="ts">
 import { useAuth } from '@/composables/useAuth'
-import { ref } from 'vue'
-const { userAvatar } = useAuth()
-const username = ref('EcoEditor')
-const email = ref('user@example.com')
+import { userApi } from '@/api/user'
+import type { UserResponse } from '@/api/user'
+import { ref, computed, onMounted } from 'vue'
+
+function formatDate(dateString?: string) {
+  if (!dateString) return '无'
+  try {
+    return new Date(dateString).toLocaleString('zh-CN')
+  } catch {
+    return '无效日期'
+  }
+}
+
+const { user, userAvatar} = useAuth()
+
+const draft = ref({
+  username: '',
+  fullName: '',
+  email: ''
+})
+function startEdit() {
+  if (!user.value) return
+  
+  draft.value = {
+    username: user.value.username || '',
+    fullName: user.value.fullName || '',
+    email: user.value.email || ''
+  }
+}
+
+const username = ref('新用户名')
 const securityQuestion = ref('您的出生地是？')
 const securityAnswer = ref('Shanghai')
 
 </script>
 
 <style scoped>
+.status-active {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.status-inactive {
+  color: #ef4444;
+  font-weight: 600;
+}
 .user-info-container {
   padding: 32px;
 }

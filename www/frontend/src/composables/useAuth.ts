@@ -154,6 +154,12 @@ const userAvatar = computed(() => {
 const userDisplayName = computed(() => {
   return user.value?.username || '未知用户'
 })
+const securityAnswer = computed(() => {
+  return user.value?.securityAnswer || '未设置'
+})
+const securityQuestion = computed(() => {
+  return user.value?.securityQuestion || '未设置'
+})
 
 // 检查用户是否有特定权限
 const hasPermission = (permission: UserGroup): boolean => {
@@ -193,6 +199,8 @@ export function useAuth() {
     userDisplayName,
     isAdmin,
     isSuperAdmin,
+    securityAnswer,
+    securityQuestion,
     
     // 方法
     setUser,
