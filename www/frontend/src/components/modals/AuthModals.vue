@@ -103,14 +103,16 @@
     <!-- 用户个人资料模态框 -->
     <div 
       v-if="showUserProfile" 
-      class="auth-modal-overlay" 
-      @click.self="$emit('closeModals')"
+      class="auth-modal-overlay admin-overlay" 
+      
     >
-      <div class="auth-modal">
+    <!-- @click.self="$emit('closeModals')" -->
+      <div class="admin-modal">
+        <router-view />
         <!-- 用户个人资料组件 -->
-        <UserProfile 
+        <!-- <UserProfile 
           @close="$emit('closeModals')"
-        />
+        /> -->
       </div>
     </div>
 
@@ -192,6 +194,12 @@ const showAnyModal = computed(() => {
  * 当管理员设置界面打开时，自动导航到系统设置路由。
  * 确保管理员界面能够正确渲染和显示。
  */
+watch(() => props.showUserProfile, (isOpen) => {
+  if (isOpen) {
+    // 打开个人中心时，导航到个人中心页面
+    router.push('/UserProfile/UserPage')
+  }
+})
 watch(() => props.showAdminSettings, (isOpen) => {
   if (isOpen) {
     // 打开管理面板时，导航到系统设置页面
