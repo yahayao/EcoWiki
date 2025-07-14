@@ -94,6 +94,20 @@
           </div>
           
           <div class="nav-group">
+            <h3 class="nav-group-title">内容管理</h3>
+            <ul class="nav-list">
+              <li class="nav-item" :class="{ active: activeSection === 'articles' }" @click="setActiveSection('articles')">
+                <div class="nav-item-content">
+                  <svg viewBox="0 0 24 24" class="nav-icon">
+                    <path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M5,19V5H19V19H5Z" />
+                  </svg>
+                  <span class="nav-text">文章管理</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+          
+          <div class="nav-group">
             <h3 class="nav-group-title">用户管理</h3>
             <ul class="nav-list">
               <li class="nav-item" :class="{ active: activeSection === 'users' }" @click="setActiveSection('users')">
@@ -135,6 +149,7 @@
       <div class="admin-content">
         <!-- 使用 v-show 替代 v-if 来避免组件重新创建和自动刷新 -->
         <SystemSettings v-show="activeSection === 'settings'" />
+        <ArticleManagement v-show="activeSection === 'articles'" />
         <UserList v-show="activeSection === 'users'" />
         <PermissionManagement v-show="activeSection === 'permissions'" />
         <RolePermissionAssignment v-show="activeSection === 'roles'" />
@@ -166,6 +181,7 @@ import toast from '../../utils/toast'  // 消息提示工具
 
 // === 子组件导入 ===
 import SystemSettings from './views/SystemSettings.vue'  // 系统设置页面
+import ArticleManagement from './views/ArticleManagement.vue'  // 文章管理页面
 import UserList from './views/UserList.vue'  // 用户列表页面
 import PermissionManagement from './views/PermissionManagement.vue'  // 权限管理页面
 import RolePermissionAssignment from './views/RolePermissionAssignment.vue'  // 角色权限分配页面

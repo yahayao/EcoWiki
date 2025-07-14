@@ -21,6 +21,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecowiki.dto.ApiResponse;
+import com.ecowiki.dto.ArticleCreateRequest;
+import com.ecowiki.dto.ArticleDto;
+import com.ecowiki.dto.ArticleUpdateRequest;
 import com.ecowiki.dto.UserWithRoleDto;
 import com.ecowiki.entity.Permission;
 import com.ecowiki.entity.RolePermission;
@@ -31,6 +34,7 @@ import com.ecowiki.repository.RoleRepository;
 import com.ecowiki.repository.UserRepository;
 import com.ecowiki.security.JwtUtil;
 import com.ecowiki.service.AdminService;
+import com.ecowiki.service.ArticleService;
 import com.ecowiki.service.PermissionService;
 import com.ecowiki.service.UserService;
 
@@ -92,6 +96,9 @@ public class AdminController {
     @Autowired 
     private RolePermissionRepository rolePermissionRepository;
 
+    @Autowired
+    private ArticleService articleService;
+
     /**
      * 获取当前请求用户实体
      * @param request HTTP请求
@@ -99,10 +106,24 @@ public class AdminController {
      */
     private User getCurrentUser(HttpServletRequest request) {
         String token = extractTokenFromRequest(request);
+        System.out.println("=== getCurrentUser 调试 ===");
+        System.out.println("Token: " + (token != null ? "存在" : "null"));
         if (token != null) {
-            String username = jwtUtil.extractUsername(token);
-            Optional<User> userOpt = userService.findByUsername(username);
-            return userOpt.orElse(null);
+            try {
+                String username = jwtUtil.extractUsername(token);
+                System.out.println("从Token提取的用户名: " + username);
+                Optional<User> userOpt = userService.findByUsername(username);
+                if (userOpt.isPresent()) {
+                    System.out.println("找到用户: " + userOpt.get().getUsername());
+                    return userOpt.get();
+                } else {
+                    System.out.println("未找到用户: " + username);
+                }
+                return userOpt.orElse(null);
+            } catch (Exception e) {
+                System.out.println("Token解析失败: " + e.getMessage());
+                return null;
+            }
         }
         return null;
     }
@@ -782,6 +803,155 @@ public class AdminController {
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("恢复用户失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 分页获取所有文章
+     * @param page 页码（默认0）
+     * @param size 每页数量（默认10）
+     * @param sortBy 排序字段（默认id）
+     * @param sortDir 排序方向（默认desc）
+     * @param request HTTP请求
+     * @return 文章分页数据，需管理员权限
+     */
+    @GetMapping("/articles")
+    public ResponseEntity<ApiResponse<Page<ArticleDto>>> getAllArticles(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            HttpServletRequest request) {
+        
+        System.out.println("=== getAllArticles 方法被调用 ===");
+        System.out.println("请求URL: " + request.getRequestURI());
+        System.out.println("请求方法: " + request.getMethod());
+        
+        try {
+            User currentUser = getCurrentUser(request);
+            System.out.println("=== 文章管理权限检查 ===");
+            System.out.println("当前用户: " + (currentUser != null ? currentUser.getUsername() : "null"));
+            if (currentUser != null) {
+                System.out.println("用户ID: " + currentUser.getUserId());
+                // 获取用户角色
+                String roleName = userService.getUserRoleName(currentUser.getUserId().intValue());
+                System.out.println("用户角色: " + roleName);
+                System.out.println("isAdmin检查结果: " + permissionService.isAdmin(currentUser));
+            }
+            
+            if (!permissionService.isAdmin(currentUser)) {
+                System.out.println("权限检查失败: 用户不是管理员");
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要管理员权限"));
+            }
+            
+            System.out.println("权限检查通过，开始获取文章列表");
+            System.out.println("请求参数: page=" + page + ", size=" + size + ", sortBy=" + sortBy + ", sortDir=" + sortDir);
+            Page<ArticleDto> articles = articleService.getAllArticles(page, size, sortBy, sortDir);
+            System.out.println("=== 文章数据调试 ===");
+            System.out.println("文章总数: " + articles.getTotalElements());
+            System.out.println("当前页文章数: " + articles.getNumberOfElements());
+            System.out.println("总页数: " + articles.getTotalPages());
+            System.out.println("是否有内容: " + articles.hasContent());
+            if (articles.hasContent()) {
+                System.out.println("第一篇文章标题: " + articles.getContent().get(0).getTitle());
+                System.out.println("第一篇文章ID: " + articles.getContent().get(0).getArticleId());
+                System.out.println("第一篇文章作者: " + articles.getContent().get(0).getAuthor());
+            } else {
+                System.out.println("没有找到任何文章内容");
+            }
+            ApiResponse<Page<ArticleDto>> response = ApiResponse.success(articles, "获取文章列表成功");
+            System.out.println("返回响应: " + response);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.out.println("获取文章列表异常: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("获取文章列表失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 创建新文章
+     * @param request 包含标题、内容等的文章创建请求
+     * @param httpRequest HTTP请求
+     * @return 新建文章DTO，仅管理员可用
+     */
+    @PostMapping("/articles")
+    public ResponseEntity<ApiResponse<ArticleDto>> createArticle(
+            @RequestBody ArticleCreateRequest request,
+            HttpServletRequest httpRequest) {
+        try {
+            User currentUser = getCurrentUser(httpRequest);
+            if (!permissionService.isAdmin(currentUser)) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要管理员权限"));
+            }
+            
+            // 设置文章的创建者为当前用户
+            request.setAuthor(currentUser.getUsername());
+            
+            ArticleDto savedArticle = articleService.createArticle(request);
+            return ResponseEntity.ok(ApiResponse.success(savedArticle, "文章创建成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("创建文章失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 更新指定文章
+     * @param articleId 文章ID
+     * @param request 包含新标题、内容等的文章更新请求
+     * @param httpRequest HTTP请求
+     * @return 更新后的文章DTO，仅管理员可用
+     */
+    @PutMapping("/articles/{articleId}")
+    public ResponseEntity<ApiResponse<ArticleDto>> updateArticle(
+            @PathVariable Long articleId,
+            @RequestBody ArticleUpdateRequest request,
+            HttpServletRequest httpRequest) {
+        try {
+            User currentUser = getCurrentUser(httpRequest);
+            if (!permissionService.isAdmin(currentUser)) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要管理员权限"));
+            }
+            
+            ArticleDto updatedArticle = articleService.updateArticle(articleId, request);
+            return ResponseEntity.ok(ApiResponse.success(updatedArticle, "文章更新成功"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("更新文章失败: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("更新文章失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 删除文章
+     * @param articleId 文章ID
+     * @param request HTTP请求
+     * @return 删除结果，仅管理员可用
+     */
+    @DeleteMapping("/articles/{articleId}")
+    public ResponseEntity<ApiResponse<String>> deleteArticle(
+            @PathVariable Long articleId,
+            HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            if (!permissionService.isAdmin(currentUser)) {
+                return ResponseEntity.status(403)
+                    .body(ApiResponse.error("权限不足，需要管理员权限"));
+            }
+            
+            // 删除文章
+            articleService.deleteArticle(articleId);
+            return ResponseEntity.ok(ApiResponse.success("文章删除成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("删除文章失败: " + e.getMessage()));
         }
     }
 }

@@ -53,6 +53,7 @@ import UserList from '../components/admin/views/UserList.vue'
 import RoleManagement from '../components/admin/views/RoleManagement.vue'
 import PermissionManagement from '../components/admin/views/PermissionManagement.vue'
 import RolePermissionAssignment from '../components/admin/views/RolePermissionAssignment.vue'
+import ArticleManagement from '../components/admin/views/ArticleManagement.vue'
 
 //import ForgotPassword from '../components/auth/Forgotpanel.vue'
 /**
@@ -81,6 +82,12 @@ const routes = [
         path: 'users', 
         name: 'AdminUsers', 
         component: UserList 
+      },
+      // 文章管理页面
+      { 
+        path: 'articles', 
+        name: 'AdminArticles', 
+        component: ArticleManagement 
       },
       // 角色权限管理页面
       { 
