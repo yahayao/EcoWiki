@@ -1,0 +1,7 @@
+# 数据库配置示例文件
+# 复制此文件为 application-local.properties 并填入真实的数据库连接信息
+
+# MySQL数据库配置
+spring.datasource.url=jdbc:mysql://localhost:3306/your_database?useSSL=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8
+spring.datasource.username=your_username
+spring.datasource.password=your_password

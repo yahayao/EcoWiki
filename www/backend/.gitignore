@@ -64,7 +64,7 @@ build/
 
 # Application specific
 application-*.properties
-!application.properties
+!application.properties.example
 *.tmp
 *.bak
 *.swp
