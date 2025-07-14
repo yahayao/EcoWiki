@@ -760,7 +760,6 @@ export class WikiParser {
       const title = heading.textContent || ''
       const id = `heading-${index}`
       
-      heading.id = id
       toc.push({ id, level, title })
     })
     

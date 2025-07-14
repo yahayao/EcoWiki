@@ -24,23 +24,64 @@
       </div>
     </div>
 
-    <!-- 目录 -->
-    <div class="table-of-contents" v-if="tableOfContents.length > 0">
-      <h3>
-        <IconArticleTOC class="toc-icon" />
-        目录
-      </h3>
-      <ul class="toc-list">
-        <li 
-          v-for="item in tableOfContents" 
-          :key="item.id"
-          :class="`toc-level-${item.level}`"
-        >
-          <a :href="`#${item.id}`" @click="scrollToHeading(item.id)">
-            {{ item.title }}
-          </a>
-        </li>
-      </ul>
+    <!-- 目录侧悬浮栏 -->
+    <div class="table-of-contents-sidebar" :class="{ 'collapsed': isToCSidebarCollapsed }">
+      <div class="toc-header">
+        <div class="toc-title-section" v-if="!isToCSidebarCollapsed">
+          <div class="toc-main-title">
+            <IconArticleTOC class="toc-main-icon" />
+            <span>文章目录</span>
+          </div>
+          <div class="toc-subtitle">
+            {{ tableOfContents.length > 0 ? `${tableOfContents.length} 个章节` : '快速导航' }}
+          </div>
+        </div>
+        <button class="toc-toggle-btn" @click="toggleToCSidebar">
+          <span class="toc-toggle-icon" :class="{ 'collapsed': isToCSidebarCollapsed }">
+            {{ isToCSidebarCollapsed ? '▶' : '◀' }}
+          </span>
+        </button>
+      </div>
+      <div class="toc-content" v-if="!isToCSidebarCollapsed">
+        <div class="toc-progress-bar">
+          <div class="toc-progress-fill"></div>
+        </div>
+        <ul class="toc-list">
+          <!-- 返回顶部选项 -->
+          <li class="toc-item toc-top-item">
+            <a @click.prevent="scrollToTop" class="toc-link toc-top-link">
+              <span class="toc-number toc-top-number">🔝</span>
+              <span class="toc-text">返回顶部</span>
+            </a>
+          </li>
+          <!-- 如果有子标题，显示分隔线和目录项 -->
+          <template v-if="tableOfContents.length > 0">
+            <li class="toc-divider"></li>
+            <!-- 正常目录项 -->
+            <li 
+              v-for="(item, index) in tableOfContents" 
+              :key="item.id"
+              :class="`toc-level-${item.level}`"
+              class="toc-item"
+            >
+              <a :href="`#${item.id}`" @click.prevent="scrollToHeading(item.id)" class="toc-link">
+                <span class="toc-number">{{ index + 1 }}</span>
+                <span class="toc-text">{{ item.title }}</span>
+              </a>
+            </li>
+          </template>
+          <!-- 如果没有子标题，显示提示信息 -->
+          <template v-else>
+            <li class="toc-divider"></li>
+            <li class="toc-item toc-no-headings">
+              <div class="toc-link toc-info-link">
+                <span class="toc-number">📄</span>
+                <span class="toc-text">本文暂无子标题</span>
+              </div>
+            </li>
+          </template>
+        </ul>
+      </div>
     </div>
 
     <!-- 文章正文 -->
@@ -113,6 +154,7 @@ const isBookmarked = ref(false)
 const currentLikes = ref(props.article.likes || 0)
 const articleBody = ref<HTMLElement>()
 const tableOfContents = ref<{ id: string; level: number; title: string }[]>([])
+const isToCSidebarCollapsed = ref(true) // 默认关闭状态
 
 // 计算属性
 const parsedContent = computed(() => {
@@ -187,16 +229,50 @@ const searchByTag = (tag: string) => {
 }
 
 const scrollToHeading = (id: string) => {
-  const element = document.getElementById(id)
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth' })
-  }
+  // 确保DOM已经更新
+  nextTick(() => {
+    const element = document.getElementById(id)
+    if (element) {
+      // 计算元素相对于视口顶部的位置，减去偏移量以确保标题不被遮挡
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+      const offsetPosition = elementPosition - 100 // 增加偏移量确保清晰可见
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      })
+    } else {
+      console.warn(`Element with id "${id}" not found`)
+    }
+  })
+}
+
+const toggleToCSidebar = () => {
+  isToCSidebarCollapsed.value = !isToCSidebarCollapsed.value
+}
+
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  })
 }
 
 const generateTableOfContents = () => {
   nextTick(() => {
     if (articleBody.value) {
+      // 直接使用原始HTML生成目录
       tableOfContents.value = wikiParser.generateToc(parsedContent.value)
+      
+      // 在DOM中为标题元素添加ID
+      nextTick(() => {
+        const headings = articleBody.value?.querySelectorAll('h1, h2, h3, h4, h5, h6')
+        if (headings) {
+          headings.forEach((heading, index) => {
+            heading.id = `heading-${index}`
+          })
+        }
+      })
     }
   })
 }
@@ -299,57 +375,336 @@ onMounted(() => {
   font-size: 0.9rem;
 }
 
-.table-of-contents {
-  background: #f8fafc;
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 32px;
-  border-left: 4px solid #4299e1;
+/* 侧悬浮目录栏 */
+.table-of-contents-sidebar {
+  position: fixed;
+  top: 50%;
+  left: 20px;
+  transform: translateY(-50%);
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    0 8px 16px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  z-index: 1000;
+  max-height: 75vh;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 320px;
+  backdrop-filter: blur(10px);
 }
 
-.table-of-contents h3 {
-  color: #1a202c;
-  margin-bottom: 12px;
-  font-size: 1.1rem;
-  font-weight: 600;
+.table-of-contents-sidebar.collapsed {
+  width: 56px;
+  max-height: 56px;
+}
+
+.table-of-contents-sidebar.collapsed .toc-header {
+  padding: 10px;
+  justify-content: center;
+}
+
+.table-of-contents-sidebar.collapsed .toc-toggle-btn {
+  margin: 0;
+}
+
+.toc-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  padding: 20px 20px 16px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px 16px 0 0;
+  position: relative;
+  overflow: hidden;
 }
 
-.toc-icon {
-  flex-shrink: 0;
-  color: #4299e1;
+.toc-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.toc-title-section {
+  flex: 1;
+  z-index: 1;
+}
+
+.toc-main-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.toc-main-icon {
+  width: 20px;
+  height: 20px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.toc-subtitle {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.toc-toggle-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  backdrop-filter: blur(10px);
+  z-index: 1;
+}
+
+.toc-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.toc-toggle-icon {
+  font-size: 14px;
+  color: white;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: bold;
+}
+
+.toc-toggle-icon.collapsed {
+  transform: rotate(0deg);
+}
+
+.toc-content {
+  padding: 0;
+  max-height: calc(75vh - 80px);
+  overflow-y: auto;
+  background: white;
+}
+
+.toc-progress-bar {
+  height: 3px;
+  background: #e2e8f0;
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.toc-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  width: 0%;
+  transition: width 0.3s ease;
 }
 
 .toc-list {
   list-style: none;
-  padding: 0;
+  padding: 16px;
   margin: 0;
 }
 
-.toc-list li {
-  margin-bottom: 4px;
+.toc-item {
+  margin-bottom: 2px;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s ease;
 }
 
-.toc-list a {
-  color: #4299e1;
+.toc-item:hover {
+  background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
+  transform: translateX(4px);
+}
+
+.toc-link {
+  color: #4a5568;
   text-decoration: none;
   font-size: 0.9rem;
-  transition: color 0.2s;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 8px;
+  line-height: 1.4;
+  position: relative;
 }
 
-.toc-list a:hover {
-  color: #2b6cb0;
-  text-decoration: underline;
+.toc-link:hover {
+  color: #2d3748;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
 }
 
-.toc-level-1 { margin-left: 0; }
-.toc-level-2 { margin-left: 16px; }
-.toc-level-3 { margin-left: 32px; }
-.toc-level-4 { margin-left: 48px; }
-.toc-level-5 { margin-left: 64px; }
-.toc-level-6 { margin-left: 80px; }
+.toc-link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 2px;
+  transition: height 0.3s ease;
+}
+
+.toc-link:hover::before {
+  height: 60%;
+}
+
+.toc-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.toc-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 返回顶部样式 */
+.toc-top-item {
+  margin-bottom: 8px;
+}
+
+.toc-top-link {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white !important;
+  font-weight: 500;
+}
+
+.toc-top-link:hover {
+  background: linear-gradient(135deg, #5a67d8, #6b46c1);
+  color: white !important;
+  transform: translateX(6px);
+}
+
+.toc-top-number {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+}
+
+.toc-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+  margin: 8px 12px;
+  border: none;
+}
+
+/* 无子标题时的样式 */
+.toc-no-headings .toc-link {
+  pointer-events: none;
+  color: #a0aec0 !important;
+  font-style: italic;
+}
+
+.toc-info-link {
+  background: linear-gradient(135deg, #f7fafc, #edf2f7);
+  border: 1px dashed #cbd5e0;
+}
+
+.toc-level-1 { 
+  margin-left: 0; 
+}
+.toc-level-1 .toc-number {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+.toc-level-1 .toc-text {
+  font-weight: 600;
+}
+
+.toc-level-2 { 
+  margin-left: 8px; 
+}
+.toc-level-2 .toc-number {
+  background: linear-gradient(135deg, #4299e1, #3182ce);
+}
+
+.toc-level-3 { 
+  margin-left: 16px; 
+}
+.toc-level-3 .toc-number {
+  background: linear-gradient(135deg, #48bb78, #38a169);
+}
+
+.toc-level-4 { 
+  margin-left: 24px; 
+}
+.toc-level-4 .toc-number {
+  background: linear-gradient(135deg, #ed8936, #dd6b20);
+}
+
+.toc-level-5 { 
+  margin-left: 32px; 
+}
+.toc-level-5 .toc-number {
+  background: linear-gradient(135deg, #e53e3e, #c53030);
+}
+
+.toc-level-6 { 
+  margin-left: 40px; 
+}
+.toc-level-6 .toc-number {
+  background: linear-gradient(135deg, #9f7aea, #805ad5);
+}
+
+/* 自定义滚动条 */
+.toc-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.toc-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.toc-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 3px;
+}
+
+.toc-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a67d8, #6b46c1);
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .table-of-contents-sidebar {
+    left: 10px;
+    width: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-of-contents-sidebar {
+    display: none;
+  }
+}
 
 .article-body {
   line-height: 1.8;
