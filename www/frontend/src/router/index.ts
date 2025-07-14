@@ -67,13 +67,13 @@ const routes = [
   { path: '/edit/:title', name: 'ArticleEdit', component: ArticleEdit },
   { path: '/UserProfile', 
     component: UserProfile,
-    redirect: '/UserProfile/UserPage',
+    redirect: '/UserProfile/Information', // 默认重定向到用户个人资料设置
     children: [
       { path: 'UserPage', name: 'UserPage', component: UserPage },
-      { path: 'UserInformation', name: 'UserInformation', component: UserInformation },
-      { path: 'UserContribute', name: 'UserContribute', component: UserContribute },
-      { path: 'UserSecure', name: 'UserSecure', component: UserSecure },
-      { path: 'UserArticle', name: 'UserArticle', component: UserArticle }
+      { path: 'Information', name: 'Information', component: UserInformation },
+      { path: 'Contribute', name: 'Contribute', component: UserContribute },
+      { path: 'Secure', name: 'Secure', component: UserSecure },
+      { path: 'Article', name: 'Article', component: UserArticle }
     ]
    },
   {

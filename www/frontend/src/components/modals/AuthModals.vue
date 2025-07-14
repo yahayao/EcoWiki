@@ -197,7 +197,7 @@ const showAnyModal = computed(() => {
 watch(() => props.showUserProfile, (isOpen) => {
   if (isOpen) {
     // 打开个人中心时，导航到个人中心页面
-    router.push('/UserProfile/UserPage')
+    router.push('/UserProfile/Information')
   }
 })
 watch(() => props.showAdminSettings, (isOpen) => {
