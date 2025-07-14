@@ -17,7 +17,7 @@
       <div v-if="mode === 'template'" class="template-mode">
         <div class="template-preview">
           <div class="default-template">
-            <h1>{{ username }}的主页</h1>
+            <h1>{{ user?.username || '未知用户' }}的主页</h1>
             <div class="user-bio">
               <textarea 
                 v-model="userDescription" 
@@ -62,7 +62,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useAuth } from '@/composables/useAuth'
 
+const { user } = useAuth()
 const mode = ref<'template' | 'custom'>('template')
 const username = ref('EcoEditor')
 const userDescription = ref('欢迎来到我的主页！我是一名热衷于环保知识的编辑者...')
