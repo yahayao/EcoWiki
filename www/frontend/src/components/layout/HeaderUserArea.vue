@@ -97,7 +97,7 @@
  * 集成全局认证状态，提供动态的用户界面。
  */
 
-import { computed, ref, defineEmits } from 'vue'
+import { computed, ref } from 'vue'
 import { useAuth } from '../../composables/useAuth'
 import { userApi } from '../../api/user'
 
