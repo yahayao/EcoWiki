@@ -906,7 +906,7 @@ const loadMoreLogs = () => {
 
 .btn-success:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
+  box-shadow: 0 8px 25px rgba(72, 187, 120)
 }
 
 .btn-warning {
@@ -1022,6 +1022,343 @@ input:checked + .toggle-slider:before {
   margin: 0;
   color: #718096;
   font-size: 0.875rem;
+}
+
+/* 设备和日志相关样式 */
+.devices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.device-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.device-icon {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  background: #e2e8f0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.device-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: #4a5568;
+}
+
+.device-info {
+  flex: 1;
+}
+
+.device-info h4 {
+  margin: 0 0 4px 0;
+  color: #2d3748;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.device-info p {
+  margin: 0 0 8px 0;
+  color: #718096;
+  font-size: 0.875rem;
+}
+
+.device-details {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.device-location,
+.device-time {
+  color: #a0aec0;
+  font-size: 0.8rem;
+}
+
+.current-device {
+  background: #c6f6d5;
+  color: #2f855a;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.log-filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.log-filters .form-select,
+.log-filters .form-input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.security-log {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.log-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.log-icon {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.log-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.log-icon.login {
+  background: #e6fffa;
+}
+
+.log-icon.login svg {
+  fill: #319795;
+}
+
+.log-icon.password {
+  background: #fff5f5;
+}
+
+.log-icon.password svg {
+  fill: #e53e3e;
+}
+
+.log-icon.security {
+  background: #f0fff4;
+}
+
+.log-icon.security svg {
+  fill: #38a169;
+}
+
+.log-content {
+  flex: 1;
+}
+
+.log-action {
+  color: #2d3748;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.log-details {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.log-time,
+.log-ip,
+.log-location {
+  color: #a0aec0;
+  font-size: 0.8rem;
+}
+
+.log-status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.log-status.success {
+  background: #c6f6d5;
+  color: #2f855a;
+}
+
+.log-status.failed {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.log-pagination {
+  text-align: center;
+}
+
+.two-factor-setup {
+  margin-top: 16px;
+}
+
+.setup-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  background: #667eea;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h4 {
+  margin: 0 0 8px 0;
+  color: #2d3748;
+  font-size: 1rem;
+}
+
+.step-content p {
+  margin: 0 0 12px 0;
+  color: #718096;
+  font-size: 0.875rem;
+}
+
+.qr-code {
+  margin: 12px 0;
+}
+
+.qr-placeholder {
+  width: 200px;
+  height: 200px;
+  background: #f7fafc;
+  border: 2px dashed #cbd5e0;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.qr-placeholder svg {
+  width: 48px;
+  height: 48px;
+  fill: #a0aec0;
+}
+
+.qr-placeholder p {
+  color: #a0aec0;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.verification-input {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.verification-input .form-input {
+  max-width: 200px;
+}
+
+.two-factor-enabled {
+  margin-top: 16px;
+}
+
+.enabled-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f0fff4;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.check-icon {
+  width: 24px;
+  height: 24px;
+  fill: #38a169;
+}
+
+.enabled-info h4 {
+  margin: 0 0 4px 0;
+  color: #2d3748;
+}
+
+.enabled-info p {
+  margin: 0;
+  color: #718096;
+  font-size: 0.875rem;
+}
+
+.backup-codes h4 {
+  margin: 0 0 8px 0;
+  color: #2d3748;
+}
+
+.backup-codes p {
+  margin: 0 0 16px 0;
+  color: #718096;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.codes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.backup-code {
+  padding: 8px 12px;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  text-align: center;
+  color: #4a5568;
+}
+
+.codes-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 /* 响应式设计 */

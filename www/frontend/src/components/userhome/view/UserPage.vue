@@ -95,8 +95,8 @@
             
             <div class="form-section">
               <label class="form-label">专业领域</label>
-              <div class="tag-input">
-                <div v-for="(tag, index) in templateData.tags" :key="index" class="tag-item">
+              <div class="tags-input">
+                <div v-for="(tag, index) in templateData.tags" :key="index" class="tag">
                   <span>{{ tag }}</span>
                   <button @click="removeTag(index)" class="tag-remove">
                     <svg viewBox="0 0 24 24" class="icon">
@@ -141,61 +141,7 @@
           </div>
           
           <!-- 右侧：预览区域 -->
-          <div class="preview-panel">
-            <div class="panel-header">
-              <h3>实时预览</h3>
-            </div>
-            
-            <div class="template-preview">
-              <div class="user-header">
-                <div class="user-avatar-large">
-                  <img :src="user?.avatar || '/default-avatar.png'" alt="用户头像" />
-                </div>
-                <h1 class="user-name">{{ user?.username || '用户名' }}</h1>
-                <div class="user-tags">
-                  <span v-for="tag in templateData.tags" :key="tag" class="tag">{{ tag }}</span>
-                </div>
-              </div>
-              
-              <div class="user-bio">
-                <p>{{ templateData.bio || '这里是您的个人简介...' }}</p>
-              </div>
-              
-              <div class="quick-stats">
-                <div class="stat-item">
-                  <span class="stat-number">{{ userStats.created }}</span>
-                  <span class="stat-label">创建页面</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-number">{{ userStats.edited }}</span>
-                  <span class="stat-label">编辑次数</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-number">{{ userStats.points }}</span>
-                  <span class="stat-label">积分</span>
-                </div>
-              </div>
-              
-              <div v-if="templateData.socialLinks.length" class="social-links-preview">
-                <h4>社交链接</h4>
-                <div class="social-buttons">
-                  <a 
-                    v-for="link in templateData.socialLinks" 
-                    :key="link.platform"
-                    :href="link.url"
-                    target="_blank"
-                    class="social-btn"
-                    :class="link.platform"
-                  >
-                    <svg viewBox="0 0 24 24" class="icon">
-                      <path :d="getSocialIcon(link.platform)"/>
-                    </svg>
-                    {{ getSocialLabel(link.platform) }}
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
+          
         </div>
       </div>
       
@@ -228,7 +174,7 @@
           <div class="code-actions">
             <div class="help-text">
               <svg viewBox="0 0 24 24" class="icon">
-                <path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"/>
+                <path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M11,17H13V11H11V17Z"/>
               </svg>
               支持HTML、CSS和JavaScript。请遵守社区规范，禁止恶意代码。
             </div>
@@ -239,6 +185,71 @@
               </svg>
               提交审核
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 模板预览模态框 -->
+    <div v-if="showTemplatePreview" class="preview-modal" @click="showTemplatePreview = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>模板预览</h3>
+          <button @click="showTemplatePreview = false" class="close-btn">
+            <svg viewBox="0 0 24 24" class="icon">
+              <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="template-preview-full">
+            <div class="user-header">
+              <div class="user-avatar-large">
+                <img :src="user?.avatar || '/default-avatar.png'" alt="用户头像" />
+              </div>
+              <h1 class="user-name">{{ user?.username || '用户名' }}</h1>
+              <div class="user-tags">
+                <span v-for="tag in templateData.tags" :key="tag" class="tag">{{ tag }}</span>
+              </div>
+            </div>
+            
+            <div class="user-bio">
+              <p>{{ templateData.bio || '这里是您的个人简介...' }}</p>
+            </div>
+            
+            <div class="quick-stats">
+              <div class="stat-item">
+                <span class="stat-number">{{ userStats.created }}</span>
+                <span class="stat-label">创建页面</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">{{ userStats.edited }}</span>
+                <span class="stat-label">编辑次数</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">{{ userStats.points }}</span>
+                <span class="stat-label">积分</span>
+              </div>
+            </div>
+            
+            <div v-if="templateData.socialLinks.length" class="social-links-preview">
+              <h4>社交链接</h4>
+              <div class="social-buttons">
+                <a 
+                  v-for="link in templateData.socialLinks" 
+                  :key="link.platform"
+                  :href="link.url"
+                  target="_blank"
+                  class="social-btn"
+                  :class="link.platform"
+                >
+                  <svg viewBox="0 0 24 24" class="icon">
+                    <path :d="getSocialIcon(link.platform)"/>
+                  </svg>
+                  {{ getSocialLabel(link.platform) }}
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -255,6 +266,7 @@ const { user } = useAuth()
 // 模式控制
 const mode = ref<'template' | 'custom'>('template')
 const pendingReview = ref(false)
+const showTemplatePreview = ref(false)
 
 // 模板数据
 const templateData = reactive({
@@ -296,8 +308,32 @@ const switchMode = (newMode: 'template' | 'custom') => {
 }
 
 const previewPage = () => {
-  console.log('预览页面')
-  // TODO: 实现预览功能
+  if (mode.value === 'template') {
+    // 模板模式：显示当前编辑内容的预览
+    showTemplatePreview.value = true
+  } else {
+    // 自定义代码模式：在新窗口中预览代码效果
+    const previewWindow = window.open('', '_blank', 'width=800,height=600')
+    if (previewWindow) {
+      const htmlContent = [
+        '<!DOCTYPE html>',
+        '<html lang="zh-CN">',
+        '<head>',
+        '<meta charset="UTF-8">',
+        '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
+        '<title>我的主页预览</title>',
+        '<style>' + customCode.css + '</style>',
+        '</head>',
+        '<body>',
+        customCode.html,
+        '<' + 'script>' + customCode.js + '</' + 'script>',
+        '</body>',
+        '</html>'
+      ].join('\n')
+      previewWindow.document.write(htmlContent)
+      previewWindow.document.close()
+    }
+  }
 }
 
 const savePage = () => {
@@ -540,6 +576,61 @@ const getCodePlaceholder = (tab: string) => {
   width: 18px;
   height: 18px;
   fill: currentColor;
+}
+
+.save-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.save-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.6s;
+}
+
+.save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
+  background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+}
+
+.save-btn:hover::before {
+  left: 100%;
+}
+
+.save-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 15px rgba(72, 187, 120, 0.5);
+}
+
+.save-btn .icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  transition: transform 0.3s ease;
+}
+
+.save-btn:hover .icon {
+  transform: scale(1.1);
 }
 
 .toolbar-stats {
@@ -927,6 +1018,197 @@ const getCodePlaceholder = (tab: string) => {
 }
 
 .submit-review-btn .icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+/* 模态框样式 */
+.preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90%;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.close-btn .icon {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+}
+
+.template-preview-full {
+  max-width: none;
+}
+
+.template-preview-full .user-header {
+  text-align: center;
+  margin-bottom: 32px;
+  padding: 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 16px;
+}
+
+.template-preview-full .user-avatar-large {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  overflow: hidden;
+  border: 4px solid white;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.template-preview-full .user-avatar-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.template-preview-full .user-name {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #2d3748;
+}
+
+.template-preview-full .user-tags {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.template-preview-full .user-bio {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  line-height: 1.6;
+  color: #4a5568;
+}
+
+.template-preview-full .quick-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.template-preview-full .stat-item {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.template-preview-full .stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #667eea;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.template-preview-full .stat-label {
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+.template-preview-full .social-links-preview {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.template-preview-full .social-links-preview h4 {
+  margin: 0 0 16px 0;
+  color: #2d3748;
+  font-size: 1.2rem;
+}
+
+.template-preview-full .social-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.template-preview-full .social-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.template-preview-full .social-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.template-preview-full .social-btn .icon {
   width: 18px;
   height: 18px;
   fill: currentColor;
