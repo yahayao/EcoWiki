@@ -30,7 +30,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+
+// -------------- Props 定义 --------------
+interface Props {
+  visible?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  visible: false
+})
+
+// -------------- Emits 定义 --------------
+const emit = defineEmits<{
+  close: []
+}>()
 
 // -------------- 基本配置 --------------
 const W = 800, H = 400
@@ -44,7 +58,7 @@ const OBSTACLE_CHANCE = 0.3
 // -------------- 响应式状态 --------------
 const canvas = ref<HTMLCanvasElement>()
 const ctx = ref<CanvasRenderingContext2D>()
-const isVisible = ref(true)
+const isVisible = ref(props.visible)
 const gameStarted = ref(false)
 const gameOver = ref(false)
 const lives = ref(3)
@@ -65,28 +79,46 @@ let keys: Record<string, boolean> = {}
 
 // -------------- 初始化 --------------
 function initGame () {
-  player = { x: W * 0.2, y: H / 2, w: 30, h: 30, vy: 0, onGround: false, canDouble: true }
-  platforms = [{ x: 0, y: H - 60, w: 300, h: PLATFORM_H }]
+  // 重置玩家到初始平台上
+  const initialPlatformY = H - 60
+  player = { 
+    x: W * 0.2, // 玩家在屏幕的固定位置
+    y: initialPlatformY - 30, // 确保玩家在平台上方
+    w: 30, 
+    h: 30, 
+    vy: 0, 
+    onGround: false, // 初始状态让玩家自然下落到平台上
+    canDouble: true 
+  }
+  // 初始平台从x=0开始，确保玩家能站在上面
+  platforms = [{ x: 0, y: initialPlatformY, w: 300, h: PLATFORM_H }]
   obstacles = []
   offsetX = 0
   lastPlatformX = 300
   lastObstacleX = 600
   lives.value = 3
   score.value = 0
+  gameStarted.value = false
+  gameOver.value = false
 }
 
 // -------------- 生成平台 --------------
 function addPlatform () {
   const prev = platforms[platforms.length - 1]
   const x = lastPlatformX + GAP_MIN + Math.random() * (GAP_MAX - GAP_MIN)
-  const y = prev.y + (Math.random() - 0.5) * 120
-  const w = 100 + Math.random() * 150
-  platforms.push({ x, y: Math.min(Math.max(y, H * 0.6), H - PLATFORM_H), w, h: PLATFORM_H })
+  // 限制平台Y坐标范围，确保可达性
+  const maxY = H - PLATFORM_H - 20 // 距离底部至少20像素
+  const minY = 100 // 距离顶部至少100像素
+  let y = prev.y + (Math.random() - 0.5) * 80 // 减小高度变化范围
+  y = Math.min(Math.max(y, minY), maxY)
+  
+  const w = 120 + Math.random() * 100 // 确保平台足够宽
+  platforms.push({ x, y, w, h: PLATFORM_H })
   lastPlatformX = x + w
 
-  // 随机障碍物
+  // 随机障碍物 - 放置在平台上方
   if (Math.random() < OBSTACLE_CHANCE && x - lastObstacleX > 200) {
-    obstacles.push({ x: x + w / 2, y: y - 25, w: 20, h: 25 })
+    obstacles.push({ x: x + w / 2 - 10, y: y - 25, w: 20, h: 25 })
     lastObstacleX = x
   }
 }
@@ -109,18 +141,36 @@ function update () {
   player.y += player.vy
   player.onGround = false
 
-  // 与平台碰撞
+  // 与平台碰撞 - 修复坐标系问题
   for (const p of platforms) {
-    if (
-      player.x < p.x + p.w &&
-      player.x + player.w > p.x &&
-      player.y + player.h > p.y &&
-      player.y + player.h < p.y + p.h + player.vy
-    ) {
-      player.y = p.y - player.h
+    // 将平台的世界坐标转换为屏幕坐标进行碰撞检测
+    const platformScreenX = p.x - offsetX
+    const platformScreenY = p.y
+    
+    // 检查水平重叠
+    const horizontalOverlap = player.x + player.w > platformScreenX && 
+                             player.x < platformScreenX + p.w
+    
+    // 检查垂直碰撞（玩家底部接触平台顶部）
+    const verticalCollision = player.y + player.h >= platformScreenY && 
+                             player.y + player.h <= platformScreenY + p.h + Math.abs(player.vy) + 2
+    
+    // 只有下降时才能着陆
+    if (horizontalOverlap && verticalCollision && player.vy >= 0) {
+      player.y = platformScreenY - player.h
       player.vy = 0
       player.onGround = true
       player.canDouble = true
+      // 调试信息
+      console.log('着陆成功！', { 
+        playerX: player.x, 
+        playerY: player.y, 
+        platformScreenX, 
+        platformScreenY,
+        horizontalOverlap,
+        verticalCollision
+      })
+      break // 找到一个平台就退出
     }
   }
 
@@ -136,13 +186,17 @@ function update () {
     player.vy = 0
   }
 
-  // 障碍物碰撞
+  // 障碍物碰撞 - 修复坐标系问题
   for (const o of obstacles) {
+    // 将障碍物的世界坐标转换为屏幕坐标进行碰撞检测
+    const obstacleScreenX = o.x - offsetX
+    const obstacleScreenY = o.y
+    
     if (
-      player.x < o.x + o.w &&
-      player.x + player.w > o.x &&
-      player.y < o.y + o.h &&
-      player.y + player.h > o.y
+      player.x < obstacleScreenX + o.w &&
+      player.x + player.w > obstacleScreenX &&
+      player.y < obstacleScreenY + o.h &&
+      player.y + player.h > obstacleScreenY
     ) {
       obstacles = obstacles.filter(ob => ob !== o)
       lives.value--
@@ -209,6 +263,9 @@ function handleKeyUp (e: KeyboardEvent) {
 
 // -------------- 对外 --------------
 function startGame () {
+  // 停止之前的游戏循环
+  if (id) cancelAnimationFrame(id)
+  
   initGame()
   gameStarted.value = true
   gameOver.value = false
@@ -217,8 +274,34 @@ function startGame () {
 }
 function closeGame () {
   isVisible.value = false
+  emit('close')
   if (id) cancelAnimationFrame(id)
 }
+
+// 对外暴露的打开游戏方法
+function openGame () {
+  isVisible.value = true
+  if (!gameStarted.value && !gameOver.value) {
+    initGame()
+  }
+}
+
+// 暴露给父组件使用
+defineExpose({
+  openGame,
+  closeGame
+})
+
+// -------------- 监听 Props 变化 --------------
+watch(() => props.visible, (newVal) => {
+  isVisible.value = newVal
+  if (newVal && !gameStarted.value && !gameOver.value) {
+    initGame()
+  }
+  if (!newVal && id) {
+    cancelAnimationFrame(id)
+  }
+})
 
 // -------------- 生命周期 --------------
 onMounted(() => {
