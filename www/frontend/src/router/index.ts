@@ -50,7 +50,6 @@ import UserArticle from '../components/userhome/view/UserArticle.vue'
 import AdminLayout from '../components/admin/AdminLayout.vue'
 import SystemSettings from '../components/admin/views/SystemSettings.vue'
 import UserList from '../components/admin/views/UserList.vue'
-import RoleManagement from '../components/admin/views/RoleManagement.vue'
 import PermissionManagement from '../components/admin/views/PermissionManagement.vue'
 import RolePermissionAssignment from '../components/admin/views/RolePermissionAssignment.vue'
 import ArticleManagement from '../components/admin/views/ArticleManagement.vue'
@@ -86,7 +85,6 @@ const routes = [
       { path: 'settings'        , name: 'AdminSettings'       , component: SystemSettings           },// 系统设置页面
       { path: 'users'           , name: 'AdminUsers'          , component: UserList                 },// 用户管理页面
       { path: 'articles'        , name: 'AdminArticles'       , component: ArticleManagement        },// 文章管理页面
-      { path: 'roles'           , name: 'AdminRoles'          , component: RoleManagement           },// 角色权限管理页面
       { path: 'permissions'     , name: 'AdminPermissions'    , component: PermissionManagement     },// 权限管理页面
       { path: 'role-permissions', name: 'AdminRolePermissions', component: RolePermissionAssignment } // 角色权限分配页面
     ]
