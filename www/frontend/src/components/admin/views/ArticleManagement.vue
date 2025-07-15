@@ -5,9 +5,19 @@
 -->
 <template>
   <div class="article-management">
-    <!-- 页面标题和操作按钮区域 -->
-    <div class="section-header">
-      <h3>📄 文章管理</h3>
+    <!-- 页面标题区域 -->
+    <div class="page-header">
+      <div class="header-content">
+        <div class="header-icon">
+          <svg viewBox="0 0 24 24" class="icon">
+            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+          </svg>
+        </div>
+        <div class="header-text">
+          <h1 class="page-title">文章管理</h1>
+          <p class="page-subtitle">管理系统文章内容和发布状态</p>
+        </div>
+      </div>
       <div class="header-actions">
         <!-- 创建文章按钮 -->
         <button class="create-btn" @click="showCreateModal = true">
@@ -535,31 +545,65 @@ defineExpose({
 
 <style scoped>
 .article-management {
-  padding: 20px;
-  background: #f5f5f5;
+  padding: 24px;
+  background: #f8fafb;
   min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-.section-header {
+/* 页面标题区域 */
+.page-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 15px 20px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  justify-content: space-between;
+  margin-bottom: 32px;
 }
 
-.section-header h3 {
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.header-icon .icon {
+  width: 24px;
+  height: 24px;
+  fill: white;
+}
+
+.header-text {
+  flex: 1;
+}
+
+.page-title {
   margin: 0;
-  color: #333;
-  font-size: 1.5em;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a202c;
+  letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+  margin: 4px 0 0 0;
+  color: #718096;
+  font-size: 16px;
+  font-weight: 400;
 }
 
 .header-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
 }
 
 .create-btn, .refresh-btn {

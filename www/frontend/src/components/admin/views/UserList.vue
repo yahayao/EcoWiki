@@ -6,9 +6,19 @@
 -->
 <template>
   <div class="user-management">
-    <!-- 页面标题和操作按钮区域 -->
-    <div class="section-header">
-      <h3>👥 用户管理</h3>
+    <!-- 页面标题区域 -->
+    <div class="page-header">
+      <div class="header-content">
+        <div class="header-icon">
+          <svg viewBox="0 0 24 24" class="icon">
+            <path d="M16,4C16.88,4 17.67,4.5 18,5.26L19,7H20A2,2 0 0,1 22,9V19A2,2 0 0,1 20,21H4A2,2 0 0,1 2,19V9C2,8.62 2.1,8.26 2.21,7.93L5.74,3.58C5.95,3.22 6.33,3 6.74,3H13.26C13.67,3 14.05,3.22 14.26,3.58L15.79,6H16M16,6A2,2 0 0,0 14,8A2,2 0 0,0 16,10A2,2 0 0,0 18,8A2,2 0 0,0 16,6Z" />
+          </svg>
+        </div>
+        <div class="header-text">
+          <h1 class="page-title">用户管理</h1>
+          <p class="page-subtitle">管理系统用户信息和角色权限</p>
+        </div>
+      </div>
       <div class="header-actions">
         <!-- 刷新按钮 -->
         <button class="refresh-btn" @click="loadUsers" :disabled="loading">
@@ -559,20 +569,65 @@ const getRoleDisplayName = (role: string) => {
 <style scoped>
 /* 用户管理主容器样式 */
 .user-management {
-  background: white;
   padding: 24px;
-  border-radius: 0;
+  background: #f8fafb;
   min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* 页面标题和操作按钮区域布局 */
-.section-header {
+/* 页面标题区域 */
+.page-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  flex-wrap: nowrap;
-  min-width: 0;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.header-icon .icon {
+  width: 24px;
+  height: 24px;
+  fill: white;
+}
+
+.header-text {
+  flex: 1;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a202c;
+  letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+  margin: 4px 0 0 0;
+  color: #718096;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
 }
 
 /* 搜索和筛选区域样式 */
@@ -830,17 +885,16 @@ const getRoleDisplayName = (role: string) => {
 
 /* 用户表格容器样式 */
 .users-table {
-  overflow-x: auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
 }
 
 /* 用户表格样式 */
 .users-table table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* 表格单元格样式 */
@@ -848,14 +902,14 @@ const getRoleDisplayName = (role: string) => {
 .users-table td {
   padding: 12px;
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #eee;
 }
 
 /* 表格标题行样式 */
 .users-table th {
-  background: #f7fafc;
+  background: #f8f9fa;
   font-weight: 600;
-  color: #2d3748;
+  color: #333;
 }
 
 /* 可排序表头样式 */
@@ -942,60 +996,61 @@ const getRoleDisplayName = (role: string) => {
 /* 角色选择下拉框样式 */
 .role-select {
   padding: 4px 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #ddd;
   border-radius: 4px;
   background: white;
-  font-size: 0.9rem;
+  font-size: 12px;
 }
 
 /* 状态指示器基础样式 */
 .status-indicator {
-  padding: 4px 12px;
+  padding: 4px 8px;
   border-radius: 4px;
-  font-size: 0.8rem;
+  font-size: 12px;
   font-weight: 500;
 }
 
 /* 激活状态指示器样式 */
 .status-active {
-  background: #c6f6d5;
-  color: #2f855a;
+  background: #c8e6c9;
+  color: #2e7d32;
 }
 
 /* 非激活状态指示器样式 */
 .status-inactive {
-  background: #fed7d7;
-  color: #c53030;
+  background: #ffcdd2;
+  color: #d32f2f;
 }
 
 /* 操作按钮基础样式 */
 .action-btn {
   padding: 4px 8px;
+  margin: 0 2px;
   border: none;
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 12px;
   transition: all 0.2s;
 }
 
 /* 禁用按钮样式 */
 .disable-btn {
-  background: #fed7d7;
-  color: #c53030;
+  background: #f44336;
+  color: white;
 }
 
 .disable-btn:hover:not(:disabled) {
-  background: #feb2b2;
+  background: #d32f2f;
 }
 
 /* 恢复按钮样式 */
 .restore-btn {
-  background: #c6f6d5;
-  color: #2f855a;
+  background: #4caf50;
+  color: white;
 }
 
 .restore-btn:hover:not(:disabled) {
-  background: #9ae6b4;
+  background: #388e3c;
 }
 
 /* 禁用状态的操作按钮样式 */

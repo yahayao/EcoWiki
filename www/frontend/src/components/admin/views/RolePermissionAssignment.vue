@@ -1,15 +1,20 @@
 <template>
   <!-- 角色权限分配主容器 -->
   <div class="role-permission-assignment">
-    <!-- 页面头部区域 -->
-    <div class="admin-header">
-      <!-- 标题内容区域 -->
-      <div class="admin-header-content">
-        <h1 class="admin-title">角色权限分配</h1>
-        <p class="admin-subtitle">管理角色的权限分配</p>
+    <!-- 页面标题区域 -->
+    <div class="page-header">
+      <div class="header-content">
+        <div class="header-icon">
+          <svg viewBox="0 0 24 24" class="icon">
+            <path d="M12,1L21,5V11C21,16.55 17.16,21.74 12,23C6.84,21.74 3,16.55 3,11V5L12,1M10,7V9H8V7H10M16,7V9H14V7H16M8,11V13H10V11H8M14,11V13H16V11H14M10,15V17H8V15H10M16,15V17H14V15H16Z" />
+          </svg>
+        </div>
+        <div class="header-text">
+          <h1 class="page-title">角色权限分配</h1>
+          <p class="page-subtitle">管理角色的权限分配</p>
+        </div>
       </div>
-      <!-- 操作按钮区域 -->
-      <div class="admin-actions">
+      <div class="header-actions">
         <!-- 创建角色按钮，点击显示创建模态框 -->
         <button 
           class="btn btn-primary"
@@ -22,7 +27,7 @@
     </div>
 
     <!-- 主内容区域 -->
-    <div class="admin-content">
+    <div class="main-content">
       <!-- 角色卡片网格展示区域 -->
       <div class="role-cards">
         <!-- 遍历所有角色，生成角色卡片 -->
@@ -668,40 +673,65 @@ defineExpose({
 
 /* 主容器样式 */
 .role-permission-assignment {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: #f8f9fa;
+  padding: 24px;
+  background: #f8fafb;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* 页面头部样式 */
-.admin-header {
+/* 页面标题区域 */
+.page-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 24px 32px;
-  background: white;
-  border-bottom: 1px solid #e9ecef;
+  justify-content: space-between;
+  margin-bottom: 32px;
 }
 
-.admin-header-content h1 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: #1e293b;
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
-.admin-subtitle {
-  margin: 4px 0 0 0;
-  color: #64748b;
-  font-size: 14px;
+.header-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-/* 主内容区域样式 */
-.admin-content {
+.header-icon .icon {
+  width: 24px;
+  height: 24px;
+  fill: white;
+}
+
+.header-text {
   flex: 1;
-  padding: 24px 32px;
-  overflow-y: auto;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a202c;
+  letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+  margin: 4px 0 0 0;
+  color: #718096;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
 }
 
 /* === 角色卡片样式 === */
@@ -1111,4 +1141,51 @@ input[type="checkbox"]:indeterminate::after {
 .icon-refresh::before { content: '🔄'; }
 .icon-shield::before { content: '🛡️'; }
 .icon-close::before { content: '×'; }
+
+/* === 响应式设计 === */
+@media (max-width: 768px) {
+  .role-permission-assignment {
+    padding: 16px;
+  }
+  
+  .page-title {
+    font-size: 24px;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .role-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .group-permissions {
+    grid-template-columns: 1fr;
+  }
+  
+  .assignment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .page-title {
+    font-size: 20px;
+  }
+  
+  .modal {
+    width: 95vw;
+  }
+}
 </style>

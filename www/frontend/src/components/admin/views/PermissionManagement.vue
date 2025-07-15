@@ -422,21 +422,18 @@ defineExpose({
 <style scoped>
 /* 权限管理主容器样式 */
 .permission-management {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: #f5f7fa;
+  padding: 24px;
+  background: #f8fafb;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* 页面头部样式 */
+/* 页面标题区域 */
 .page-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 24px 32px;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  justify-content: space-between;
+  margin-bottom: 32px;
 }
 
 /* 头部内容区域样式 */
@@ -455,27 +452,33 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .header-icon .icon {
   width: 24px;
   height: 24px;
-  fill: currentColor;
+  fill: white;
 }
 
 /* 头部文字样式 */
+.header-text {
+  flex: 1;
+}
+
 .header-text h1 {
   margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a202c;
+  letter-spacing: -0.5px;
 }
 
 .header-text p {
   margin: 4px 0 0 0;
-  color: #6b7280;
-  font-size: 14px;
+  color: #718096;
+  font-size: 16px;
+  font-weight: 400;
 }
 
 /* 头部操作按钮区域样式 */
@@ -486,9 +489,7 @@ defineExpose({
 
 /* 权限列表容器样式 */
 .permissions-container {
-  flex: 1;
-  padding: 24px 32px;
-  overflow: auto;
+  background: transparent;
 }
 
 /* 加载、错误和空状态样式 */
@@ -779,5 +780,78 @@ defineExpose({
 .warning-text {
   color: #ef4444;
   font-size: 14px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .permission-management {
+    padding: 16px;
+  }
+  
+  .header-text h1 {
+    font-size: 24px;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .list-header,
+  .permission-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .list-header {
+    display: none;
+  }
+  
+  .permission-row {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    padding: 16px;
+  }
+  
+  .cell {
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  
+  .cell:last-child {
+    border-bottom: none;
+  }
+  
+  .cell:before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #374151;
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  
+  .permission-actions {
+    justify-content: flex-end;
+    padding-top: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .header-text h1 {
+    font-size: 20px;
+  }
+  
+  .modal-content {
+    min-width: 95vw;
+  }
 }
 </style>
