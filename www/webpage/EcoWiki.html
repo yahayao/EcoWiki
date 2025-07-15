@@ -1,0 +1,816 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoWiki - 简约高性能的Wiki框架</title>
+    <meta name="description" content="EcoWiki是一款简约、高性能、易用、可扩展、安全、可靠的wiki框架，拥有属于自己的创新生态圈。">
+    <link href="https://oss.logoyq.com/vilook/website/css/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* 自定义主题色 - 紫色系列 */
+        :root {
+            --primary-color: #8B5CF6;
+            --secondary-color: #7C3AED;
+            --accent-color: #6D28D9;
+            --light-color: #EDE9FE;
+            --dark-color: #4C1D95;
+        }
+        
+        /* 通用样式 */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        .text-primary { color: var(--primary-color); }
+        .bg-primary { background-color: var(--primary-color); }
+        .border-primary { border-color: var(--primary-color); }
+        
+        /* 按钮悬停效果 */
+        .btn-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-hover:hover {
+            transform: scale(1.05);
+        }
+        
+        /* 卡片悬停效果 */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-5px);
+        }
+        
+        /* 自定义渐变背景 */
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+        }
+
+        /* 导航菜单下划线动画 */
+        .nav-link {
+            position: relative;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* 表单输入框聚焦效果 */
+        .form-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+        
+        /* 图标动画效果 */
+        .animate-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        .animate-icon:hover {
+            transform: translateY(-3px);
+        }
+        
+        /* 自定义波浪形状 */
+        .wave-shape {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            line-height: 0;
+        }
+        
+        .wave-shape svg {
+            position: relative;
+            display: block;
+            width: calc(100% + 1.3px);
+            height: 70px;
+        }
+        
+        .wave-shape .shape-fill {
+            fill: #FFFFFF;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .wave-shape svg {
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-sm fixed w-full z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="#hero" class="js-scroll">
+                        <img src="https://www.yanqueai.com/vilook/combined/20250715/10/ccc96fd7fed09a76b3ba4e29e45a1d0af5a846f8.png" alt="EcoWiki Logo" class="h-10">
+                    </a>
+                </div>
+                
+                <!-- 桌面端菜单 -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#features" class="nav-link text-gray-700 hover:text-primary font-medium js-scroll">功能特点</a>
+                    <a href="#ecosystem" class="nav-link text-gray-700 hover:text-primary font-medium js-scroll">生态系统</a>
+                    <a href="#plugins" class="nav-link text-gray-700 hover:text-primary font-medium js-scroll">插件扩展</a>
+                    <a href="#testimonials" class="nav-link text-gray-700 hover:text-primary font-medium js-scroll">用户评价</a>
+                    <a href="#contact" class="nav-link text-gray-700 hover:text-primary font-medium js-scroll">联系我们</a>
+                    <a href="#download" class="ml-4 px-6 py-2 bg-gradient-primary text-white font-medium rounded-lg btn-hover js-scroll">立即下载</a>
+                </div>
+                
+                <!-- 移动端菜单按钮 -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-button" class="text-gray-700">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 移动端菜单内容 -->
+            <div id="mobile-menu" class="md:hidden hidden mt-4 pb-2">
+                <a href="#features" class="block py-2 text-gray-700 hover:text-primary font-medium js-scroll">功能特点</a>
+                <a href="#ecosystem" class="block py-2 text-gray-700 hover:text-primary font-medium js-scroll">生态系统</a>
+                <a href="#plugins" class="block py-2 text-gray-700 hover:text-primary font-medium js-scroll">插件扩展</a>
+                <a href="#testimonials" class="block py-2 text-gray-700 hover:text-primary font-medium js-scroll">用户评价</a>
+                <a href="#contact" class="block py-2 text-gray-700 hover:text-primary font-medium js-scroll">联系我们</a>
+                <a href="#download" class="inline-block mt-2 px-6 py-2 bg-gradient-primary text-white font-medium rounded-lg btn-hover js-scroll">立即下载</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主页横幅 -->
+    <section id="hero" class="pt-24 pb-16 md:pt-32 md:pb-20 relative bg-gradient-primary text-white">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="md:w-1/2 mb-10 md:mb-0">
+                    <h1 class="text-3xl md:text-5xl font-bold leading-tight mb-4">EcoWiki - 打造简约高效的知识库</h1>
+                    <p class="text-lg md:text-xl mb-8 text-gray-100">一款简约、高性能、易用、可扩展、安全、可靠的Wiki框架，拥有属于自己的创新生态圈。</p>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <a href="#download" class="px-8 py-3 bg-white text-accent-color font-bold rounded-lg btn-hover text-center js-scroll">
+                            <i class="fas fa-download mr-2"></i>立即下载
+                        </a>
+                        <a href="#features" class="px-8 py-3 border-2 border-white text-white font-bold rounded-lg btn-hover text-center js-scroll">
+                            <i class="fas fa-info-circle mr-2"></i>了解更多
+                        </a>
+                    </div>
+                </div>
+                <div class="md:w-1/2">
+                    <img src="https://images.unsplash.com/photo-1591629351942-66ea6a946260?ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=80" alt="EcoWiki平台展示" class="rounded-lg shadow-2xl">
+                </div>
+            </div>
+        </div>
+        <div class="wave-shape">
+            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill"></path>
+            </svg>
+        </div>
+    </section>
+
+    <!-- 核心优势 -->
+    <section class="py-12 md:py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">为何选择 <span class="text-primary">EcoWiki</span></h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">EcoWiki专为企业和团队打造，核心强大而精简，让知识管理更加简单高效</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- 优势卡片1 -->
+                <div class="bg-white p-6 rounded-xl shadow-md card-hover">
+                    <div class="w-14 h-14 rounded-full bg-light-color flex items-center justify-center mb-5">
+                        <i class="fas fa-bolt text-2xl text-accent-color animate-icon"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">高性能设计</h3>
+                    <p class="text-gray-600">经过优化的代码结构和数据处理机制，即使在大型知识库中也能保持极速响应</p>
+                </div>
+                
+                <!-- 优势卡片2 -->
+                <div class="bg-white p-6 rounded-xl shadow-md card-hover">
+                    <div class="w-14 h-14 rounded-full bg-light-color flex items-center justify-center mb-5">
+                        <i class="fas fa-puzzle-piece text-2xl text-accent-color animate-icon"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">极易扩展</h3>
+                    <p class="text-gray-600">核心框架保持精简，所有额外功能通过插件生态系统提供，按需扩展</p>
+                </div>
+                
+                <!-- 优势卡片3 -->
+                <div class="bg-white p-6 rounded-xl shadow-md card-hover">
+                    <div class="w-14 h-14 rounded-full bg-light-color flex items-center justify-center mb-5">
+                        <i class="fas fa-lock text-2xl text-accent-color animate-icon"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">安全可靠</h3>
+                    <p class="text-gray-600">内置多层安全防护，保障您的知识资产安全，定期安全更新</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 功能特点 -->
+    <section id="features" class="py-12 md:py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">强大而精简的<span class="text-primary">核心功能</span></h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">我们专注于提供最核心、最高效的Wiki基础功能，让您的团队协作更加顺畅</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 左侧功能列表 -->
+                <div class="space-y-6">
+                    <!-- 功能1 -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm flex items-start card-hover">
+                        <div class="mr-4 bg-light-color p-3 rounded-lg">
+                            <i class="fas fa-pencil-alt text-accent-color text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-2">直观的编辑器</h3>
+                            <p class="text-gray-600">支持Markdown和所见即所得编辑模式，让内容创作更加流畅自然</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 功能2 -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm flex items-start card-hover">
+                        <div class="mr-4 bg-light-color p-3 rounded-lg">
+                            <i class="fas fa-sitemap text-accent-color text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-2">灵活的结构组织</h3>
+                            <p class="text-gray-600">自定义知识结构，支持多级目录和标签系统，轻松组织海量内容</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 功能3 -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm flex items-start card-hover">
+                        <div class="mr-4 bg-light-color p-3 rounded-lg">
+                            <i class="fas fa-search text-accent-color text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-2">高级搜索功能</h3>
+                            <p class="text-gray-600">全文搜索引擎，支持多条件过滤和智能推荐，快速定位所需内容</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右侧功能列表 -->
+                <div class="space-y-6">
+                    <!-- 功能4 -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm flex items-start card-hover">
+                        <div class="mr-4 bg-light-color p-3 rounded-lg">
+                            <i class="fas fa-history text-accent-color text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-2">版本历史控制</h3>
+                            <p class="text-gray-600">完整的版本历史记录，随时查看和回滚内容更改，杜绝误操作</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 功能5 -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm flex items-start card-hover">
+                        <div class="mr-4 bg-light-color p-3 rounded-lg">
+                            <i class="fas fa-users text-accent-color text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-2">多级权限管理</h3>
+                            <p class="text-gray-600">细粒度的权限控制系统，从页面级到部分内容级的权限设置</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 功能6 -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm flex items-start card-hover">
+                        <div class="mr-4 bg-light-color p-3 rounded-lg">
+                            <i class="fas fa-sync-alt text-accent-color text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-2">实时协作</h3>
+                            <p class="text-gray-600">多用户实时编辑同一文档，变更即时同步，提高团队协作效率</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 生态系统 -->
+    <section id="ecosystem" class="py-12 md:py-20 bg-white relative">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">创新<span class="text-primary">生态圈</span></h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">EcoWiki拥有完整的生态系统，支持各种应用场景，让知识管理更加灵活</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- 生态卡片1 -->
+                <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-md card-hover">
+                    <img src="https://images.unsplash.com/photo-1584572336928-7863a227d08a?ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=80" alt="团队协作" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-3">团队协作</h3>
+                        <p class="text-gray-600 mb-4">适合团队共同创建和维护知识库，支持实时编辑和协作讨论</p>
+                        <a href="#" class="inline-block text-primary font-medium hover:underline">
+                            了解更多 <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- 生态卡片2 -->
+                <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-md card-hover">
+                    <img src="https://images.unsplash.com/photo-1517292987719-0369a794ec0f?ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=80" alt="项目文档" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-3">项目文档</h3>
+                        <p class="text-gray-600 mb-4">为项目创建详尽的技术文档和使用指南，方便团队成员查阅</p>
+                        <a href="#" class="inline-block text-primary font-medium hover:underline">
+                            了解更多 <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- 生态卡片3 -->
+                <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-md card-hover">
+                    <img src="https://images.unsplash.com/photo-1553962482-406439cad88e?ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=80" alt="知识库建设" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-3">企业知识库</h3>
+                        <p class="text-gray-600 mb-4">构建企业内部知识体系，沉淀经验，加速新员工培训和知识传承</p>
+                        <a href="#" class="inline-block text-primary font-medium hover:underline">
+                            了解更多 <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 插件扩展 -->
+    <section id="plugins" class="py-12 md:py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4"><span class="text-primary">插件</span>扩展系统</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">EcoWiki核心精简，所有额外功能通过插件扩展，按需安装，灵活配置</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- 插件卡片1 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-light-color flex items-center justify-center mr-3">
+                            <i class="fas fa-chart-bar text-accent-color"></i>
+                        </div>
+                        <h3 class="text-lg font-bold">数据分析</h3>
+                    </div>
+                    <p class="text-gray-600">提供详细的内容访问和使用数据分析，了解知识库使用情况</p>
+                </div>
+                
+                <!-- 插件卡片2 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-light-color flex items-center justify-center mr-3">
+                            <i class="fas fa-comments text-accent-color"></i>
+                        </div>
+                        <h3 class="text-lg font-bold">评论讨论</h3>
+                    </div>
+                    <p class="text-gray-600">为页面添加评论和讨论功能，促进团队成员间的交流与协作</p>
+                </div>
+                
+                <!-- 插件卡片3 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-light-color flex items-center justify-center mr-3">
+                            <i class="fas fa-file-export text-accent-color"></i>
+                        </div>
+                        <h3 class="text-lg font-bold">导出工具</h3>
+                    </div>
+                    <p class="text-gray-600">支持多种格式导出，包括PDF、Word、HTML等，方便分享和存档</p>
+                </div>
+                
+                <!-- 插件卡片4 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-light-color flex items-center justify-center mr-3">
+                            <i class="fas fa-robot text-accent-color"></i>
+                        </div>
+                        <h3 class="text-lg font-bold">AI助手</h3>
+                    </div>
+                    <p class="text-gray-600">集成人工智能辅助，提供内容推荐、智能补全和自动分类</p>
+                </div>
+                
+                <!-- 插件卡片5 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-light-color flex items-center justify-center mr-3">
+                            <i class="fas fa-paint-brush text-accent-color"></i>
+                        </div>
+                        <h3 class="text-lg font-bold">主题模板</h3>
+                    </div>
+                    <p class="text-gray-600">丰富的主题和模板库，轻松打造符合企业风格的知识库</p>
+                </div>
+                
+                <!-- 插件卡片6 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-light-color flex items-center justify-center mr-3">
+                            <i class="fas fa-bell text-accent-color"></i>
+                        </div>
+                        <h3 class="text-lg font-bold">通知提醒</h3>
+                    </div>
+                    <p class="text-gray-600">内容更新、评论回复等事件的自定义通知，支持邮件和站内消息</p>
+                </div>
+                
+                <!-- 插件卡片7 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-light-color flex items-center justify-center mr-3">
+                            <i class="fas fa-language text-accent-color"></i>
+                        </div>
+                        <h3 class="text-lg font-bold">多语言支持</h3>
+                    </div>
+                    <p class="text-gray-600">内置多语言系统，支持界面和内容的多语言展示与切换</p>
+                </div>
+                
+                <!-- 插件卡片8 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-light-color flex items-center justify-center mr-3">
+                            <i class="fas fa-link text-accent-color"></i>
+                        </div>
+                        <h3 class="text-lg font-bold">第三方集成</h3>
+                    </div>
+                    <p class="text-gray-600">与常用工具如Slack、JIRA、Github等无缝集成，打通工作流</p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12">
+                <a href="#" class="inline-flex items-center px-8 py-3 bg-gradient-primary text-white font-bold rounded-lg btn-hover">
+                    <i class="fas fa-store mr-2"></i>浏览插件市场
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 用户评价 -->
+    <section id="testimonials" class="py-12 md:py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">用户的<span class="text-primary">真实评价</span></h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">看看其他团队如何使用EcoWiki构建他们的知识管理系统</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- 评价1 -->
+                <div class="bg-gray-50 p-6 rounded-xl shadow-sm card-hover">
+                    <div class="mb-6">
+                        <i class="fas fa-quote-left text-3xl text-light-color"></i>
+                    </div>
+                    <p class="text-gray-700 mb-6">EcoWiki让我们的团队文档管理变得前所未有的简单。插件系统特别灵活，我们只使用真正需要的功能，系统运行非常流畅。</p>
+                    <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80" alt="用户头像" class="w-12 h-12 rounded-full object-cover mr-4">
+                        <div>
+                            <h4 class="font-bold">张明</h4>
+                            <p class="text-sm text-gray-500">技术总监 / 云科技</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 评价2 -->
+                <div class="bg-gray-50 p-6 rounded-xl shadow-sm card-hover">
+                    <div class="mb-6">
+                        <i class="fas fa-quote-left text-3xl text-light-color"></i>
+                    </div>
+                    <p class="text-gray-700 mb-6">作为一家快速成长的初创企业，我们需要一个可以跟随我们成长的知识库。EcoWiki的性能和可扩展性令人印象深刻，完全满足我们的需求。</p>
+                    <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80" alt="用户头像" class="w-12 h-12 rounded-full object-cover mr-4">
+                        <div>
+                            <h4 class="font-bold">李佳</h4>
+                            <p class="text-sm text-gray-500">CEO / 星创科技</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 评价3 -->
+                <div class="bg-gray-50 p-6 rounded-xl shadow-sm card-hover">
+                    <div class="mb-6">
+                        <i class="fas fa-quote-left text-3xl text-light-color"></i>
+                    </div>
+                    <p class="text-gray-700 mb-6">我们公司的技术文档量非常大，EcoWiki的高级搜索功能帮助我们的开发者迅速找到所需信息，大大提高了工作效率。</p>
+                    <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80" alt="用户头像" class="w-12 h-12 rounded-full object-cover mr-4">
+                        <div>
+                            <h4 class="font-bold">王伟</h4>
+                            <p class="text-sm text-gray-500">研发经理 / 聚合数据</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 数据展示 -->
+    <section class="py-12 md:py-20 bg-gradient-primary text-white">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <!-- 数据1 -->
+                <div class="text-center">
+                    <div class="text-4xl md:text-5xl font-bold mb-2">5000+</div>
+                    <p class="text-lg">活跃用户</p>
+                </div>
+                
+                <!-- 数据2 -->
+                <div class="text-center">
+                    <div class="text-4xl md:text-5xl font-bold mb-2">200+</div>
+                    <p class="text-lg">可用插件</p>
+                </div>
+                
+                <!-- 数据3 -->
+                <div class="text-center">
+                    <div class="text-4xl md:text-5xl font-bold mb-2">99.9%</div>
+                    <p class="text-lg">可用性</p>
+                </div>
+                
+                <!-- 数据4 -->
+                <div class="text-center">
+                    <div class="text-4xl md:text-5xl font-bold mb-2">24/7</div>
+                    <p class="text-lg">技术支持</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 下载区域 -->
+    <section id="download" class="py-12 md:py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="bg-gray-50 rounded-2xl p-8 md:p-12 shadow-sm max-w-4xl mx-auto text-center">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">准备好开始使用 <span class="text-primary">EcoWiki</span> 了吗？</h2>
+                <p class="text-gray-600 mb-8 max-w-2xl mx-auto">立即下载并部署EcoWiki，开始构建您的知识管理系统。我们提供多种版本满足不同需求。</p>
+                
+                <div class="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-6">
+                    <a href="#" class="px-8 py-3 bg-gradient-primary text-white font-bold rounded-lg btn-hover">
+                        <i class="fas fa-download mr-2"></i>下载社区版
+                    </a>
+                    <a href="#" class="px-8 py-3 border-2 border-primary text-primary font-bold rounded-lg btn-hover">
+                        <i class="fas fa-briefcase mr-2"></i>企业版详情
+                    </a>
+                    <a href="#" class="px-8 py-3 bg-gray-800 text-white font-bold rounded-lg btn-hover">
+                        <i class="fab fa-github mr-2"></i>GitHub获取
+                    </a>
+                </div>
+                
+                <div class="mt-8 text-gray-500">
+                    <p>支持 Windows、macOS 和 Linux 系统</p>
+                    <div class="flex justify-center mt-4 space-x-6">
+                        <i class="fab fa-windows text-2xl"></i>
+                        <i class="fab fa-apple text-2xl"></i>
+                        <i class="fab fa-linux text-2xl"></i>
+                        <i class="fab fa-docker text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 联系我们 -->
+    <section id="contact" class="py-12 md:py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">联系<span class="text-primary">我们</span></h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">有任何问题或建议？请随时与我们联系，我们将尽快回复您</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <!-- 联系信息 -->
+                <div class="bg-white p-8 rounded-xl shadow-sm">
+                    <h3 class="text-2xl font-bold mb-6">联系方式</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-full bg-light-color flex items-center justify-center mr-4 mt-1">
+                                <i class="fas fa-envelope text-accent-color"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold mb-1">电子邮件</h4>
+                                <p class="text-gray-600">support@ecowiki.com</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-full bg-light-color flex items-center justify-center mr-4 mt-1">
+                                <i class="fas fa-phone-alt text-accent-color"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold mb-1">电话</h4>
+                                <p class="text-gray-600">+86 400-123-4567</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-full bg-light-color flex items-center justify-center mr-4 mt-1">
+                                <i class="fas fa-map-marker-alt text-accent-color"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold mb-1">地址</h4>
+                                <p class="text-gray-600">北京市海淀区中关村科技园</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8">
+                        <h4 class="font-bold mb-3">关注我们</h4>
+                        <div class="flex space-x-4">
+                            <a href="#" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-primary hover:text-white transition duration-300">
+                                <i class="fab fa-weixin"></i>
+                            </a>
+                            <a href="#" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-primary hover:text-white transition duration-300">
+                                <i class="fab fa-weibo"></i>
+                            </a>
+                            <a href="#" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-primary hover:text-white transition duration-300">
+                                <i class="fab fa-github"></i>
+                            </a>
+                            <a href="#" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-primary hover:text-white transition duration-300">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 联系表单 -->
+                <div class="bg-white p-8 rounded-xl shadow-sm">
+                    <h3 class="text-2xl font-bold mb-6">发送消息</h3>
+                    
+                    <form>
+                        <div class="mb-4">
+                            <label for="name" class="block text-gray-700 font-medium mb-2">姓名</label>
+                            <input type="text" id="name" class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="请输入您的姓名">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="email" class="block text-gray-700 font-medium mb-2">邮箱</label>
+                            <input type="email" id="email" class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="请输入您的邮箱">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="subject" class="block text-gray-700 font-medium mb-2">主题</label>
+                            <input type="text" id="subject" class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="请输入消息主题">
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="message" class="block text-gray-700 font-medium mb-2">消息内容</label>
+                            <textarea id="message" rows="4" class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="请输入您的消息内容"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="w-full px-6 py-3 bg-gradient-primary text-white font-bold rounded-lg btn-hover">
+                            发送消息
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-900 text-white pt-16 pb-8">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+                <!-- 公司信息 -->
+                <div>
+                    <img src="https://www.yanqueai.com/vilook/combined/20250715/10/ccc96fd7fed09a76b3ba4e29e45a1d0af5a846f8.png" alt="EcoWiki Logo" class="h-10 mb-4">
+                    <p class="text-gray-400 mb-4">一款简约、高性能、易用、可扩展、安全、可靠的Wiki框架</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <i class="fab fa-weixin"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <i class="fab fa-weibo"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <i class="fab fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- 产品 -->
+                <div>
+                    <h4 class="text-lg font-bold mb-4">产品</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">功能介绍</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">价格方案</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">插件市场</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">更新日志</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">路线图</a></li>
+                    </ul>
+                </div>
+                
+                <!-- 资源 -->
+                <div>
+                    <h4 class="text-lg font-bold mb-4">资源</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">文档中心</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">开发指南</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">API参考</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">社区论坛</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">视频教程</a></li>
+                    </ul>
+                </div>
+                
+                <!-- 公司 -->
+                <div>
+                    <h4 class="text-lg font-bold mb-4">公司</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">关于我们</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">联系我们</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">加入我们</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">博客</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">合作伙伴</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-gray-400">© 2025 EcoWiki. 保留所有权利。</p>
+                    <div class="flex space-x-6 mt-4 md:mt-0">
+                        <a href="#" class="text-gray-400 hover:text-white">服务条款</a>
+                        <a href="#" class="text-gray-400 hover:text-white">隐私政策</a>
+                        <a href="#" class="text-gray-400 hover:text-white">Cookie设置</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 返回顶部按钮 -->
+    <button id="back-to-top" class="fixed bottom-8 right-8 w-12 h-12 bg-gradient-primary text-white rounded-full shadow-lg flex items-center justify-center opacity-0 invisible transition-all duration-300">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- JavaScript -->
+    <script>
+        // 移动端菜单切换
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // 平滑滚动
+        document.querySelectorAll('.js-scroll').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                    
+                    // 关闭移动端菜单（如果打开）
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                }
+            });
+        });
+        
+        // 返回顶部按钮
+        const backToTopButton = document.getElementById('back-to-top');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopButton.classList.remove('opacity-0', 'invisible');
+                backToTopButton.classList.add('opacity-100', 'visible');
+            } else {
+                backToTopButton.classList.remove('opacity-100', 'visible');
+                backToTopButton.classList.add('opacity-0', 'invisible');
+            }
+        });
+        
+        backToTopButton.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    </script>
+</body>
+</html>
