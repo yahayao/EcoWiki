@@ -65,61 +65,33 @@ const routes = [
   { path: '/wiki/:title', name: 'ArticleDetail', component: ArticleDetail },
   { path: '/wiki/:title/history', name: 'ArticleHistory', component: ArticleHistory },
   { path: '/edit/:title', name: 'ArticleEdit', component: ArticleEdit },
-  { path: '/UserProfile', 
+  
+  {
+    path: '/UserProfile',
     component: UserProfile,
     redirect: '/UserProfile/Information', // 默认重定向到用户个人资料设置
     children: [
-      { path: 'Information', name: 'UserInformation', component: UserInformation },
-      { path: 'UserPage', name: 'UserPage', component: UserPage },
-      { path: 'Contribute', name: 'UserContribute', component: UserContribute },
-      { path: 'Article', name: 'UserArticle', component: UserArticle },
-      { path: 'Secure', name: 'UserSecure', component: UserSecure }
+      { path: 'Information'    , name: 'UserInformation'     , component: UserInformation           },// 用户信息设置
+      { path: 'UserPage'       , name: 'UserPage'            , component: UserPage                  },// 用户个人主页
+      { path: 'Contribute'     , name: 'UserContribute'      , component: UserContribute            },// 用户贡献记录
+      { path: 'Article'        , name: 'UserArticle'         , component: UserArticle               },// 用户文章列表
+      { path: 'Secure'         , name: 'UserSecure'          , component: UserSecure                } // 用户安全设置
     ]
-   },
+  },
   {
     path: '/admin',
     component: AdminLayout,
     redirect: '/admin/settings', // 默认重定向到系统设置
     children: [
-      // 系统设置页面
-      { 
-        path: 'settings', 
-        name: 'AdminSettings', 
-        component: SystemSettings 
-      },
-      // 用户管理页面
-      { 
-        path: 'users', 
-        name: 'AdminUsers', 
-        component: UserList 
-      },
-      // 文章管理页面
-      { 
-        path: 'articles', 
-        name: 'AdminArticles', 
-        component: ArticleManagement 
-      },
-      // 角色权限管理页面
-      { 
-        path: 'roles', 
-        name: 'AdminRoles', 
-        component: RoleManagement 
-      },
-      // 权限管理页面
-      { 
-        path: 'permissions', 
-        name: 'AdminPermissions', 
-        component: PermissionManagement 
-      },
-      // 角色权限分配页面
-      { 
-        path: 'role-permissions', 
-        name: 'AdminRolePermissions', 
-        component: RolePermissionAssignment 
-      }
+      { path: 'settings'        , name: 'AdminSettings'       , component: SystemSettings           },// 系统设置页面
+      { path: 'users'           , name: 'AdminUsers'          , component: UserList                 },// 用户管理页面
+      { path: 'articles'        , name: 'AdminArticles'       , component: ArticleManagement        },// 文章管理页面
+      { path: 'roles'           , name: 'AdminRoles'          , component: RoleManagement           },// 角色权限管理页面
+      { path: 'permissions'     , name: 'AdminPermissions'    , component: PermissionManagement     },// 权限管理页面
+      { path: 'role-permissions', name: 'AdminRolePermissions', component: RolePermissionAssignment } // 角色权限分配页面
     ]
   },
-  
+
   // 404 Not Found处理
   // 匹配所有未定义的路由，重定向到首页
   {
@@ -155,14 +127,14 @@ router.beforeEach((to, from, next) => {
     // 保存来源路由到localStorage，用于返回按钮功能
     localStorage.setItem('previous-route-before-admin', from.path)
   }
-  
+
   // 如果从管理后台离开到非管理后台页面，关闭管理后台模态框
   if (from.path.startsWith('/admin') && !to.path.startsWith('/admin')) {
     // 触发自定义事件来关闭管理后台模态框
     // 这个事件会被App.vue监听并处理
     window.dispatchEvent(new CustomEvent('close-admin-modal'))
   }
-  
+
   // 确认导航
   next()
 })
