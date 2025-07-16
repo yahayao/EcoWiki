@@ -44,11 +44,22 @@
     <div class="message-tabs">
       <div class="tabs-container">
         <button 
-          v-for="tab in tabs" 
+          v-for="(tab, index) in tabs" 
           :key="tab.key"
           class="tab-button"
-          :class="{ active: activeTab === tab.key }"
+          :class="{ 
+            active: activeTab === tab.key,
+            'drag-over': dragOverIndex === index,
+            'dragging': draggedTabIndex === index
+          }"
           @click="activeTab = tab.key"
+          @dragstart="handleDragStart($event, index)"
+          @dragenter="handleDragEnter(index)"
+          @dragleave="handleDragLeave"
+          @dragover.prevent="handleDragOver"
+          @drop="handleDrop($event, index)"
+          @dragend="handleDragEnd"
+          draggable="true"
         >
           <span class="tab-label">{{ tab.label }}</span>
           <span v-if="tab.key === 'unread' && unreadCount > 0" class="tab-badge">
@@ -270,12 +281,49 @@ const sendForm = ref({
 })
 
 // 标签页配置
-const tabs = [
+const defaultTabs = [
   { key: 'all', label: '全部消息' },
   { key: 'received', label: '收到的' },
   { key: 'sent', label: '发送的' },
   { key: 'unread', label: '未读消息' }
 ]
+
+// 从本地存储获取标签页顺序，如果没有则使用默认顺序
+const getTabsOrder = (): typeof defaultTabs => {
+  try {
+    const savedOrder = localStorage.getItem('messageTabsOrder')
+    if (savedOrder) {
+      const parsedOrder = JSON.parse(savedOrder)
+      // 验证保存的顺序是否有效
+      if (Array.isArray(parsedOrder) && parsedOrder.length === defaultTabs.length) {
+        const isValid = defaultTabs.every(defaultTab => 
+          parsedOrder.some(savedTab => savedTab.key === defaultTab.key)
+        )
+        if (isValid) {
+          return parsedOrder
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('读取标签页顺序失败:', error)
+  }
+  return [...defaultTabs]
+}
+
+// 保存标签页顺序到本地存储
+const saveTabsOrder = (tabs: typeof defaultTabs) => {
+  try {
+    localStorage.setItem('messageTabsOrder', JSON.stringify(tabs))
+  } catch (error) {
+    console.warn('保存标签页顺序失败:', error)
+  }
+}
+
+const tabs = ref(getTabsOrder())
+
+// 拖拽相关状态
+const draggedTabIndex = ref<number | null>(null)
+const dragOverIndex = ref<number | null>(null)
 
 // 监听标签页切换
 watch(activeTab, () => {
@@ -514,6 +562,77 @@ const formatTime = (timeStr: string): string => {
   if (diff < 604800000) return `${Math.floor(diff / 86400000)}天前`
   
   return time.toLocaleDateString('zh-CN')
+}
+
+/**
+ * 拖拽开始
+ */
+const handleDragStart = (event: DragEvent, index: number) => {
+  draggedTabIndex.value = index
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/html', '')
+  }
+}
+
+/**
+ * 拖拽进入
+ */
+const handleDragEnter = (index: number) => {
+  dragOverIndex.value = index
+}
+
+/**
+ * 拖拽离开
+ */
+const handleDragLeave = () => {
+  // 延迟清除，避免在子元素间移动时闪烁
+  setTimeout(() => {
+    dragOverIndex.value = null
+  }, 50)
+}
+
+/**
+ * 拖拽悬停
+ */
+const handleDragOver = (event: DragEvent) => {
+  event.preventDefault()
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move'
+  }
+}
+
+/**
+ * 拖拽放置
+ */
+const handleDrop = (event: DragEvent, dropIndex: number) => {
+  event.preventDefault()
+  
+  if (draggedTabIndex.value === null || draggedTabIndex.value === dropIndex) {
+    draggedTabIndex.value = null
+    dragOverIndex.value = null
+    return
+  }
+
+  // 重新排列标签页
+  const newTabs = [...tabs.value]
+  const draggedTab = newTabs.splice(draggedTabIndex.value, 1)[0]
+  newTabs.splice(dropIndex, 0, draggedTab)
+  
+  tabs.value = newTabs
+  saveTabsOrder(newTabs)
+  
+  // 清除拖拽状态
+  draggedTabIndex.value = null
+  dragOverIndex.value = null
+}
+
+/**
+ * 拖拽结束
+ */
+const handleDragEnd = () => {
+  draggedTabIndex.value = null
+  dragOverIndex.value = null
 }
 </script>
 
@@ -1527,5 +1646,25 @@ const formatTime = (timeStr: string): string => {
   cursor: not-allowed;
   transform: none !important;
   box-shadow: none !important;
+}
+
+/* 拖拽状态样式 */
+.tab-button.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+.tab-button.drag-over {
+  border-left: 3px solid #7c3aed;
+  padding-left: 9px;
+  transition: all 0.2s ease;
+}
+
+.tab-button[draggable="true"] {
+  cursor: move;
+}
+
+.tab-button[draggable="true"]:hover {
+  background: rgba(124, 58, 237, 0.1);
 }
 </style>
