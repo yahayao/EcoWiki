@@ -1,26 +1,31 @@
 package com.ecowiki.controller;
 
-import com.ecowiki.entity.ArticleVersion;
-import com.ecowiki.entity.ArticleVersionStats;
-import com.ecowiki.service.ArticleVersionService;
-import com.ecowiki.dto.ApiResponse;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.ecowiki.dto.ApiResponse;
+import com.ecowiki.entity.ArticleVersion;
+import com.ecowiki.entity.ArticleVersionStats;
+import com.ecowiki.service.ArticleVersionService;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-import java.util.stream.Collectors;
-
 /**
  * 文章版本控制器
  * 提供文章版本管理的REST API
@@ -91,7 +96,6 @@ public class ArticleVersionController {
         } catch (Exception e) {
             System.err.println("Error getting version content for articleId=" + articleId + 
                              ", versionNumber=" + versionNumber + ": " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.badRequest().body(ApiResponse.error("获取版本内容失败: " + e.getMessage()));
         }
     }
