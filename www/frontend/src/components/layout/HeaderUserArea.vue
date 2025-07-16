@@ -63,7 +63,10 @@
         <transition name="fade">
           <div v-if="showMenu" class="menu">
             <div @click="$emit('showUserProfile')" class="menu-item">个人主页</div>
-            <div class="menu-item">消息通知</div>
+            <div @click="$emit('showMessages')" class="menu-item">
+              <span>消息通知</span>
+              <span v-if="unreadCount > 0" class="unread-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+            </div>
             <div 
               v-if="hasAdminPermission" 
               @click="$emit('showAdminSettings')" 
@@ -95,9 +98,10 @@
  * 集成全局认证状态，提供动态的用户界面。
  */
 
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useAuth } from '../../composables/useAuth'
 import { userApi, USER_GROUPS } from '../../api/user'
+import { messageApi } from '../../api/message'
 
 /**
  * 组件事件定义
@@ -112,6 +116,8 @@ defineEmits<{
   showAdminSettings: []
   /** 显示个人中心界面事件 */
   showUserProfile: []
+  /** 显示消息面板事件 */
+  showMessages: []
   /** 用户登出事件 */
   logout: []
 }>()
@@ -121,6 +127,12 @@ defineEmits<{
  * 获取用户信息、登录状态和头像数据
  */
 const { user, isAuthenticated, userAvatar } = useAuth()
+
+/**
+ * 响应式数据
+ */
+const showMenu = ref(false)
+const unreadCount = ref(0)
 
 /**
  * 管理员权限检查
@@ -141,7 +153,50 @@ const hasAdminPermission = computed(() => {
   // 使用官方的权限检查函数，确保只有管理员和超级管理员可以看到设置
   return userApi.isAdmin(user.value)
 })
-const showMenu = ref(false)
+
+/**
+ * 加载未读消息数量
+ */
+const loadUnreadCount = async () => {
+  if (!user.value) {
+    unreadCount.value = 0
+    return
+  }
+  
+  try {
+    unreadCount.value = await messageApi.getUnreadCount()
+  } catch (error) {
+    console.error('获取未读消息数量失败:', error)
+    unreadCount.value = 0
+  }
+}
+
+/**
+ * 监听用户登录状态变化
+ */
+watch(isAuthenticated, (newValue) => {
+  if (newValue) {
+    loadUnreadCount()
+  } else {
+    unreadCount.value = 0
+  }
+})
+
+/**
+ * 组件挂载时加载未读消息数量
+ */
+onMounted(() => {
+  if (isAuthenticated.value) {
+    loadUnreadCount()
+  }
+  
+  // 定期更新未读消息数量（每30秒）
+  setInterval(() => {
+    if (isAuthenticated.value) {
+      loadUnreadCount()
+    }
+  }, 30000)
+})
 </script>
 
 <style scoped>
@@ -314,10 +369,29 @@ const showMenu = ref(false)
   color: #333;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .menu-item:hover {
   background-color: #f5f5f5;
+}
+
+/* 未读消息数量badge */
+.unread-badge {
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
 }
 
 /* Vue 过渡动画：淡入淡出 + 向下位移 10px */

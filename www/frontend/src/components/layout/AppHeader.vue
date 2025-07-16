@@ -58,6 +58,7 @@
         @showAdminSettings="$emit('showAdminSettings')"
         @logout="$emit('logout')"
         @showUserProfile="$emit('showUserProfile')"
+        @showMessages="$emit('showMessages')"
       />
     </div>
   </header>
@@ -88,6 +89,8 @@ defineEmits<{
   showAdminSettings: []
   /** 显示用户个人资料事件 */
   showUserProfile: []
+  /** 显示消息面板事件 */
+  showMessages: []
   /** 用户登出事件 */
   logout: []
 }>()
