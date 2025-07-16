@@ -30,6 +30,15 @@
           <IconCheck />
           <span>全部已读</span>
         </button>
+        <button 
+          class="action-btn danger" 
+          @click="deleteReadMessages"
+          :disabled="readCount === 0"
+          title="删除已读消息"
+        >
+          <IconTrash />
+          <span>删除已读</span>
+        </button>
         <button class="action-btn primary" @click="showSendDialog = true" title="发送消息">
           <IconSend />
           <span>发送消息</span>
@@ -268,6 +277,9 @@ const currentUserId = computed(() => {
 const loading = ref(false)
 const messages = ref<MessageDto[]>([])
 const unreadCount = ref(0)
+const readCount = computed(() => {
+  return messages.value.filter(msg => msg.status === '已读').length
+})
 const activeTab = ref('all')
 const currentPage = ref(0)
 const totalPages = ref(0)
@@ -532,6 +544,43 @@ const deleteMessage = async (messageId: number) => {
   } catch (error) {
     console.error('删除消息失败:', error)
     toast.error(error instanceof Error ? error.message : '删除失败')
+  }
+}
+
+/**
+ * 删除已读消息
+ */
+const deleteReadMessages = async () => {
+  try {
+    // 获取已读消息的ID列表
+    const readMessageIds = messages.value
+      .filter(msg => msg.status === '已读' && msg.recipientUserId === currentUserId.value)
+      .map(msg => msg.messageId)
+    
+    if (readMessageIds.length === 0) {
+      toast.info('没有已读消息可删除')
+      return
+    }
+    
+    // 确认删除
+    if (!confirm(`确定要删除 ${readMessageIds.length} 条已读消息吗？此操作不可撤销。`)) {
+      return
+    }
+    
+    // 批量删除已读消息
+    const deletePromises = readMessageIds.map(id => messageApi.deleteMessage(id))
+    await Promise.all(deletePromises)
+    
+    // 更新本地状态，移除已删除的消息
+    messages.value = messages.value.filter(msg => !readMessageIds.includes(msg.messageId))
+    
+    toast.success(`成功删除 ${readMessageIds.length} 条已读消息`)
+    
+    // 重新加载当前页面的消息
+    await loadMessages()
+  } catch (error) {
+    console.error('删除已读消息失败:', error)
+    toast.error('删除已读消息失败')
   }
 }
 
@@ -837,6 +886,18 @@ const handleDragEnd = () => {
 .action-btn.secondary:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.action-btn.danger {
+  background: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  color: #dc3545;
+}
+
+.action-btn.danger:hover:not(:disabled) {
+  background: rgba(220, 53, 69, 0.2);
+  border-color: rgba(220, 53, 69, 0.5);
   transform: translateY(-1px);
 }
 
