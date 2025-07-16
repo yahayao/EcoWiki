@@ -39,6 +39,16 @@ export interface SendMessageRequest {
 }
 
 /**
+ * 群发消息请求对象
+ */
+export interface BroadcastMessageRequest {
+  /** 接收用户ID列表 */
+  recipientUserIds: number[]
+  /** 消息内容 */
+  content: string
+}
+
+/**
  * 分页响应对象
  */
 export interface PageResponse<T> {
@@ -73,6 +83,19 @@ export const messageApi = {
     const response = await api.post<ApiResponse<MessageDto>>('/api/messages/send', request)
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '发送消息失败')
+    }
+    return response.data.data
+  },
+
+  /**
+   * 群发消息
+   * @param request 群发消息请求
+   * @returns 发送结果
+   */
+  async broadcastMessage(request: BroadcastMessageRequest): Promise<MessageDto[]> {
+    const response = await api.post<ApiResponse<MessageDto[]>>('/api/messages/broadcast', request)
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message || '群发消息失败')
     }
     return response.data.data
   },

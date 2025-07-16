@@ -201,9 +201,9 @@
           <div class="form-group">
             <label>接收用户ID：</label>
             <input 
-              v-model="sendForm.recipientUserId" 
-              type="number" 
-              placeholder="请输入用户ID"
+              v-model="sendForm.recipientUserIds" 
+              type="text" 
+              placeholder="输入用户ID，多个用逗号分隔，如：1,2,3"
               class="form-input"
             />
           </div>
@@ -222,7 +222,7 @@
           <button 
             class="send-btn" 
             @click="sendMessage"
-            :disabled="!sendForm.recipientUserId || !sendForm.content.trim()"
+            :disabled="!sendForm.recipientUserIds || !sendForm.content.trim()"
           >
             发送
           </button>
@@ -276,8 +276,9 @@ const expandedMessage = ref<number | null>(null)
 
 // 发送消息表单
 const sendForm = ref({
-  recipientUserId: null as number | null,
-  content: ''
+  recipientUserIds: '', // 改为字符串，支持多个ID用逗号分隔
+  content: '',
+  isBroadcast: false // 是否为群发
 })
 
 // 标签页配置
@@ -415,17 +416,43 @@ const changePage = (page: number) => {
  * 发送消息
  */
 const sendMessage = async () => {
-  if (!sendForm.value.recipientUserId || !sendForm.value.content.trim()) return
+  if (!sendForm.value.recipientUserIds.trim() || !sendForm.value.content.trim()) return
   
   try {
-    await messageApi.sendMessage({
-      recipientUserId: sendForm.value.recipientUserId,
-      content: sendForm.value.content.trim()
-    })
+    // 解析用户ID列表
+    const userIds = sendForm.value.recipientUserIds
+      .split(',')
+      .map(id => id.trim())
+      .filter(id => id && !isNaN(Number(id)))
+      .map(id => Number(id))
     
-    toast.success('消息发送成功')
+    if (userIds.length === 0) {
+      toast.error('请输入有效的用户ID')
+      return
+    }
+    
+    // 根据是否群发选择不同的发送方式
+    if (sendForm.value.isBroadcast && userIds.length > 1) {
+      // 群发消息
+      await messageApi.broadcastMessage({
+        recipientUserIds: userIds,
+        content: sendForm.value.content.trim()
+      })
+      toast.success(`群发消息成功，已发送给 ${userIds.length} 个用户`)
+    } else {
+      // 单独发送给每个用户
+      const promises = userIds.map(userId => 
+        messageApi.sendMessage({
+          recipientUserId: userId,
+          content: sendForm.value.content.trim()
+        })
+      )
+      await Promise.all(promises)
+      toast.success(`消息发送成功，已发送给 ${userIds.length} 个用户`)
+    }
+    
     showSendDialog.value = false
-    sendForm.value = { recipientUserId: null, content: '' }
+    sendForm.value = { recipientUserIds: '', content: '', isBroadcast: false }
     
     // 重新加载消息列表
     loadMessages()
@@ -1667,4 +1694,29 @@ const handleDragEnd = () => {
 .tab-button[draggable="true"]:hover {
   background: rgba(124, 58, 237, 0.1);
 }
+
+/* 新增样式：群发功能相关 */
+.input-hint {
+        font-size: 12px;
+        color: #666;
+        margin-top: 4px;
+        line-height: 1.4;
+      }
+      
+      .checkbox-container {
+        display: flex;
+        align-items: center;
+        margin-top: 8px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      
+      .checkbox-container input[type="checkbox"] {
+        margin-right: 8px;
+        cursor: pointer;
+      }
+      
+      .checkmark {
+        color: #007acc;
+      }
 </style>

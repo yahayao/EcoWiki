@@ -1,6 +1,7 @@
 package com.ecowiki.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -164,6 +165,55 @@ public class MessageService {
         messageRepository.deleteById(messageId);
     }
     
+    /**
+     * 群发消息
+     * @param senderUserId 发送者用户ID
+     * @param recipientUserIds 接收者用户ID列表
+     * @param content 消息内容
+     * @return 消息DTO列表
+     */
+    public List<MessageDto> broadcastMessage(Integer senderUserId, List<Integer> recipientUserIds, String content) {
+        // 验证发送者是否存在
+        Optional<User> sender = userRepository.findByUserId(senderUserId.longValue());
+        if (sender.isEmpty()) {
+            throw new RuntimeException("发送者用户不存在");
+        }
+        
+        List<MessageDto> sentMessages = new ArrayList<>();
+        
+        for (Integer recipientUserId : recipientUserIds) {
+            try {
+                // 验证接收者是否存在
+                Optional<User> recipient = userRepository.findByUserId(recipientUserId.longValue());
+                if (recipient.isEmpty()) {
+                    System.err.println("接收者用户不存在: " + recipientUserId);
+                    continue; // 跳过不存在的用户，继续发送给其他用户
+                }
+                
+                // 创建消息
+                Message message = new Message(recipientUserId, senderUserId, content);
+                message.setSendTime(LocalDateTime.now());
+                message.setStatus("未读");
+                
+                Message savedMessage = messageRepository.save(message);
+                
+                // 转换为DTO并添加到结果列表
+                MessageDto messageDto = convertToDto(savedMessage, sender.get(), recipient.get());
+                sentMessages.add(messageDto);
+                
+            } catch (Exception e) {
+                System.err.println("发送消息给用户 " + recipientUserId + " 失败: " + e.getMessage());
+                // 继续发送给其他用户
+            }
+        }
+        
+        if (sentMessages.isEmpty()) {
+            throw new RuntimeException("没有成功发送任何消息，请检查接收者用户ID");
+        }
+        
+        return sentMessages;
+    }
+
     /**
      * 转换Message实体为MessageDto
      * @param message 消息实体

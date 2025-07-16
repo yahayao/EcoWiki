@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecowiki.dto.ApiResponse;
+import com.ecowiki.dto.BroadcastMessageRequest;
 import com.ecowiki.dto.MessageDto;
 import com.ecowiki.dto.SendMessageRequest;
 import com.ecowiki.entity.User;
@@ -75,6 +76,36 @@ public class MessageController {
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("发送失败: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * 群发消息
+     * @param request 群发消息请求
+     * @param httpRequest HTTP请求
+     * @return 发送结果
+     */
+    @PostMapping("/broadcast")
+    public ResponseEntity<ApiResponse<List<MessageDto>>> broadcastMessage(
+            @RequestBody BroadcastMessageRequest request,
+            HttpServletRequest httpRequest) {
+        try {
+            User currentUser = getCurrentUser(httpRequest);
+            if (currentUser == null) {
+                return ResponseEntity.status(401)
+                    .body(ApiResponse.error("用户未登录"));
+            }
+            
+            List<MessageDto> messages = messageService.broadcastMessage(
+                currentUser.getUserId().intValue(),
+                request.getRecipientUserIds(),
+                request.getContent()
+            );
+            
+            return ResponseEntity.ok(ApiResponse.success(messages, "消息群发成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("群发失败: " + e.getMessage()));
         }
     }
     
