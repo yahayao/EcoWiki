@@ -317,6 +317,35 @@ export const adminApi = {
   },
 
   /**
+   * 获取所有启用的用户（用于联系人选择）
+   * 
+   * 获取系统中所有处于激活状态的用户列表，主要用于消息发送时的联系人选择功能。
+   * 返回精简的用户信息，包含ID、用户名、邮箱、头像等基本信息。
+   * 
+   * @returns Promise<UserContact[]> 启用用户列表
+   * @throws Error 当网络错误或权限不足时抛出异常
+   * 
+   * @example
+   * ```typescript
+   * const activeUsers = await adminApi.getAllActiveUsers()
+   * // 返回: [{ userId: 1, username: 'admin', email: 'admin@example.com', active: true }]
+   * ```
+   */
+  getAllActiveUsers: async () => {
+    try {
+      const response = await api.get('/admin/users/active')
+      if (response.data && response.data.code === 200 && response.data.data) {
+        return response.data.data
+      } else {
+        throw new Error(response.data?.message || '获取启用用户列表失败')
+      }
+    } catch (error: any) {
+      console.error('获取启用用户列表失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '获取启用用户列表失败')
+    }
+  },
+
+  /**
    * 更新用户权限组
    * 
    * 修改指定用户的角色权限组，这是用户权限管理的核心功能。

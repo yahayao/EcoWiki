@@ -1,7 +1,9 @@
 package com.ecowiki.controller.api.admin;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -24,6 +26,7 @@ import com.ecowiki.dto.ApiResponse;
 import com.ecowiki.dto.ArticleCreateRequest;
 import com.ecowiki.dto.ArticleDto;
 import com.ecowiki.dto.ArticleUpdateRequest;
+import com.ecowiki.dto.UserContactDto;
 import com.ecowiki.dto.UserWithRoleDto;
 import com.ecowiki.entity.Permission;
 import com.ecowiki.entity.RolePermission;
@@ -952,6 +955,60 @@ public class AdminController {
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("删除文章失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 获取所有启用的用户（用于联系人选择）
+     * 
+     * 获取系统中所有处于激活状态的用户列表，主要用于消息发送时的联系人选择功能。
+     * 返回精简的用户信息，包含ID、用户名、邮箱、全名、角色等基本信息。
+     * 
+     * @param request HTTP请求对象，用于获取当前用户信息
+     * @return ResponseEntity<ApiResponse<List<UserContactDto>>> 启用用户列表
+     */
+    @GetMapping("/users/active")
+    public ResponseEntity<ApiResponse<List<UserContactDto>>> getAllActiveUsers(HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            if (currentUser == null) {
+                return ResponseEntity.status(401)
+                    .body(ApiResponse.error("请先登录"));
+            }
+            
+            // 使用UserRepository中已有的方法获取所有启用的用户
+            List<User> activeUsers = userRepository.findAllActiveUsers();
+            
+            // 转换为DTO
+            List<UserContactDto> userContacts = activeUsers.stream()
+                .map(user -> {
+                    UserContactDto dto = new UserContactDto();
+                    dto.setUserId(user.getUserId());
+                    dto.setUsername(user.getUsername());
+                    dto.setEmail(user.getEmail());
+                    dto.setFullName(user.getFullName());
+                    dto.setActive(user.getActive());
+                    
+                    // 获取用户角色信息
+                    if (user.getRoleId() != null) {
+                        roleRepository.findById(user.getRoleId()).ifPresent(role -> {
+                            dto.setRoleId(user.getRoleId());
+                            dto.setRoleName(role.getRoleName());
+                        });
+                    } else {
+                        // 如果User表中没有roleId，从UserService获取主要角色
+                        String roleName = userService.getUserRoleName(user.getUserId().intValue());
+                        dto.setRoleName(roleName);
+                    }
+                    
+                    return dto;
+                })
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(ApiResponse.success(userContacts, "获取用户列表成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("获取用户列表失败: " + e.getMessage()));
         }
     }
 }
