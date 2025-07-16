@@ -234,7 +234,7 @@ public class AdminController {
             } else {
                 throw new RuntimeException("用户不存在");
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("权限更新失败: " + e.getMessage()));
         }
@@ -868,7 +868,6 @@ public class AdminController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             System.out.println("获取文章列表异常: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("获取文章列表失败: " + e.getMessage()));
         }
