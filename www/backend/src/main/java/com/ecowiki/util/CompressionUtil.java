@@ -1,19 +1,19 @@
 package com.ecowiki.util;
 
-import org.springframework.stereotype.Component;
-import org.brotli.dec.BrotliInputStream;
-
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-import java.util.zip.Deflater;
-import java.util.zip.Inflater;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+import java.util.zip.Inflater;
+
+import org.brotli.dec.BrotliInputStream;
+import org.springframework.stereotype.Component;
 
 /**
  * 压缩工具类
@@ -192,16 +192,19 @@ public class CompressionUtil {
         }
         
         switch (algorithm.toLowerCase()) {
-            case "deflate":
+            case "deflate" -> {
                 return decompressDeflate(compressedData);
-            case "gzip":
+            }
+            case "gzip" -> {
                 return decompressGzip(compressedData);
-            case "brotli":
+            }
+            case "brotli" -> {
                 return decompressBrotli(compressedData);
-            case "none":
+            }
+            case "none" -> {
                 return new String(compressedData, StandardCharsets.UTF_8);
-            default:
-                throw new IllegalArgumentException("Unsupported compression algorithm: " + algorithm);
+            }
+            default -> throw new IllegalArgumentException("Unsupported compression algorithm: " + algorithm);
         }
     }
     
