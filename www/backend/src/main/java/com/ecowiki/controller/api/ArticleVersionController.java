@@ -1,4 +1,4 @@
-package com.ecowiki.controller;
+package com.ecowiki.controller.api;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -176,8 +176,12 @@ public class ArticleVersionController {
             @RequestBody RestoreVersionRequest request) {
         
         try {
+            System.out.println("开始恢复版本 - articleId: " + articleId + ", versionNumber: " + versionNumber + ", author: " + request.getAuthor());
+            
             ArticleVersion restoredVersion = versionService.restoreToVersion(
                     articleId, versionNumber, request.getAuthor());
+            
+            System.out.println("版本恢复成功 - 新版本ID: " + restoredVersion.getVersionId() + ", 新版本号: " + restoredVersion.getVersionNumber());
             
             Map<String, Object> response = new HashMap<>();
             response.put("newVersionId", restoredVersion.getVersionId());
@@ -187,6 +191,8 @@ public class ArticleVersionController {
             return ResponseEntity.ok(ApiResponse.success(response, "版本恢复成功"));
             
         } catch (Exception e) {
+            System.err.println("版本恢复失败 - articleId: " + articleId + ", versionNumber: " + versionNumber + ", 错误: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(ApiResponse.error("版本恢复失败: " + e.getMessage()));
         }
     }

@@ -76,8 +76,8 @@
           
           <div class="version-meta">
             <span class="version-author">作者: {{ version.author }}</span>
-            <span class="version-size">{{ formatFileSize(version.originalSize) }}</span>
-            <span v-if="version.isCompressed" class="compressed-badge">已压缩</span>
+            <span class="version-size">{{ formatFileSize(version.originalSize || 0) }}</span>
+            <span v-if="version.compressedSize && version.compressedSize < (version.originalSize || 0)" class="compressed-badge">已压缩</span>
             <span v-if="version.isArchived" class="archived-badge">已归档</span>
           </div>
           
@@ -203,6 +203,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { articleApi, type Article, type ArticleVersion, type ArticleVersionStats } from '../../api/article'
+import { useAuth } from '../../composables/useAuth'
+import toast from '@/utils/toast'
 
 interface Props {
   article: Article | null
@@ -230,6 +232,7 @@ const currentPage = ref(0)
 const totalPages = ref(0)
 const pageSize = ref(20)
 const currentVersionId = ref<number | null>(null)
+const { userDisplayName, isAuthenticated, user } = useAuth()
 
 // 计算属性
 const hasArticle = computed(() => props.article !== null)
@@ -279,7 +282,7 @@ const loadVersions = async () => {
       pageSize.value
     )
     
-    versions.value = response.content
+    versions.value = response.versions
     totalPages.value = response.totalPages
     
     // 获取版本统计信息
@@ -317,7 +320,8 @@ const restoreVersion = async (version: ArticleVersion) => {
   
   try {
     loading.value = true
-    await articleApi.restoreVersion(props.article.articleId, version.versionId)
+    const currentUser = user.value?.username || userDisplayName.value || '未知用户'
+    await articleApi.restoreToVersion(props.article.articleId, version.versionNumber, currentUser)
     emit('restoreVersion', version)
     loadVersions() // 重新加载版本列表
   } catch (err) {
@@ -330,6 +334,11 @@ const restoreVersion = async (version: ArticleVersion) => {
 
 // 删除版本
 const deleteVersion = async (version: ArticleVersion) => {
+  // TODO: 删除版本功能暂未实现，等待后端API支持
+  toast.error('删除版本功能暂未实现')
+  return
+  
+  /* 
   const confirmed = confirm(`确定要删除版本 ${version.versionNumber} 吗？此操作无法撤销。`)
   if (!confirmed) return
   
@@ -344,6 +353,7 @@ const deleteVersion = async (version: ArticleVersion) => {
   } finally {
     loading.value = false
   }
+  */
 }
 
 // 比较版本

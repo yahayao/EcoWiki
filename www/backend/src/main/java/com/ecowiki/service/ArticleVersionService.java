@@ -1,7 +1,9 @@
 package com.ecowiki.service;
 
+import com.ecowiki.entity.Article;
 import com.ecowiki.entity.ArticleVersion;
 import com.ecowiki.entity.ArticleVersionStats;
+import com.ecowiki.repository.ArticleRepository;
 import com.ecowiki.repository.ArticleVersionRepository;
 import com.ecowiki.repository.ArticleVersionStatsRepository;
 import com.ecowiki.util.CompressionUtil;
@@ -41,6 +43,9 @@ public class ArticleVersionService {
     
     @Autowired
     private ArticleVersionStatsRepository statsRepository;
+    
+    @Autowired
+    private ArticleRepository articleRepository;
     
     @Autowired
     private CompressionUtil compressionUtil;
@@ -420,33 +425,113 @@ public class ArticleVersionService {
     
     /**
      * 恢复文章到指定版本
-     * 将指定版本的内容作为新的版本创建
+     * 将指定版本的内容作为新的版本创建，并同步更新articles表
      */
     public ArticleVersion restoreToVersion(Long articleId, Integer versionNumber, String author) {
-        // 获取要恢复到的版本内容
-        String contentToRestore = getVersionContent(articleId, versionNumber);
-        
-        // 获取当前最新内容进行比较
-        String currentContent;
         try {
-            currentContent = getLatestVersionContent(articleId);
-        } catch (RuntimeException e) {
-            // 如果没有版本，直接创建
-            currentContent = "";
+            System.out.println("Service: 开始恢复版本 - articleId: " + articleId + ", versionNumber: " + versionNumber + ", author: " + author);
+            
+            // 获取要恢复到的版本内容
+            String contentToRestore = getVersionContent(articleId, versionNumber);
+            System.out.println("Service: 获取到版本内容，长度: " + contentToRestore.length());
+            
+            // 获取当前最新内容进行比较
+            String currentContent;
+            try {
+                currentContent = getLatestVersionContent(articleId);
+                System.out.println("Service: 获取当前内容，长度: " + currentContent.length());
+            } catch (RuntimeException e) {
+                // 如果没有版本，直接创建
+                currentContent = "";
+                System.out.println("Service: 没有找到当前版本，使用空内容");
+            }
+            
+            // 如果内容相同，不需要恢复
+            if (contentToRestore.equals(currentContent)) {
+                System.out.println("Service: 内容相同，不需要恢复");
+                throw new RuntimeException("Content is the same as current version, no need to restore");
+            }
+            
+            // 使用专门的方法创建恢复版本，允许重复内容
+            System.out.println("Service: 开始创建恢复版本");
+            ArticleVersion restoredVersion = createRestoreVersion(articleId, contentToRestore, author, versionNumber);
+            System.out.println("Service: 恢复版本创建成功，版本ID: " + restoredVersion.getVersionId());
+            
+            // 同步更新articles表的内容
+            System.out.println("Service: 开始更新articles表内容");
+            updateArticleContent(articleId, contentToRestore);
+            System.out.println("Service: articles表内容更新完成");
+            
+            return restoredVersion;
+            
+        } catch (Exception e) {
+            System.err.println("Service: 恢复版本失败 - " + e.getMessage());
+            e.printStackTrace();
+            throw e;
         }
+    }
+    
+    /**
+     * 更新文章表的内容
+     * 私有方法，用于在版本恢复时同步更新articles表
+     */
+    private void updateArticleContent(Long articleId, String content) {
+        Article article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new RuntimeException("文章不存在"));
         
-        // 如果内容相同，不需要恢复
-        if (contentToRestore.equals(currentContent)) {
-            throw new RuntimeException("Content is the same as current version, no need to restore");
+        article.setContent(content);
+        // 更新修改时间
+        article.setUpdateTime(LocalDateTime.now());
+        
+        articleRepository.save(article);
+    }
+    
+    /**
+     * 创建恢复版本的内部方法
+     * 即使内容重复也会创建新版本，并添加恢复标识
+     */
+    private ArticleVersion createRestoreVersion(Long articleId, String content, String author, Integer originalVersionNumber) {
+        try {
+            // 获取最新版本号
+            Integer nextVersionNumber = getNextVersionNumber(articleId);
+            
+            // 计算内容哈希
+            String contentHash = compressionUtil.calculateHash(content);
+            
+            // 获取最新版本和基础版本
+            Optional<ArticleVersion> latestVersion = versionRepository.findLatestByArticleId(articleId);
+            Optional<ArticleVersion> latestBaseVersion = versionRepository.findLatestBaseVersionByArticleId(articleId);
+            
+            ArticleVersion newVersion;
+            
+            if (!latestVersion.isPresent() || !latestBaseVersion.isPresent()) {
+                // 第一个版本，存储完整内容
+                newVersion = createFullVersion(articleId, nextVersionNumber, content, author, contentHash);
+            } else {
+                // 计算与最新版本的差异
+                String latestContent = reconstructContent(latestVersion.get());
+                DiffUtil.DiffResult diffResult = diffUtil.calculateDiff(latestContent, content);
+                
+                if (diffResult.isLargeChange(DIFF_THRESHOLD)) {
+                    // 差异太大，存储完整版本
+                    newVersion = createFullVersion(articleId, nextVersionNumber, content, author, contentHash);
+                } else {
+                    // 存储差异版本
+                    newVersion = createDiffVersion(articleId, nextVersionNumber, content, author, 
+                                                latestContent, latestBaseVersion.get(), contentHash);
+                }
+            }
+            
+            // 设置恢复标识和变更摘要
+            newVersion.setChangeSummary("恢复到版本 " + originalVersionNumber);
+            
+            // 更新统计信息
+            updateVersionStats(articleId, newVersion.getStorageType());
+            
+            return versionRepository.save(newVersion);
+            
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create restore version", e);
         }
-        
-        // 创建新版本，内容为恢复的版本内容
-        ArticleVersion restoredVersion = createVersion(articleId, contentToRestore, author);
-        
-        // 设置变更摘要
-        restoredVersion.setChangeSummary("恢复到版本 " + versionNumber);
-        versionRepository.save(restoredVersion);
-        
-        return restoredVersion;
     }
 }
