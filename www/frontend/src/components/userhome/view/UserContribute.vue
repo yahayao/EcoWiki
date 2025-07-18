@@ -168,58 +168,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { userApi } from '@/api/user'
+import toast from '@/utils/toast'
 
 // 统计数据
 const stats = ref({
-  createdPages: 42,
-  createdThisMonth: 5,
-  editCount: 156,
-  editsThisMonth: 23,
-  points: 3245,
-  pointsThisMonth: 180
+  createdPages: 0,
+  createdThisMonth: 0,
+  editCount: 0,
+  editsThisMonth: 0,
+  points: 0,
+  pointsThisMonth: 0
 })
 
-const totalScore = computed(() => stats.value.points)
+const achievements = ref<any[]>([])
+const contributionCalendar = ref<any[]>([])
 
-// 成就数据
-const achievements = ref([
-  {
-    id: 1,
-    name: '首次创建',
-    description: '创建您的第一个页面',
-    icon: 'M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z',
-    unlocked: true,
-    unlockedDate: '2025-06-15',
-    progress: 100
-  },
-  {
-    id: 2,
-    name: '编辑达人',
-    description: '完成100次编辑',
-    icon: 'M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z',
-    unlocked: true,
-    unlockedDate: '2025-07-01',
-    progress: 100
-  },
-  {
-    id: 3,
-    name: '知识分享者',
-    description: '创建10个高质量页面',
-    icon: 'M12,2A2,2 0 0,1 14,4C14,4.74 13.6,5.39 13,5.73V7H14A7,7 0 0,1 21,14H22A1,1 0 0,1 23,15V18A1,1 0 0,1 22,19H21V20A2,2 0 0,1 19,22H5A2,2 0 0,1 3,20V19H2A1,1 0 0,1 1,18V15A1,1 0 0,1 2,14H3A7,7 0 0,1 10,7H11V5.73C10.4,5.39 10,4.74 10,4A2,2 0 0,1 12,2M7.5,13A2.5,2.5 0 0,0 5,15.5A2.5,2.5 0 0,0 7.5,18A2.5,2.5 0 0,0 10,15.5A2.5,2.5 0 0,0 7.5,13M16.5,13A2.5,2.5 0 0,0 14,15.5A2.5,2.5 0 0,0 16.5,18A2.5,2.5 0 0,0 19,15.5A2.5,2.5 0 0,0 16.5,13Z',
-    unlocked: false,
-    progress: 80
-  },
-  {
-    id: 4,
-    name: '社区贡献者',
-    description: '获得1000积分',
-    icon: 'M16,17H5V7H16L19.55,12L16,17M5.5,6C5.5,4.89 6.39,4 7.5,4H16.5L20.5,9L16.5,14H7.5C6.39,14 5.5,13.11 5.5,12V6M5.5,18V16H7.5V18H5.5Z',
-    unlocked: true,
-    unlockedDate: '2025-07-10',
-    progress: 100
-  }
-])
+const totalScore = computed(() => stats.value.points)
 
 // 历史记录
 const historyFilter = ref('all')
@@ -252,13 +218,14 @@ const history = ref([
   {
     id: 4,
     type: 'created',
-    title: '绿色出行指南',
-    description: '创建了城市绿色出行方式的完整指南',
+    title: '生物多样性保护',
+    description: '新建了生物多样性保护的完整知识体系',
     date: '2025-07-05 11:20',
-    points: 45
+    points: 60
   }
 ])
 
+// 过滤后的历史记录
 const filteredHistory = computed(() => {
   if (historyFilter.value === 'all') {
     return history.value
@@ -266,7 +233,7 @@ const filteredHistory = computed(() => {
   return history.value.filter(item => item.type === historyFilter.value)
 })
 
-// 工具方法
+// 获取类型图标
 const getTypeIcon = (type: string) => {
   const icons = {
     created: 'M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z',
@@ -276,6 +243,7 @@ const getTypeIcon = (type: string) => {
   return icons[type as keyof typeof icons] || icons.created
 }
 
+// 获取类型标签
 const getTypeLabel = (type: string) => {
   const labels = {
     created: '创建',
@@ -284,6 +252,137 @@ const getTypeLabel = (type: string) => {
   }
   return labels[type as keyof typeof labels] || '未知'
 }
+
+// 格式化日期
+const formatDate = (dateString: string) => {
+  if (!dateString) return '无'
+  try {
+    return new Date(dateString).toLocaleDateString('zh-CN')
+  } catch {
+    return '无效日期'
+  }
+}
+
+// 加载用户贡献数据
+const loadContributions = async () => {
+  try {
+    const contributions = await userApi.getUserContributions()
+    
+    stats.value = {
+      createdPages: contributions.createdPages,
+      createdThisMonth: contributions.createdThisMonth,
+      editCount: contributions.editCount,
+      editsThisMonth: contributions.editsThisMonth,
+      points: contributions.points,
+      pointsThisMonth: contributions.pointsThisMonth
+    }
+    
+    // 处理成就数据
+    if (contributions.achievements && contributions.achievements.length > 0) {
+      achievements.value = contributions.achievements
+    } else {
+      // 使用默认成就数据
+      achievements.value = [
+        {
+          id: 1,
+          name: '首次创建',
+          description: '创建您的第一个页面',
+          icon: 'M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z',
+          unlocked: contributions.createdPages > 0,
+          unlockedDate: contributions.createdPages > 0 ? '2025-06-15' : '',
+          progress: contributions.createdPages > 0 ? 100 : 0
+        },
+        {
+          id: 2,
+          name: '编辑达人',
+          description: '完成100次编辑',
+          icon: 'M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z',
+          unlocked: contributions.editCount >= 100,
+          unlockedDate: contributions.editCount >= 100 ? '2025-07-01' : '',
+          progress: Math.min(100, (contributions.editCount / 100) * 100)
+        },
+        {
+          id: 3,
+          name: '知识分享者',
+          description: '创建10个高质量页面',
+          icon: 'M12,2A2,2 0 0,1 14,4C14,4.74 13.6,5.39 13,5.73V7H14A7,7 0 0,1 21,14H22A1,1 0 0,1 23,15V18A1,1 0 0,1 22,19H21V20A2,2 0 0,1 19,22H5A2,2 0 0,1 3,20V19H2A1,1 0 0,1 1,18V15A1,1 0 0,1 2,14H3A7,7 0 0,1 10,7H11V5.73C10.4,5.39 10,4.74 10,4A2,2 0 0,1 12,2M7.5,13A2.5,2.5 0 0,0 5,15.5A2.5,2.5 0 0,0 7.5,18A2.5,2.5 0 0,0 10,15.5A2.5,2.5 0 0,0 7.5,13M16.5,13A2.5,2.5 0 0,0 14,15.5A2.5,2.5 0 0,0 16.5,18A2.5,2.5 0 0,0 19,15.5A2.5,2.5 0 0,0 16.5,13Z',
+          unlocked: contributions.createdPages >= 10,
+          unlockedDate: contributions.createdPages >= 10 ? '2025-07-05' : '',
+          progress: Math.min(100, (contributions.createdPages / 10) * 100)
+        },
+        {
+          id: 4,
+          name: '社区贡献者',
+          description: '获得1000积分',
+          icon: 'M16,17H5V7H16L19.55,12L16,17M5.5,6C5.5,4.89 6.39,4 7.5,4H16.5L20.5,9L16.5,14H7.5C6.39,14 5.5,13.11 5.5,12V6M5.5,18V16H7.5V18H5.5Z',
+          unlocked: contributions.points >= 1000,
+          unlockedDate: contributions.points >= 1000 ? '2025-07-10' : '',
+          progress: Math.min(100, (contributions.points / 1000) * 100)
+        }
+      ]
+    }
+    
+    // 处理贡献日历数据
+    contributionCalendar.value = contributions.contributionCalendar || []
+    
+  } catch (error: any) {
+    console.error('加载贡献数据失败:', error)
+    toast.error('加载贡献数据失败', '错误')
+    
+    // 使用默认数据
+    stats.value = {
+      createdPages: 42,
+      createdThisMonth: 5,
+      editCount: 156,
+      editsThisMonth: 23,
+      points: 3245,
+      pointsThisMonth: 180
+    }
+    
+    achievements.value = [
+      {
+        id: 1,
+        name: '首次创建',
+        description: '创建您的第一个页面',
+        icon: 'M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z',
+        unlocked: true,
+        unlockedDate: '2025-06-15',
+        progress: 100
+      },
+      {
+        id: 2,
+        name: '编辑达人',
+        description: '完成100次编辑',
+        icon: 'M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z',
+        unlocked: true,
+        unlockedDate: '2025-07-01',
+        progress: 100
+      },
+      {
+        id: 3,
+        name: '知识分享者',
+        description: '创建10个高质量页面',
+        icon: 'M12,2A2,2 0 0,1 14,4C14,4.74 13.6,5.39 13,5.73V7H14A7,7 0 0,1 21,14H22A1,1 0 0,1 23,15V18A1,1 0 0,1 22,19H21V20A2,2 0 0,1 19,22H5A2,2 0 0,1 3,20V19H2A1,1 0 0,1 1,18V15A1,1 0 0,1 2,14H3A7,7 0 0,1 10,7H11V5.73C10.4,5.39 10,4.74 10,4A2,2 0 0,1 12,2M7.5,13A2.5,2.5 0 0,0 5,15.5A2.5,2.5 0 0,0 7.5,18A2.5,2.5 0 0,0 10,15.5A2.5,2.5 0 0,0 7.5,13M16.5,13A2.5,2.5 0 0,0 14,15.5A2.5,2.5 0 0,0 16.5,18A2.5,2.5 0 0,0 19,15.5A2.5,2.5 0 0,0 16.5,13Z',
+        unlocked: false,
+        progress: 80
+      },
+      {
+        id: 4,
+        name: '社区贡献者',
+        description: '获得1000积分',
+        icon: 'M16,17H5V7H16L19.55,12L16,17M5.5,6C5.5,4.89 6.39,4 7.5,4H16.5L20.5,9L16.5,14H7.5C6.39,14 5.5,13.11 5.5,12V6M5.5,18V16H7.5V18H5.5Z',
+        unlocked: true,
+        unlockedDate: '2025-07-10',
+        progress: 100
+      }
+    ]
+  }
+}
+
+// 初始化
+onMounted(() => {
+  loadContributions()
+})
 </script>
 
 <style scoped>

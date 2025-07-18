@@ -912,6 +912,218 @@ export const userApi = {
   isSuperAdmin: (user: UserResponse | null): boolean => {
     if (!user) return false
     return user.userGroup === USER_GROUPS.SUPER_ADMIN
+  },
+
+  /**
+   * 更新个人资料
+   * @param profileData 要更新的资料数据
+   * @returns 更新后的用户信息
+   */
+  updateProfile: async (profileData: {
+    username?: string
+    fullName?: string
+    email?: string
+  }): Promise<UserResponse> => {
+    try {
+      const response = await api.put('/auth/profile', profileData)
+
+      if (response.data.code === 200 && response.data.data) {
+        return response.data.data
+      }
+
+      throw new Error(response.data.message || '更新个人资料失败')
+    } catch (error: any) {
+      console.error('更新个人资料失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '更新个人资料失败')
+    }
+  },
+
+  /**
+   * 更换用户头像
+   * @param avatarFile 头像文件
+   * @returns 新的头像URL
+   */
+  updateAvatar: async (avatarFile: File): Promise<string> => {
+    try {
+      const formData = new FormData()
+      formData.append('avatar', avatarFile)
+
+      const response = await api.post('/auth/avatar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+
+      if (response.data.code === 200 && response.data.data) {
+        return response.data.data.avatarUrl
+      }
+
+      throw new Error(response.data.message || '更换头像失败')
+    } catch (error: any) {
+      console.error('更换头像失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '更换头像失败')
+    }
+  },
+
+  /**
+   * 修改密码
+   * @param passwordData 密码修改数据
+   * @returns 修改结果
+   */
+  changePassword: async (passwordData: {
+    currentPassword: string
+    newPassword: string
+    confirmPassword: string
+  }): Promise<void> => {
+    try {
+      const response = await api.post('/auth/change-password', passwordData)
+
+      if (response.data.code !== 200) {
+        throw new Error(response.data.message || '修改密码失败')
+      }
+    } catch (error: any) {
+      console.error('修改密码失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '修改密码失败')
+    }
+  },
+
+  /**
+   * 更新安全设置
+   * @param securityData 安全设置数据
+   * @returns 更新结果
+   */
+  updateSecuritySettings: async (securityData: {
+    securityQuestion?: string
+    securityAnswer?: string
+  }): Promise<void> => {
+    try {
+      const response = await api.put('/auth/security', securityData)
+
+      if (response.data.code !== 200) {
+        throw new Error(response.data.message || '更新安全设置失败')
+      }
+    } catch (error: any) {
+      console.error('更新安全设置失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '更新安全设置失败')
+    }
+  },
+
+  /**
+   * 获取用户文章统计
+   * @returns 用户文章统计数据
+   */
+  getUserArticleStats: async (): Promise<{
+    totalArticles: number
+    publishedArticles: number
+    draftArticles: number
+    favoriteArticles: number
+    totalViews: number
+    totalLikes: number
+  }> => {
+    try {
+      const response = await api.get('/auth/article-stats')
+
+      if (response.data.code === 200 && response.data.data) {
+        return response.data.data
+      }
+
+      throw new Error(response.data.message || '获取文章统计失败')
+    } catch (error: any) {
+      console.error('获取文章统计失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '获取文章统计失败')
+    }
+  },
+
+  /**
+   * 获取用户收藏文章列表
+   * @param page 页码（从0开始）
+   * @param size 每页大小
+   * @returns 收藏文章列表
+   */
+  getFavoriteArticles: async (page: number = 0, size: number = 10): Promise<{
+    content: any[]
+    totalElements: number
+    totalPages: number
+    size: number
+    number: number
+  }> => {
+    try {
+      const response = await api.get('/auth/favorite-articles', {
+        params: { page, size }
+      })
+
+      if (response.data.code === 200 && response.data.data) {
+        return response.data.data
+      }
+
+      throw new Error(response.data.message || '获取收藏文章失败')
+    } catch (error: any) {
+      console.error('获取收藏文章失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '获取收藏文章失败')
+    }
+  },
+
+  /**
+   * 获取用户创建的文章列表
+   * @param page 页码（从0开始）
+   * @param size 每页大小
+   * @param status 文章状态过滤（可选）
+   * @returns 用户文章列表
+   */
+  getUserArticles: async (page: number = 0, size: number = 10, status?: 'published' | 'draft'): Promise<{
+    content: any[]
+    totalElements: number
+    totalPages: number
+    size: number
+    number: number
+  }> => {
+    try {
+      const params: any = { page, size }
+      if (status) {
+        params.status = status
+      }
+
+      const response = await api.get('/auth/my-articles', {
+        params
+      })
+
+      if (response.data.code === 200 && response.data.data) {
+        return response.data.data
+      }
+
+      throw new Error(response.data.message || '获取用户文章失败')
+    } catch (error: any) {
+      console.error('获取用户文章失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '获取用户文章失败')
+    }
+  },
+
+  /**
+   * 获取用户贡献统计
+   * @returns 用户贡献统计数据
+   */
+  getUserContributions: async (): Promise<{
+    createdPages: number
+    editCount: number
+    points: number
+    createdThisMonth: number
+    editsThisMonth: number
+    pointsThisMonth: number
+    achievements: any[]
+    contributionCalendar: any[]
+  }> => {
+    try {
+      const response = await api.get('/auth/contributions')
+
+      if (response.data.code === 200 && response.data.data) {
+        return response.data.data
+      }
+
+      throw new Error(response.data.message || '获取贡献统计失败')
+    } catch (error: any) {
+      console.error('获取贡献统计失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '获取贡献统计失败')
+    }
   }
 }
 

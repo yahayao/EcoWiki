@@ -80,8 +80,64 @@
           <div class="info-item">
             <label class="info-label">用户名</label>
             <div class="info-value-container">
-              <div class="info-value">{{ user?.username || '未知用户' }}</div>
-              <button class="edit-btn" @click="editUsername">
+              <div v-if="!isEditing || editType !== 'username'" class="info-value">{{ user?.username || '未知用户' }}</div>
+              <div v-else class="edit-container">
+                <input
+                  v-model="draft.username"
+                  type="text"
+                  class="edit-input"
+                  placeholder="请输入用户名"
+                  @keyup.enter="saveEdit"
+                  @keyup.escape="cancelEdit"
+                />
+                <div class="edit-actions">
+                  <button class="save-btn" @click="saveEdit">
+                    <svg viewBox="0 0 24 24" class="icon">
+                      <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/>
+                    </svg>
+                  </button>
+                  <button class="cancel-btn" @click="cancelEdit">
+                    <svg viewBox="0 0 24 24" class="icon">
+                      <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <button v-if="!isEditing || editType !== 'username'" class="edit-btn" @click="editUsername">
+                <svg viewBox="0 0 24 24" class="icon">
+                  <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <label class="info-label">全名</label>
+            <div class="info-value-container">
+              <div v-if="!isEditing || editType !== 'fullName'" class="info-value">{{ user?.fullName || '未设置' }}</div>
+              <div v-else class="edit-container">
+                <input
+                  v-model="draft.fullName"
+                  type="text"
+                  class="edit-input"
+                  placeholder="请输入全名"
+                  @keyup.enter="saveEdit"
+                  @keyup.escape="cancelEdit"
+                />
+                <div class="edit-actions">
+                  <button class="save-btn" @click="saveEdit">
+                    <svg viewBox="0 0 24 24" class="icon">
+                      <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/>
+                    </svg>
+                  </button>
+                  <button class="cancel-btn" @click="cancelEdit">
+                    <svg viewBox="0 0 24 24" class="icon">
+                      <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <button v-if="!isEditing || editType !== 'fullName'" class="edit-btn" @click="editFullName">
                 <svg viewBox="0 0 24 24" class="icon">
                   <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
                 </svg>
@@ -92,19 +148,60 @@
           <div class="info-item">
             <label class="info-label">电子邮箱</label>
             <div class="info-value-container">
-              <div class="info-value">{{ user?.email || '未设置' }}</div>
-              <span class="verification-badge verified">
-                <svg viewBox="0 0 24 24" class="icon">
-                  <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/>
-                </svg>
-                已验证
-              </span>
+              <div v-if="!isEditing || editType !== 'email'" class="info-value">{{ user?.email || '未设置' }}</div>
+              <div v-else class="edit-container">
+                <input
+                  v-model="draft.email"
+                  type="email"
+                  class="edit-input"
+                  placeholder="请输入邮箱"
+                  @keyup.enter="saveEdit"
+                  @keyup.escape="cancelEdit"
+                />
+                <div class="edit-actions">
+                  <button class="save-btn" @click="saveEdit">
+                    <svg viewBox="0 0 24 24" class="icon">
+                      <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/>
+                    </svg>
+                  </button>
+                  <button class="cancel-btn" @click="cancelEdit">
+                    <svg viewBox="0 0 24 24" class="icon">
+                      <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div v-if="!isEditing || editType !== 'email'" class="info-value-right">
+                <span class="verification-badge verified">
+                  <svg viewBox="0 0 24 24" class="icon">
+                    <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/>
+                  </svg>
+                  已验证
+                </span>
+                <button class="edit-btn" @click="editEmail">
+                  <svg viewBox="0 0 24 24" class="icon">
+                    <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
           <div class="info-item">
             <label class="info-label">注册时间</label>
             <div class="info-value">{{ formatDate(user?.createdAt) }}</div>
+          </div>
+
+          <div class="info-item">
+            <label class="info-label">登录密码</label>
+            <div class="info-value-container">
+              <div class="info-value security-hidden">••••••••••••</div>
+              <button class="edit-btn" @click="openPasswordForm">
+                <svg viewBox="0 0 24 24" class="icon">
+                  <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div class="info-item">
@@ -155,6 +252,66 @@
         </div>
       </div>
     </div>
+
+    <!-- 密码修改模态框 -->
+    <div v-if="showPasswordForm" class="modal-overlay" @click="closePasswordForm">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3 class="modal-title">修改密码</h3>
+          <button class="modal-close" @click="closePasswordForm">
+            <svg viewBox="0 0 24 24" class="icon">
+              <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+            </svg>
+          </button>
+        </div>
+        
+        <form @submit.prevent="changePassword" class="password-form">
+          <div class="form-group">
+            <label class="form-label">当前密码</label>
+            <input
+              v-model="passwordForm.currentPassword"
+              type="password"
+              class="form-input"
+              placeholder="请输入当前密码"
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">新密码</label>
+            <input
+              v-model="passwordForm.newPassword"
+              type="password"
+              class="form-input"
+              placeholder="请输入新密码（至少6位）"
+              minlength="6"
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">确认新密码</label>
+            <input
+              v-model="passwordForm.confirmPassword"
+              type="password"
+              class="form-input"
+              placeholder="请再次输入新密码"
+              minlength="6"
+              required
+            />
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" @click="closePasswordForm">
+              取消
+            </button>
+            <button type="submit" class="btn btn-primary">
+              确认修改
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -163,6 +320,7 @@ import { useAuth } from '@/composables/useAuth'
 import { userApi } from '@/api/user'
 import type { UserResponse } from '@/api/user'
 import { ref, computed, onMounted } from 'vue'
+import toast from '@/utils/toast'
 
 function formatDate(dateString?: string) {
   if (!dateString) return '无'
@@ -173,13 +331,28 @@ function formatDate(dateString?: string) {
   }
 }
 
-const { user, userAvatar} = useAuth()
+const { user, userAvatar, setUser } = useAuth()
+
+// 编辑状态管理
+const isEditing = ref(false)
+const editType = ref<'username' | 'email' | 'fullName' | 'security' | ''>('')
 
 const draft = ref({
   username: '',
   fullName: '',
-  email: ''
+  email: '',
+  securityQuestion: '',
+  securityAnswer: ''
 })
+
+// 密码修改相关
+const passwordForm = ref({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+
+const showPasswordForm = ref(false)
 
 function startEdit() {
   if (!user.value) return
@@ -187,35 +360,186 @@ function startEdit() {
   draft.value = {
     username: user.value.username || '',
     fullName: user.value.fullName || '',
-    email: user.value.email || ''
+    email: user.value.email || '',
+    securityQuestion: '',
+    securityAnswer: ''
   }
 }
 
 // 头像相关方法
+const avatarInput = ref<HTMLInputElement>()
+
 const changeAvatar = () => {
-  // TODO: 实现更换头像功能
-  console.log('更换头像')
+  // 创建隐藏的文件输入框
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  input.style.display = 'none'
+  
+  input.onchange = async (event) => {
+    const file = (event.target as HTMLInputElement)?.files?.[0]
+    if (!file) return
+    
+    // 验证文件大小（限制5MB）
+    if (file.size > 5 * 1024 * 1024) {
+      toast.show('文件大小不能超过5MB', '错误', { type: 'error' })
+      return
+    }
+    
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      toast.show('请选择图片文件', '错误', { type: 'error' })
+      return
+    }
+    
+    try {
+      toast.show('正在上传头像...', '提示', { type: 'info' })
+      const avatarUrl = await userApi.updateAvatar(file)
+      
+      // 更新本地用户信息
+      if (user.value) {
+        const updatedUser = { ...user.value, avatarUrl }
+        setUser(updatedUser, localStorage.getItem('token') || '', localStorage.getItem('refreshToken') || '')
+      }
+      
+      toast.show('头像更新成功', '成功', { type: 'success' })
+    } catch (error: any) {
+      toast.show(error.message || '头像更新失败', '错误', { type: 'error' })
+    }
+  }
+  
+  document.body.appendChild(input)
+  input.click()
+  document.body.removeChild(input)
 }
 
-// 编辑方法
+// 编辑用户名
 const editUsername = () => {
-  // TODO: 实现编辑用户名功能
-  console.log('编辑用户名')
+  if (!user.value) return
+  editType.value = 'username'
+  draft.value.username = user.value.username || ''
+  isEditing.value = true
 }
 
+// 编辑全名
+const editFullName = () => {
+  if (!user.value) return
+  editType.value = 'fullName'
+  draft.value.fullName = user.value.fullName || ''
+  isEditing.value = true
+}
+
+// 编辑邮箱
+const editEmail = () => {
+  if (!user.value) return
+  editType.value = 'email'
+  draft.value.email = user.value.email || ''
+  isEditing.value = true
+}
+
+// 保存编辑
+const saveEdit = async () => {
+  if (!editType.value || editType.value === 'security') return
+  
+  try {
+    const updateData: any = {}
+    if (editType.value === 'username') {
+      updateData.username = draft.value.username
+    } else if (editType.value === 'fullName') {
+      updateData.fullName = draft.value.fullName
+    } else if (editType.value === 'email') {
+      updateData.email = draft.value.email
+    }
+    
+    toast.show('正在保存...', '提示', { type: 'info' })
+    const updatedUser = await userApi.updateProfile(updateData)
+    
+    // 更新本地用户信息
+    setUser(updatedUser, localStorage.getItem('token') || '', localStorage.getItem('refreshToken') || '')
+    
+    isEditing.value = false
+    editType.value = ''
+    
+    toast.show('信息更新成功', '成功', { type: 'success' })
+  } catch (error: any) {
+    toast.show(error.message || '更新失败', '错误', { type: 'error' })
+  }
+}
+
+// 取消编辑
+const cancelEdit = () => {
+  isEditing.value = false
+  editType.value = ''
+}
+
+// 安全设置相关
 const editSecurityQuestion = () => {
-  // TODO: 实现编辑安全问题功能
-  console.log('编辑安全问题')
+  editType.value = 'security'
+  isEditing.value = true
 }
 
 const editSecurityAnswer = () => {
-  // TODO: 实现编辑安全答案功能
-  console.log('编辑安全答案')
+  editType.value = 'security'
+  isEditing.value = true
 }
 
-const username = ref('新用户名')
-const securityQuestion = ref('您的出生地是？')
-const securityAnswer = ref('Shanghai')
+const saveSecuritySettings = async () => {
+  try {
+    toast.show('正在保存安全设置...', '提示', { type: 'info' })
+    await userApi.updateSecuritySettings({
+      securityQuestion: draft.value.securityQuestion,
+      securityAnswer: draft.value.securityAnswer
+    })
+    
+    isEditing.value = false
+    editType.value = ''
+    
+    toast.show('安全设置更新成功', '成功', { type: 'success' })
+  } catch (error: any) {
+    toast.show(error.message || '安全设置更新失败', '错误', { type: 'error' })
+  }
+}
+
+// 密码修改
+const openPasswordForm = () => {
+  showPasswordForm.value = true
+  passwordForm.value = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  }
+}
+
+const closePasswordForm = () => {
+  showPasswordForm.value = false
+}
+
+const changePassword = async () => {
+  if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
+    toast.show('新密码与确认密码不匹配', '错误', { type: 'error' })
+    return
+  }
+  
+  if (passwordForm.value.newPassword.length < 6) {
+    toast.show('新密码长度至少6位', '错误', { type: 'error' })
+    return
+  }
+  
+  try {
+    toast.show('正在修改密码...', '提示', { type: 'info' })
+    await userApi.changePassword(passwordForm.value)
+    
+    showPasswordForm.value = false
+    toast.show('密码修改成功', '成功', { type: 'success' })
+  } catch (error: any) {
+    toast.show(error.message || '密码修改失败', '错误', { type: 'error' })
+  }
+}
+
+// 初始化数据
+onMounted(() => {
+  startEdit()
+})
 </script>
 
 <style scoped>
@@ -670,6 +994,227 @@ const securityAnswer = ref('Shanghai')
   
   .page-title {
     font-size: 20px;
+  }
+}
+
+/* 编辑功能样式 */
+.edit-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.edit-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.edit-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.save-btn,
+.cancel-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.save-btn {
+  background: #48bb78;
+  color: white;
+}
+
+.save-btn:hover {
+  background: #38a169;
+}
+
+.cancel-btn {
+  background: #ed64a6;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: #d53f8c;
+}
+
+.save-btn .icon,
+.cancel-btn .icon {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.info-value-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 模态框样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: slideIn 0.3s ease-out;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #718096;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: #f7fafc;
+  color: #2d3748;
+}
+
+.modal-close .icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.password-form {
+  padding: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.btn-secondary:hover {
+  background: #cbd5e0;
+}
+
+.btn-primary {
+  background: #667eea;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #5a67d8;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>

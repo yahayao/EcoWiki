@@ -265,4 +265,11 @@ public class UserService {
     public void cleanupUserRoles(Integer userId) {
         userRoleRepository.deleteByUserId(userId);
     }
+    
+    /**
+     * 保存用户信息
+     */
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
 }

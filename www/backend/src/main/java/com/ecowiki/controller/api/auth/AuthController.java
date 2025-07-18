@@ -10,6 +10,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ecowiki.dto.ApiResponse;
 import com.ecowiki.dto.LoginRequest;
 import com.ecowiki.dto.ResetPasswordRequest;
+import com.ecowiki.dto.UpdateProfileRequest;
 import com.ecowiki.dto.UserRegistrationDto;
 import com.ecowiki.entity.User;
 import com.ecowiki.security.JwtUtil;
@@ -275,6 +277,80 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(500)
                 .body(ApiResponse.error("获取用户信息失败: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * 更新用户个人资料
+     * @param request HTTP请求
+     * @param profileData 要更新的个人资料数据
+     * @return 更新后的用户信息
+     */
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<Object>> updateProfile(
+            jakarta.servlet.http.HttpServletRequest request,
+            @Valid @RequestBody UpdateProfileRequest profileData) {
+        try {
+            // 从请求头提取JWT Token
+            String token = extractTokenFromRequest(request);
+            
+            if (token == null) {
+                return ResponseEntity.status(401)
+                    .body(ApiResponse.error("缺少认证令牌"));
+            }
+            
+            // 验证JWT令牌并获取用户名
+            String username = jwtUtil.extractUsername(token);
+            if (username == null || !jwtUtil.isTokenValid(token)) {
+                return ResponseEntity.status(401)
+                    .body(ApiResponse.error("认证令牌无效"));
+            }
+            
+            // 根据用户名查找用户
+            Optional<User> userOpt = userService.findByUsername(username);
+            
+            if (!userOpt.isPresent()) {
+                return ResponseEntity.status(404)
+                    .body(ApiResponse.error("用户不存在"));
+            }
+            
+            User user = userOpt.get();
+            
+            // 更新用户信息
+            if (profileData.getUsername() != null && !profileData.getUsername().trim().isEmpty()) {
+                // 检查新用户名是否已存在（排除当前用户）
+                if (!profileData.getUsername().equals(user.getUsername()) && 
+                    !userService.isUsernameAvailable(profileData.getUsername())) {
+                    return ResponseEntity.status(400)
+                        .body(ApiResponse.error("用户名已存在"));
+                }
+                user.setUsername(profileData.getUsername().trim());
+            }
+            
+            if (profileData.getFullName() != null && !profileData.getFullName().trim().isEmpty()) {
+                user.setFullName(profileData.getFullName().trim());
+            }
+            
+            if (profileData.getEmail() != null && !profileData.getEmail().trim().isEmpty()) {
+                // 检查新邮箱是否已存在（排除当前用户）
+                if (!profileData.getEmail().equals(user.getEmail()) && 
+                    !userService.isEmailAvailable(profileData.getEmail())) {
+                    return ResponseEntity.status(400)
+                        .body(ApiResponse.error("邮箱已被注册"));
+                }
+                user.setEmail(profileData.getEmail().trim());
+            }
+            
+            // 保存更新后的用户信息
+            User updatedUser = userService.saveUser(user);
+            
+            // 返回更新后的用户信息
+            Map<String, Object> result = createUserResponse(updatedUser);
+            return ResponseEntity.ok(ApiResponse.success(result, "个人资料更新成功"));
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                .body(ApiResponse.error("系统繁忙，请稍后重试"));
         }
     }
     

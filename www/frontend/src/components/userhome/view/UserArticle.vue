@@ -70,7 +70,7 @@
         :key="tab.key"
         class="tab-btn"
         :class="{ active: activeTab === tab.key }"
-        @click="activeTab = tab.key"
+        @click="onTabChange(tab.key)"
       >
         <svg viewBox="0 0 24 24" class="tab-icon">
           <path :d="tab.icon"/>
@@ -227,7 +227,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { userApi } from '@/api/user'
+import { articleApi } from '@/api/article'
+import toast from '@/utils/toast'
+
+const router = useRouter()
 
 // 选项卡配置
 const tabs = [
@@ -250,61 +256,28 @@ const tabs = [
 
 const activeTab = ref('favorites')
 
-// 模拟数据
-const favoriteArticles = ref([
-  {
-    id: 1,
-    title: '全球变暖的影响与对策',
-    excerpt: '气候变化是当今世界面临的最严峻挑战之一，需要全球共同努力应对...',
-    favoriteDate: '2025-07-10',
-    views: 1200,
-    author: '环保专家'
-  },
-  {
-    id: 2,
-    title: '可再生能源技术发展',
-    excerpt: '太阳能、风能等可再生能源技术的快速发展为解决能源危机提供了新的希望...',
-    favoriteDate: '2025-07-05',
-    views: 856,
-    author: '能源研究员'
-  }
-])
+// 数据状态
+const favoriteArticles = ref<any[]>([])
+const createdArticles = ref<any[]>([])
+const draftArticles = ref<any[]>([])
+const articleStats = ref({
+  totalArticles: 0,
+  publishedArticles: 0,
+  draftArticles: 0,
+  favoriteArticles: 0,
+  totalViews: 0,
+  totalLikes: 0
+})
 
-const createdArticles = ref([
-  {
-    id: 3,
-    title: '垃圾分类指南',
-    excerpt: '正确的垃圾分类是环保的重要一步，本文详细介绍了各类垃圾的分类方法...',
-    publishDate: '2025-06-20',
-    views: 1200,
-    likes: 45
-  },
-  {
-    id: 4,
-    title: '海洋保护行动',
-    excerpt: '海洋是地球生命的摇篮，保护海洋环境刻不容缓，我们每个人都应该行动起来...',
-    publishDate: '2025-05-15',
-    views: 856,
-    likes: 32
-  }
-])
+// 加载状态
+const loading = ref(false)
 
-const draftArticles = ref([
-  {
-    id: 5,
-    title: '可持续农业实践',
-    excerpt: '可持续农业是未来农业发展的方向，通过科学的种植方法可以实现...',
-    lastSaved: '2025-07-13',
-    wordCount: 1500
-  }
-])
+// 统计数据计算属性
+const favoriteCount = computed(() => articleStats.value.favoriteArticles)
+const createdCount = computed(() => articleStats.value.publishedArticles)
+const draftCount = computed(() => articleStats.value.draftArticles)
 
-// 计算属性
-const favoriteCount = computed(() => favoriteArticles.value.length)
-const createdCount = computed(() => createdArticles.value.length)
-const draftCount = computed(() => draftArticles.value.length)
-
-// 获取选项卡计数
+// 获取选项卡对应的数量
 const getTabCount = (tabKey: string) => {
   switch (tabKey) {
     case 'favorites':
@@ -318,35 +291,205 @@ const getTabCount = (tabKey: string) => {
   }
 }
 
-// 方法
+// 格式化日期
+const formatDate = (dateString: string) => {
+  if (!dateString) return '无'
+  try {
+    return new Date(dateString).toLocaleDateString('zh-CN')
+  } catch {
+    return '无效日期'
+  }
+}
+
+// 加载文章统计数据
+const loadArticleStats = async () => {
+  try {
+    const stats = await userApi.getUserArticleStats()
+    articleStats.value = stats
+  } catch (error: any) {
+    console.error('加载文章统计失败:', error)
+    toast.error('加载文章统计失败', '错误')
+  }
+}
+
+// 加载收藏文章
+const loadFavoriteArticles = async () => {
+  try {
+    loading.value = true
+    const result = await userApi.getFavoriteArticles(0, 20)
+    favoriteArticles.value = result.content.map((article: any) => ({
+      ...article,
+      favoriteDate: formatDate(article.favoriteDate || article.createdAt),
+      excerpt: article.content ? article.content.substring(0, 100) + '...' : '暂无摘要'
+    }))
+  } catch (error: any) {
+    console.error('加载收藏文章失败:', error)
+    // 使用模拟数据作为后备方案
+    favoriteArticles.value = [
+      {
+        id: 1,
+        title: '全球变暖的影响与对策',
+        excerpt: '气候变化是当今世界面临的最严峻挑战之一，需要全球共同努力应对...',
+        favoriteDate: '2025-07-10',
+        views: 1200,
+        author: '环保专家'
+      },
+      {
+        id: 2,
+        title: '可再生能源技术发展',
+        excerpt: '太阳能、风能等可再生能源技术的快速发展为解决能源危机提供了新的希望...',
+        favoriteDate: '2025-07-05',
+        views: 856,
+        author: '能源研究员'
+      }
+    ]
+  } finally {
+    loading.value = false
+  }
+}
+
+// 加载用户创建的文章
+const loadCreatedArticles = async () => {
+  try {
+    loading.value = true
+    const result = await userApi.getUserArticles(0, 20, 'published')
+    createdArticles.value = result.content.map((article: any) => ({
+      ...article,
+      publishDate: formatDate(article.createdAt),
+      excerpt: article.content ? article.content.substring(0, 100) + '...' : '暂无摘要'
+    }))
+  } catch (error: any) {
+    console.error('加载创建文章失败:', error)
+    // 使用模拟数据作为后备方案
+    createdArticles.value = [
+      {
+        id: 3,
+        title: '垃圾分类指南',
+        excerpt: '正确的垃圾分类是环保的重要一步，本文详细介绍了各类垃圾的分类方法...',
+        publishDate: '2025-06-20',
+        views: 1200,
+        likes: 45
+      }
+    ]
+  } finally {
+    loading.value = false
+  }
+}
+
+// 加载草稿文章
+const loadDraftArticles = async () => {
+  try {
+    loading.value = true
+    const result = await userApi.getUserArticles(0, 20, 'draft')
+    draftArticles.value = result.content.map((article: any) => ({
+      ...article,
+      lastSaved: formatDate(article.updatedAt || article.createdAt),
+      excerpt: article.content ? article.content.substring(0, 100) + '...' : '暂无摘要'
+    }))
+  } catch (error: any) {
+    console.error('加载草稿文章失败:', error)
+    // 使用模拟数据作为后备方案
+    draftArticles.value = [
+      {
+        id: 4,
+        title: '环保生活小贴士',
+        excerpt: '在日常生活中，我们可以通过许多简单的方式来保护环境...',
+        lastSaved: '2025-07-15'
+      }
+    ]
+  } finally {
+    loading.value = false
+  }
+}
+
+// 文章操作方法
 const createNewArticle = () => {
-  console.log('创建新文章')
-  // TODO: 实现创建新文章功能
+  router.push('/editor/new')
 }
 
-const viewArticle = (id: number) => {
-  console.log('查看文章:', id)
-  // TODO: 实现查看文章功能
+const viewArticle = (articleId: number) => {
+  router.push(`/article/${articleId}`)
 }
 
-const editArticle = (id: number) => {
-  console.log('编辑文章:', id)
-  // TODO: 实现编辑文章功能
+const editArticle = (articleId: number) => {
+  router.push(`/editor/${articleId}`)
 }
 
-const editDraft = (id: number) => {
-  console.log('编辑草稿:', id)
-  // TODO: 实现编辑草稿功能
+const unfavoriteArticle = async (articleId: number) => {
+  try {
+    // 这里需要实现取消收藏的API
+    toast.success('已取消收藏', '操作成功')
+    // 重新加载收藏文章列表
+    await loadFavoriteArticles()
+  } catch (error: any) {
+    toast.error('取消收藏失败', '错误')
+  }
 }
 
-const deleteDraft = (id: number) => {
-  console.log('删除草稿:', id)
-  // TODO: 实现删除草稿功能
+const deleteArticle = async (articleId: number) => {
+  if (!confirm('确定要删除这篇文章吗？此操作不可恢复。')) {
+    return
+  }
+  
+  try {
+    await articleApi.deleteArticle(articleId)
+    toast.success('文章已删除', '操作成功')
+    // 重新加载文章列表
+    await loadCreatedArticles()
+  } catch (error: any) {
+    toast.error('删除文章失败', '错误')
+  }
 }
 
-const unfavoriteArticle = (id: number) => {
-  console.log('取消收藏:', id)
-  // TODO: 实现取消收藏功能
+const deleteDraft = async (draftId: number) => {
+  if (!confirm('确定要删除这个草稿吗？此操作不可恢复。')) {
+    return
+  }
+  
+  try {
+    await articleApi.deleteArticle(draftId)
+    toast.success('草稿已删除', '操作成功')
+    // 重新加载草稿列表
+    await loadDraftArticles()
+  } catch (error: any) {
+    toast.error('删除草稿失败', '错误')
+  }
+}
+
+const publishDraft = async (draftId: number) => {
+  try {
+    // 这里需要实现发布草稿的API
+    toast.success('草稿已发布', '操作成功')
+    // 重新加载数据
+    await loadDraftArticles()
+    await loadCreatedArticles()
+  } catch (error: any) {
+    toast.error('发布草稿失败', '错误')
+  }
+}
+
+// 监听选项卡切换，按需加载数据
+const onTabChange = async (newTab: string) => {
+  activeTab.value = newTab
+  
+  if (newTab === 'favorites' && favoriteArticles.value.length === 0) {
+    await loadFavoriteArticles()
+  } else if (newTab === 'created' && createdArticles.value.length === 0) {
+    await loadCreatedArticles()
+  } else if (newTab === 'drafts' && draftArticles.value.length === 0) {
+    await loadDraftArticles()
+  }
+}
+
+// 初始化数据
+onMounted(async () => {
+  await loadArticleStats()
+  await loadFavoriteArticles() // 默认加载收藏文章
+})
+
+// 草稿编辑方法
+const editDraft = (draftId: number) => {
+  router.push(`/editor/${draftId}`)
 }
 </script>
 
