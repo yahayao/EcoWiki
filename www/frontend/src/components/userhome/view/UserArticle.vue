@@ -685,18 +685,18 @@ const editDraft = (draftId: number) => {
 /* 统计概览 */
 .stats-overview {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
   margin-bottom: 32px;
 }
 
 .stat-card {
   background: white;
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 12px;
+  padding: 16px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   border: 1px solid #e2e8f0;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
@@ -738,14 +738,14 @@ const editDraft = (draftId: number) => {
   right: 0;
   bottom: 0;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 16px;
+  border-radius: 12px;
   pointer-events: none;
 }
 
 .stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -769,8 +769,8 @@ const editDraft = (draftId: number) => {
 }
 
 .stat-icon .icon {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   fill: white;
 }
 
@@ -779,15 +779,15 @@ const editDraft = (draftId: number) => {
 }
 
 .stat-number {
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 700;
   color: #1a202c;
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .stat-label {
-  font-size: 14px;
+  font-size: 12px;
   color: #718096;
   font-weight: 500;
 }
@@ -989,7 +989,8 @@ const editDraft = (draftId: number) => {
   }
   
   .stats-overview {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
   
   .article-tabs {
@@ -1030,7 +1031,13 @@ const editDraft = (draftId: number) => {
   .stat-card {
     flex-direction: column;
     text-align: center;
-    gap: 12px;
+    gap: 8px;
+    padding: 12px;
+  }
+  
+  .stats-overview {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 }
 </style>
