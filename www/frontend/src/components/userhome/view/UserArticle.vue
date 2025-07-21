@@ -703,7 +703,6 @@ const editDraft = (draftId: number) => {
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
 }
 
@@ -713,14 +712,22 @@ const editDraft = (draftId: number) => {
 }
 
 .stat-card.clickable:hover {
-  transform: translateY(-3px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 .stat-card.active {
   border-color: #667eea;
-  box-shadow: 0 8px 30px rgba(102, 126, 234, 0.2);
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.stat-card.active .stat-content .stat-number {
+  color: white;
+}
+
+.stat-card.active .stat-content .stat-label {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .stat-card.active::after {
@@ -730,7 +737,7 @@ const editDraft = (draftId: number) => {
   left: 0;
   right: 0;
   bottom: 0;
-  border: 2px solid #667eea;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 16px;
   pointer-events: none;
 }
