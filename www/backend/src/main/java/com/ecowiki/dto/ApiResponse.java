@@ -25,12 +25,15 @@ public class ApiResponse<T> {
     private T data;
     /** 响应时间戳 */
     private long timestamp;
+    /** 是否成功 */
+    private boolean success;
 
     public ApiResponse(int code, String message, T data) {
         this.code = code;
         this.message = message;
         this.data = data;
         this.timestamp = System.currentTimeMillis();
+        this.success = code >= 200 && code < 300;
     }
 
     /**
@@ -82,7 +85,10 @@ public class ApiResponse<T> {
 
     // Getters and Setters
     public int getCode() { return code; }
-    public void setCode(int code) { this.code = code; }
+    public void setCode(int code) { 
+        this.code = code;
+        this.success = code >= 200 && code < 300;
+    }
     
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
@@ -92,4 +98,7 @@ public class ApiResponse<T> {
     
     public long getTimestamp() { return timestamp; }
     public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
+    
+    public boolean isSuccess() { return success; }
+    public void setSuccess(boolean success) { this.success = success; }
 }

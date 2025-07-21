@@ -71,3 +71,14 @@ api.interceptors.response.use(
 )
 
 export { api }
+
+// 导出各模块API
+export { articleApi } from './article'
+export { userApi } from './user' 
+export { TagApi } from './tag'
+export { messageApi } from './message'
+export { commentApi } from './comment'
+
+// 导出主要类型接口
+export type { Article, ArticleVersion, CreateVersionRequest } from './article'
+export type { Comment, Reply, CreateCommentRequest } from './comment'
