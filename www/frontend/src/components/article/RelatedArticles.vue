@@ -108,6 +108,7 @@ const articles = ref<RelatedArticle[]>([])
 const loading = ref(false)
 const loadingMore = ref(false)
 const hasMore = ref(true)
+const currentPage = ref(0) // 添加当前页码状态
 
 // 模拟推荐算法的文章转换
 const convertToRelatedArticle = (article: Article): RelatedArticle => {
@@ -133,17 +134,27 @@ onMounted(() => {
 // 监听当前文章变化
 watch(() => props.currentArticleId, () => {
   if (props.currentArticleId) {
+    // 重置状态
+    articles.value = []
+    currentPage.value = 0
+    hasMore.value = true
     loadRelatedArticles()
   }
 })
 
 const loadRelatedArticles = async () => {
   loading.value = true
+  currentPage.value = 0 // 重置页码
   try {
     // 获取相关文章 - 基于分类、标签等进行推荐
     const response = await articleApi.getArticles(0, props.maxResults || 6)
     
-    articles.value = response.content.map(convertToRelatedArticle)
+    // 过滤掉当前文章，避免推荐自己
+    const filteredArticles = response.content.filter(
+      (article: Article) => article.articleId !== props.currentArticleId
+    )
+    
+    articles.value = filteredArticles.map(convertToRelatedArticle)
     hasMore.value = response.totalElements > (props.maxResults || 6)
   } catch (error) {
     console.error('加载相关文章失败:', error)
@@ -188,21 +199,41 @@ const loadMockData = () => {
 const loadMore = async () => {
   loadingMore.value = true
   try {
-    // 加载更多相关文章
-    const response = await articleApi.getArticles(1, 3)
+    // 递增页码以获取下一页数据
+    currentPage.value++
     
-    const moreArticles = response.content.map(convertToRelatedArticle)
-    articles.value.push(...moreArticles)
-    hasMore.value = response.content.length === 3
+    // 加载更多相关文章
+    const response = await articleApi.getArticles(currentPage.value, 3)
+    
+    // 过滤掉当前文章和已存在的文章，避免重复
+    const existingIds = new Set(articles.value.map(article => article.id))
+    const filteredArticles = response.content.filter(
+      (article: Article) => article.articleId !== props.currentArticleId && 
+                           !existingIds.has(article.articleId)
+    )
+    
+    if (filteredArticles.length > 0) {
+      const moreArticles = filteredArticles.map(convertToRelatedArticle)
+      articles.value.push(...moreArticles)
+    }
+    
+    // 判断是否还有更多数据
+    hasMore.value = response.content.length === 3 && filteredArticles.length > 0
   } catch (error) {
     console.error('加载更多文章失败:', error)
     toast.show('加载更多失败', '错误', { type: 'error' })
+    // 如果加载失败，回退页码
+    currentPage.value = Math.max(0, currentPage.value - 1)
   } finally {
     loadingMore.value = false
   }
 }
 
 const refreshRecommendations = () => {
+  // 重置状态
+  articles.value = []
+  currentPage.value = 0
+  hasMore.value = true
   loadRelatedArticles()
 }
 
