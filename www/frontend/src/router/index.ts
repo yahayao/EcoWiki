@@ -31,12 +31,14 @@
  */
 
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
 
 // 导入页面组件
 import DynamicHome from '../views/DynamicHome.vue'
 import ArticleDetail from '../views/ArticleDetail.vue'
 import ArticleEdit from '../views/ArticleEdit.vue'
 import ArticleHistory from '../views/ArticleHistory.vue'
+import CreatePage from '../views/CreatePage.vue'
 
 // 导入用户个人资料组件
 import UserProfile from '../components/userhome/UserProfile.vue'
@@ -64,6 +66,7 @@ const routes = [
   { path: '/wiki/:title', name: 'ArticleDetail', component: ArticleDetail },
   { path: '/wiki/:title/history', name: 'ArticleHistory', component: ArticleHistory },
   { path: '/edit/:title', name: 'ArticleEdit', component: ArticleEdit },
+  { path: '/create', name: 'CreatePage', component: CreatePage },
   
   {
     path: '/UserProfile',
@@ -114,12 +117,23 @@ const router = createRouter({
  * 主要功能：
  * 1. 保存进入管理后台前的路由，便于返回
  * 2. 检测离开管理后台的导航，触发关闭事件
+ * 3. 检查创建页面的访问权限
  * 
  * @param to 即将进入的路由对象
  * @param from 当前导航正要离开的路由对象
  * @param next 确认导航的回调函数
  */
 router.beforeEach((to, from, next) => {
+  // 检查创建页面权限
+  if (to.name === 'CreatePage') {
+    const { isAuthenticated } = useAuth()
+    if (!isAuthenticated.value) {
+      // 未登录用户重定向到首页
+      next('/')
+      return
+    }
+  }
+
   // 如果即将进入管理后台，且来源不是管理后台
   if (to.path.startsWith('/admin') && !from.path.startsWith('/admin')) {
     // 保存来源路由到localStorage，用于返回按钮功能

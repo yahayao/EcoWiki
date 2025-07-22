@@ -50,6 +50,19 @@
 <template>
   <!-- 用户操作区域容器 -->
   <div class="user-area">
+    <!-- 创建页面按钮 - 仅登录用户可见 -->
+    <button 
+      v-if="isAuthenticated"
+      class="action-button create-button" 
+      @click="navigateToCreatePage"
+      title="创建新页面"
+    >
+      <svg viewBox="0 0 24 24" class="button-icon">
+        <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
+      </svg>
+      创建页面
+    </button>
+
     <!-- 已登录状态 - 显示用户信息和操作按钮 -->
     <template v-if="isAuthenticated">
       <!-- 用户信息展示 -->
@@ -99,6 +112,7 @@
  */
 
 import { computed, ref, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuth } from '../../composables/useAuth'
 import { userApi, USER_GROUPS } from '../../api/user'
 import { messageApi } from '../../api/message'
@@ -129,10 +143,22 @@ defineEmits<{
 const { user, isAuthenticated, userAvatar } = useAuth()
 
 /**
+ * 路由实例
+ */
+const router = useRouter()
+
+/**
  * 响应式数据
  */
 const showMenu = ref(false)
 const unreadCount = ref(0)
+
+/**
+ * 导航到创建页面
+ */
+const navigateToCreatePage = () => {
+  router.push('/create')
+}
 
 /**
  * 管理员权限检查
@@ -297,6 +323,31 @@ onMounted(() => {
   background-color: #f7fafc;             /* 悬停时背景稍微变色 */
   transform: translateY(-1px);           /* 向上轻微移动 */
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);  /* 添加阴影效果 */
+}
+
+/* 创建页面按钮样式 */
+.create-button {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);  /* 绿色渐变背景 */
+  color: white;                          /* 白色文字 */
+  border: none;                          /* 无边框 */
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);  /* 绿色阴影 */
+  display: flex;                         /* 弹性布局 */
+  align-items: center;                   /* 垂直居中 */
+  gap: 6px;                             /* 图标和文字间距 */
+}
+
+/* 创建页面按钮悬停效果 */
+.create-button:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);  /* 更深的绿色渐变 */
+  transform: translateY(-1px);           /* 向上轻微移动 */
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);  /* 加强阴影效果 */
+}
+
+/* 按钮图标样式 */
+.button-icon {
+  width: 16px;                          /* 图标宽度 */
+  height: 16px;                         /* 图标高度 */
+  fill: currentColor;                   /* 图标颜色继承文字颜色 */
 }
 
 /* 登出按钮样式 */
