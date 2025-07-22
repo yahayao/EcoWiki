@@ -62,8 +62,14 @@ public class ArticleService {
      * 创建新文章
      * @param request 文章创建请求对象
      * @return 创建成功的文章DTO
+     * @throws IllegalArgumentException 如果文章标题已存在
      */
     public ArticleDto createArticle(ArticleCreateRequest request) {
+        // 检查标题是否已存在
+        if (articleRepository.findByTitle(request.getTitle()).isPresent()) {
+            throw new IllegalArgumentException("标题为 '" + request.getTitle() + "' 的文章已存在");
+        }
+        
         Article article = new Article();
         article.setTitle(request.getTitle());
         article.setAuthor(request.getAuthor());
@@ -94,6 +100,15 @@ public class ArticleService {
         }
         
         return convertToDto(savedArticle);
+    }
+
+    /**
+     * 检查文章标题是否已存在
+     * @param title 文章标题
+     * @return 如果标题已存在返回true，否则返回false
+     */
+    public boolean titleExists(String title) {
+        return articleRepository.findByTitle(title).isPresent();
     }
 
     /**

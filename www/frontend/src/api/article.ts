@@ -334,6 +334,34 @@ class ArticleApi {
   }
 
   /**
+   * 检查文章标题是否已存在
+   * 
+   * 在创建文章前检查标题是否重复，避免创建重复内容。
+   * 可用于实时验证用户输入的标题。
+   * 
+   * @param {string} title - 要检查的文章标题
+   * @returns {Promise<boolean>} 如果标题已存在返回true，否则返回false
+   * @throws {Error} 当检查失败时抛出错误信息
+   * 
+   * @example
+   * ```typescript
+   * const exists = await articleApi.checkTitleExists("生态保护指南");
+   * if (exists) {
+   *   console.log("标题已存在，请选择其他标题");
+   * }
+   * ```
+   */
+  async checkTitleExists(title: string): Promise<boolean> {
+    const response = await this.api.get<ApiResponse<boolean>>('/articles/check-title', {
+      params: { title }
+    })
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message)
+    }
+    return response.data.data
+  }
+
+  /**
    * 获取文章列表（分页查询）
    * 
    * 支持分页、排序的文章列表查询，是文章展示的核心功能。

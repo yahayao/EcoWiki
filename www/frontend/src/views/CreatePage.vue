@@ -45,18 +45,31 @@
             <label for="pageTitle" class="form-label">
               页面标题 <span class="required">*</span>
             </label>
-            <input
-              id="pageTitle"
-              v-model="form.title"
-              type="text"
-              class="form-input"
-              :class="{ error: titleError }"
-              placeholder="请输入页面标题..."
-              @input="validateTitle"
-              @blur="validateTitle"
-            />
+            <div class="input-wrapper">
+              <input
+                id="pageTitle"
+                v-model="form.title"
+                type="text"
+                class="form-input"
+                :class="{ 
+                  error: titleError,
+                  success: titleAvailable === true,
+                  checking: checkingTitle
+                }"
+                placeholder="请输入页面标题..."
+                @input="debouncedValidateTitle"
+                @blur="validateTitle"
+              />
+              <!-- 状态指示器 -->
+              <div class="input-status">
+                <span v-if="checkingTitle" class="checking-icon">⏳</span>
+                <span v-else-if="titleAvailable === true" class="success-icon">✓</span>
+                <span v-else-if="titleAvailable === false" class="error-icon">✗</span>
+              </div>
+            </div>
             <div v-if="titleError" class="form-error">{{ titleError }}</div>
-            <div v-else-if="form.title" class="form-help">
+            <div v-else-if="titleAvailable === false" class="form-error">该标题已存在，请选择其他标题</div>
+            <div v-else-if="form.title && titleAvailable === true" class="form-help">
               URL预览: <code>/wiki/{{ encodeURIComponent(form.title) }}</code>
             </div>
           </div>
@@ -106,6 +119,19 @@ if (!isAuthenticated.value) {
   router.replace('/')
 }
 
+// 防抖函数
+const debounce = (func: Function, wait: number) => {
+  let timeout: ReturnType<typeof setTimeout>
+  return function executedFunction(...args: any[]) {
+    const later = () => {
+      clearTimeout(timeout)
+      func(...args)
+    }
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
+}
+
 // 表单数据
 const form = ref({
   title: '',
@@ -115,6 +141,8 @@ const form = ref({
 // 状态管理
 const creating = ref(false)
 const titleError = ref('')
+const checkingTitle = ref(false)
+const titleAvailable = ref<boolean | null>(null)
 
 // 页面模板配置 - 使用空白模板
 const templates = ref([
@@ -127,27 +155,25 @@ const templates = ref([
   }
 ])
 
-// 计算属性
-const canCreate = computed(() => {
-  return form.value.title.trim() && !titleError.value
-})
-
 // 验证标题
-const validateTitle = () => {
+const validateTitle = async () => {
   const title = form.value.title.trim()
   
   if (!title) {
     titleError.value = '页面标题不能为空'
+    titleAvailable.value = null
     return
   }
   
   if (title.length < 2) {
     titleError.value = '页面标题至少需要2个字符'
+    titleAvailable.value = null
     return
   }
   
   if (title.length > 100) {
     titleError.value = '页面标题不能超过100个字符'
+    titleAvailable.value = null
     return
   }
   
@@ -155,15 +181,61 @@ const validateTitle = () => {
   const invalidChars = /[<>:"\/\\|?*]/
   if (invalidChars.test(title)) {
     titleError.value = '页面标题不能包含特殊字符 < > : " / \\ | ? *'
+    titleAvailable.value = null
     return
+  }
+  
+  // 检查标题是否已存在
+  try {
+    checkingTitle.value = true
+    titleAvailable.value = null
+    const exists = await articleApi.checkTitleExists(title)
+    if (exists) {
+      titleError.value = '该标题已存在，请选择其他标题'
+      titleAvailable.value = false
+      return
+    } else {
+      titleAvailable.value = true
+    }
+  } catch (error) {
+    console.error('检查标题失败:', error)
+    titleAvailable.value = null
+    // 检查失败不阻止用户继续，但会在创建时再次验证
+  } finally {
+    checkingTitle.value = false
   }
   
   titleError.value = ''
 }
 
+// 计算属性
+const canCreate = computed(() => {
+  return form.value.title.trim() && !titleError.value && !checkingTitle.value && titleAvailable.value === true
+})
+
+// 创建防抖的标题验证函数
+const debouncedValidateTitle = debounce(() => {
+  if (!form.value.title.trim()) {
+    titleError.value = ''
+    titleAvailable.value = null
+    checkingTitle.value = false
+    return
+  }
+  validateTitle()
+}, 500)
+
 // 创建页面
 const createPage = async () => {
   if (!canCreate.value) return
+  
+  // 最终验证标题可用性
+  if (!titleAvailable.value) {
+    await validateTitle()
+    if (!titleAvailable.value) {
+      toast.error('请输入有效且可用的页面标题', '创建失败')
+      return
+    }
+  }
   
   creating.value = true
   
@@ -196,7 +268,13 @@ const createPage = async () => {
     
   } catch (error: any) {
     console.error('创建页面失败:', error)
-    toast.error(error.message || '创建页面失败', '错误')
+    if (error.message && error.message.includes('已存在')) {
+      titleError.value = error.message
+      titleAvailable.value = false
+      toast.error('标题已存在，请选择其他标题', '创建失败')
+    } else {
+      toast.error(error.message || '创建页面失败', '错误')
+    }
   } finally {
     creating.value = false
   }
@@ -307,6 +385,12 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .form-label {
   display: block;
   margin-bottom: 8px;
@@ -322,11 +406,28 @@ onMounted(() => {
 .form-textarea,
 .form-select {
   width: 100%;
-  padding: 12px 16px;
+  padding: 12px 40px 12px 16px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   font-size: 14px;
   transition: all 0.2s;
+}
+
+.form-input.success {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.form-input.checking {
+  border-color: #f59e0b;
+}
+
+.input-status {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
 }
 
 .form-input:focus,
@@ -344,6 +445,34 @@ onMounted(() => {
 .form-error {
   margin-top: 4px;
   color: #ef4444;
+  font-size: 12px;
+}
+
+.success-icon {
+  color: #10b981;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.error-icon {
+  color: #ef4444;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.checking-icon {
+  font-size: 14px;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.form-checking {
+  margin-top: 4px;
+  color: #f59e0b;
   font-size: 12px;
 }
 

@@ -62,9 +62,28 @@ public class ArticleController {
             ArticleDto article = articleService.createArticle(request);
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(article, "文章创建成功"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error("创建文章失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 检查文章标题是否已存在
+     * @param title 要检查的标题
+     * @return 检查结果
+     */
+    @GetMapping("/check-title")
+    public ResponseEntity<ApiResponse<Boolean>> checkTitleExists(@RequestParam String title) {
+        try {
+            boolean exists = articleService.titleExists(title);
+            return ResponseEntity.ok(ApiResponse.success(exists, exists ? "标题已存在" : "标题可用"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("检查标题失败: " + e.getMessage()));
         }
     }
 
