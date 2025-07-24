@@ -143,6 +143,13 @@ import { articleApi, type Article, type ArticleVersion } from '../api/article'
 const route = useRoute()
 const router = useRouter()
 
+// 定义组件事件
+const emit = defineEmits<{
+  'show-login': []
+  'show-register': []
+  'show-admin': []
+}>()
+
 /**
  * 响应式状态管理
  */
@@ -207,8 +214,8 @@ const goBack = () => {
 }
 
 const showLoginModal = () => {
-  // 显示登录模态框的逻辑
-  console.log('显示登录模态框')
+  // 向父组件发送显示登录模态框的事件
+  emit('show-login')
 }
 
 // 浮动按钮事件处理
