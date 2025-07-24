@@ -210,7 +210,7 @@ export interface UserResponse {
   /** 账户是否激活 */
   active: boolean
   /** 用户头像URL */
-  avatar?: string
+  avatarUrl?: string
   /** 账户创建时间 */
   createdAt: string
   /** 最后更新时间 */
@@ -947,10 +947,13 @@ export const userApi = {
     try {
       const formData = new FormData()
       formData.append('avatar', avatarFile)
-
-      const response = await api.post('/auth/avatar', formData, {
+      console.log('发送头像更新请求:', {
+        fileName: avatarFile.name,
+        fileSize: avatarFile.size
+      })
+      const response = await api.post('/profile/avatar', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'frontend/public/avatar-img',
         },
       })
 

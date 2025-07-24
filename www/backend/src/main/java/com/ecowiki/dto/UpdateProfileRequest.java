@@ -1,5 +1,7 @@
 package com.ecowiki.dto;
 
+import org.hibernate.validator.constraints.URL;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 
@@ -17,15 +19,19 @@ public class UpdateProfileRequest {
     @Email(message = "邮箱格式不正确")
     @Size(max = 100, message = "邮箱长度不能超过100个字符")
     private String email;
+
+    @URL(message = "头像URL格式不正确")
+    private String avatarUrl; // 新增字段
     
     // 构造函数
     public UpdateProfileRequest() {
     }
     
-    public UpdateProfileRequest(String username, String fullName, String email) {
+    public UpdateProfileRequest(String username, String fullName, String email, String avatarUrl) {
         this.username = username;
         this.fullName = fullName;
         this.email = email;
+        this.avatarUrl = avatarUrl;
     }
     
     // Getter和Setter方法
@@ -52,6 +58,14 @@ public class UpdateProfileRequest {
     public void setEmail(String email) {
         this.email = email;
     }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+    
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
     
     @Override
     public String toString() {
@@ -59,6 +73,7 @@ public class UpdateProfileRequest {
                 "username='" + username + '\'' +
                 ", fullName='" + fullName + '\'' +
                 ", email='" + email + '\'' +
+                ", avatarUrl='" + avatarUrl + '\'' +
                 '}';
     }
 }

@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.ecowiki.controller.api.ApiProfileController;
 
 import com.ecowiki.dto.ApiResponse;
 import com.ecowiki.dto.LoginRequest;
@@ -83,7 +85,6 @@ import jakarta.validation.Valid;
  * @since 2024-01-01
  */
 @RestController
-@RequestMapping("/auth")
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")  // 允许任意前端跨域访问
 @Validated  // 启用请求参数验证
 public class AuthController {
@@ -111,7 +112,7 @@ public class AuthController {
      * @param username 要检查的用户名
      * @return API响应，包含可用性状态
      */
-    @GetMapping("/check-username")
+    @GetMapping("/auth/check-username")
     public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkUsername(@RequestParam String username) {
         Map<String, Boolean> result = new HashMap<>();
         result.put("available", userService.isUsernameAvailable(username));
@@ -127,14 +128,14 @@ public class AuthController {
      * @param email 要检查的邮箱地址
      * @return API响应，包含可用性状态
      */
-    @GetMapping("/check-email")
+    @GetMapping("/auth/check-email")
     public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkEmail(@RequestParam String email) {
         Map<String, Boolean> result = new HashMap<>();
         result.put("available", userService.isEmailAvailable(email));
         return ResponseEntity.ok(ApiResponse.success(result));
     }
     
-    @PostMapping("/register")
+    @PostMapping("/auth/register")
     public ResponseEntity<ApiResponse<Map<String, Object>>> registerUser(@Valid @RequestBody UserRegistrationDto dto) {
         try {
             User user = userService.registerUser(dto);
@@ -155,7 +156,7 @@ public class AuthController {
         }
     }
     
-    @PostMapping("/login")
+    @PostMapping("/auth/login")
     public ResponseEntity<ApiResponse<Map<String, Object>>> loginUser(@Valid @RequestBody LoginRequest request) {
         try {
             User user = userService.authenticateUser(request);
@@ -176,7 +177,7 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/reset-password")
+    @PostMapping("/auth/reset-password")
     public ResponseEntity<ApiResponse<Map<String, Object>>> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) {
         try {
             // 支持用户名或邮箱登录
@@ -216,7 +217,7 @@ public class AuthController {
         }
     }
     
-    @GetMapping("/health")
+    @GetMapping("/auth/health")
     public ResponseEntity<ApiResponse<Map<String, String>>> health() {
         Map<String, String> result = new HashMap<>();
         result.put("status", "OK");
@@ -233,7 +234,7 @@ public class AuthController {
      * @param request HTTP请求，包含Authorization头部
      * @return API响应，包含用户详细信息
      */
-    @GetMapping("/me")
+    @GetMapping("/auth/me")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getCurrentUser(jakarta.servlet.http.HttpServletRequest request) {
         try {
             String token = extractTokenFromRequest(request);
@@ -280,12 +281,14 @@ public class AuthController {
         }
     }
     
+    
     /**
      * 更新用户个人资料
      * @param request HTTP请求
      * @param profileData 要更新的个人资料数据
      * @return 更新后的用户信息
      */
+    
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<Object>> updateProfile(
             jakarta.servlet.http.HttpServletRequest request,
@@ -340,6 +343,9 @@ public class AuthController {
                 }
                 user.setEmail(profileData.getEmail().trim());
             }
+            if (profileData.getAvatarUrl() != null && !profileData.getAvatarUrl().trim().isEmpty()) {
+            user.setAvatarUrl(profileData.getAvatarUrl().trim());
+        }
             
             // 保存更新后的用户信息
             User updatedUser = userService.saveUser(user);
