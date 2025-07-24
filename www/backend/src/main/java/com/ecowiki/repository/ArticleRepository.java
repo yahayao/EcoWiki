@@ -190,4 +190,19 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
      */
     @Query("SELECT SUM(a.likes) FROM Article a")
     Long getTotalLikes();
+        
+    /**
+     * 获取所有文章ID列表
+     * @return 文章ID列表
+     */
+    @Query("SELECT a.articleId FROM Article a")
+    List<Long> findAllArticleIds();
+    
+    /**
+     * 获取指定文章的评论数
+     * @param articleId 文章ID
+     * @return 评论数
+     */
+    @Query("SELECT a.comments FROM Article a WHERE a.articleId = :articleId")
+    Integer getCommentsCount(@Param("articleId") Long articleId);
 }

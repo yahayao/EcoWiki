@@ -46,6 +46,9 @@ public class CommentService {
     @Autowired
     private UserRepository userRepository;
     
+    @Autowired
+    private ArticleService articleService;
+    
     /**
      * 根据文章ID分页查询评论
      * 
@@ -107,6 +110,9 @@ public class CommentService {
         
         Comment savedComment = commentRepository.save(comment);
         
+        // 更新文章的评论计数
+        updateArticleCommentCount(articleId);
+        
         return convertToDTO(savedComment, username);
     }
     
@@ -144,6 +150,9 @@ public class CommentService {
         reply.setDeleted(false);
         
         Comment savedReply = commentRepository.save(reply);
+        
+        // 更新文章的评论计数（回复也算作评论）
+        updateArticleCommentCount(parentComment.getArticleId());
         
         return convertReplyToDTO(savedReply, username);
     }
@@ -217,8 +226,12 @@ public class CommentService {
             throw new RuntimeException("无权限删除此评论");
         }
         
+        Long articleId = comment.getArticleId();
         comment.softDelete();
         commentRepository.save(comment);
+        
+        // 更新文章的评论计数
+        updateArticleCommentCount(articleId);
     }
     
     /**
@@ -308,6 +321,19 @@ public class CommentService {
         dto.setIsLiked(isLiked);
         
         return dto;
+    }
+    
+    /**
+     * 更新文章的评论计数
+     * 
+     * @param articleId 文章ID
+     */
+    private void updateArticleCommentCount(Long articleId) {
+        // 统计该文章的实际评论数（包括顶级评论和回复，但排除已删除的）
+        long commentCount = commentRepository.countAllCommentsByArticleId(articleId);
+        
+        // 调用ArticleService更新文章表中的评论数
+        articleService.updateCommentsCount(articleId, (int) commentCount);
     }
     
     /**
