@@ -1,0 +1,161 @@
+===============================================
+Spring Boot 2FA Demo 网页访问指南
+===============================================
+
+应用程序配置信息：
+- 服务器端口：8080
+- 应用名称：2FA-Demo
+- 基础URL：http://localhost:8080
+
+===============================================
+可访问的网页端点
+===============================================
+
+1. 【TOTP设置端点 - 固定密钥】
+   URL: http://localhost:8080/auth/totp-setup?username=testuser
+   方法: GET
+   功能: 获取固定的TOTP密钥和QR码URL
+   参数: username (必需) - 用户名
+   返回格式: JSON
+   示例返回:
+   {
+     "secret": "OZSNQGV44RGY63BL",
+     "qrCodeUrl": "otpauth://totp/testuser@SpringBootDemo?secret=OZSNQGV44RGY63BL"
+   }
+
+2. 【TOTP设置端点 - 动态密钥】
+   URL: http://localhost:8080/auth/totp-setup1?username=testuser
+   方法: GET
+   功能: 生成新的随机TOTP密钥和QR码URL
+   参数: username (必需) - 用户名
+   返回格式: JSON
+   示例返回:
+   {
+     "secret": "动态生成的32位密钥",
+     "qrCodeUrl": "otpauth://totp/testuser@SpringBootDemo?secret=动态密钥"
+   }
+
+3. 【简单测试端点】
+   URL: http://localhost:8080/test/test1
+   方法: GET
+   功能: 测试应用程序是否正常运行
+   参数: 无
+   返回: "hell1" (文本)
+
+4. 【TOTP验证端点】
+   URL: http://localhost:8080/test/totp-verify?totp=123456
+   方法: GET
+   功能: 验证6位TOTP验证码
+   参数: totp (必需) - 6位数字验证码
+   注意: 此端点可能需要身份验证
+   成功返回: "2FA 成功!"
+   失败返回: "无效的 TOTP!"
+
+===============================================
+使用步骤指南
+===============================================
+
+第一步：启动应用程序
+1. 在项目根目录运行: mvn spring-boot:run
+2. 等待应用程序启动完成
+3. 看到 "Started DemoApplication" 表示启动成功
+
+第二步：测试应用程序连接
+1. 在浏览器中访问: http://localhost:8080/test/test1
+2. 如果显示 "hell1"，说明应用程序正常运行
+
+第三步：设置TOTP（双因子认证）
+1. 访问: http://localhost:8080/auth/totp-setup?username=您的用户名
+2. 复制返回的secret密钥: OZSNQGV44RGY63BL
+3. 复制返回的qrCodeUrl（用于生成二维码）
+
+第四步：配置Google Authenticator
+1. 在手机上下载 Google Authenticator 应用
+2. 选择 "扫描二维码" 或 "手动输入"
+3. 如果手动输入，使用密钥: OZSNQGV44RGY63BL
+4. 如果扫描二维码，需要将qrCodeUrl转换为二维码图片
+
+第五步：验证TOTP
+1. 在Google Authenticator中查看6位验证码
+2. 访问: http://localhost:8080/test/totp-verify?totp=您的6位验证码
+3. 看到 "2FA 成功!" 表示验证成功
+
+===============================================
+Spring Security 配置
+===============================================
+
+无需认证的路径：
+- /login
+- /totp-setup
+- /totp-verify
+- /auth/**
+- /test/**
+
+需要认证的路径：
+- 其他所有路径
+
+默认用户配置：
+- 用户名: user
+- 密码: password
+- 角色: USER
+
+===============================================
+故障排除
+===============================================
+
+如果无法访问网页：
+1. 检查应用程序是否正在运行
+2. 检查端口8080是否被占用
+3. 查看控制台日志是否有错误信息
+
+如果TOTP验证失败：
+1. 确保手机时间与服务器时间同步
+2. 检查输入的6位验证码是否正确
+3. 确保使用正确的密钥: OZSNQGV44RGY63BL
+
+如果出现编译错误：
+1. 确保Java版本为21
+2. 运行: mvn clean compile
+3. 检查所有依赖是否正确下载
+
+===============================================
+示例curl命令
+===============================================
+
+测试应用程序：
+curl http://localhost:8080/test/test1
+
+获取TOTP设置：
+curl "http://localhost:8080/auth/totp-setup?username=testuser"
+
+验证TOTP（替换123456为实际验证码）：
+curl "http://localhost:8080/test/totp-verify?totp=123456"
+
+===============================================
+项目文件结构
+===============================================
+
+主要文件：
+- DemoApplication.java - 应用程序入口
+- SecurityConfig.java - Spring Security配置
+- TotpAuthenticator.java - TOTP认证核心类
+- TotpSetupController.java - TOTP设置控制器
+- TotpVerifyController.java - TOTP验证控制器
+- QRCodeResponse.java - 响应DTO类
+- application.properties - 应用配置
+
+依赖库：
+- Spring Boot Starter Web
+- Spring Boot Starter Security
+- Google Authenticator (warrenstrange)
+
+===============================================
+备注
+===============================================
+
+- 此项目使用固定密钥 OZSNQGV44RGY63BL 进行演示
+- 生产环境中应该为每个用户生成唯一密钥
+- 需要实现密钥的持久化存储（数据库）
+- 当前配置禁用了CSRF保护以简化测试
+
+创建时间: 2025年7月22日

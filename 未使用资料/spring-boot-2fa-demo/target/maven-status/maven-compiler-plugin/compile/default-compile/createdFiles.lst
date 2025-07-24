@@ -1,0 +1,9 @@
+com\example\demo\DemoApplication.class
+com\example\demo\security\TotpAuthenticationToken.class
+com\example\demo\web\TotpVerifyController.class
+com\example\demo\security\TotpAuthenticationFilter.class
+com\example\demo\security\TotpAuthenticator.class
+com\example\demo\dto\QRCodeResponse.class
+com\example\demo\security\SecurityConfig.class
+com\example\demo\web\TotpSetupController.class
+com\example\demo\security\TotpAuthenticationProvider.class
