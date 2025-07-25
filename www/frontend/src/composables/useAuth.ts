@@ -142,10 +142,12 @@ const isAuthenticated = computed(() => {
 
 // 获取用户头像
 const userAvatar = computed(() => {
-  if (user.value?.avatar) {
-    return user.value.avatar
+  // 优先从用户数据中的 avatarUrl 字段获取
+  if (user.value?.avatarUrl) {
+    return user.value.avatarUrl
   }
   
+  // 如果没有头像URL，生成默认头像
   const username = user.value?.username || 'User'
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=667eea&color=fff&size=40`
 })
@@ -188,6 +190,62 @@ const isSuperAdmin = computed(() => {
 // 初始化认证状态
 initializeAuth()
 
+/**
+ * 刷新用户信息
+ * 
+ * 从后端重新获取用户信息并更新本地缓存
+ * 用于头像更新、个人信息修改后的数据同步
+ */
+const refreshUserInfo = async () => {
+  if (!token.value) {
+    console.warn('用户未登录，无法刷新用户信息')
+    return false
+  }
+  
+  try {
+    // 调用后端API获取最新用户信息
+    const response = await fetch('http://localhost:8080/api/auth/me', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token.value}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+    
+    const result = await response.json()
+    
+    if (result.code === 200 && result.data) {
+      // 更新用户信息
+      user.value = {
+        userId: result.data.id,
+        username: result.data.username,
+        email: result.data.email,
+        fullName: result.data.fullName,
+        userGroup: result.data.userGroup,
+        active: result.data.active,
+        avatarUrl: result.data.avatarUrl,
+        createdAt: result.data.createdAt,
+        updatedAt: result.data.updatedAt
+      }
+      
+      // 更新本地存储
+      localStorage.setItem('user', JSON.stringify(user.value))
+      
+      console.log('用户信息刷新成功:', user.value.username, user.value.avatarUrl)
+      return true
+    } else {
+      throw new Error(result.message || '获取用户信息失败')
+    }
+  } catch (error) {
+    console.error('刷新用户信息失败:', error)
+    return false
+  }
+}
+
 export function useAuth() {
   return {
     // 状态
@@ -206,6 +264,7 @@ export function useAuth() {
     setUser,
     clearUser,
     hasPermission,
+    refreshUserInfo,
     
     // 常量
     USER_GROUPS

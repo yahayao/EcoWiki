@@ -380,6 +380,7 @@ public class AuthController {
         // 角色信息现在通过UserService获取
         userResponse.put("userGroup", userService.getUserRoleName(user.getUserId().intValue()));
         userResponse.put("active", user.getActive());
+        userResponse.put("avatarUrl", user.getAvatarUrl()); // 添加头像URL字段
         userResponse.put("createdAt", user.getCreatedAt());
         userResponse.put("updatedAt", user.getUpdatedAt());
         return userResponse;

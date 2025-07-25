@@ -322,7 +322,7 @@ function formatDate(dateString?: string) {
   }
 }
 
-const { user, userAvatar, setUser } = useAuth()
+const { user, userAvatar, setUser, refreshUserInfo } = useAuth()
 
 // 编辑状态管理
 const isEditing = ref(false)
@@ -358,7 +358,7 @@ function startEdit() {
 }
 
 // 头像上传成功处理
-const handleAvatarUploadSuccess = (result: {
+const handleAvatarUploadSuccess = async (result: {
   avatarUrl: string
   fullUrl: string
   fileName: string
@@ -366,6 +366,9 @@ const handleAvatarUploadSuccess = (result: {
 }) => {
   toast.show('头像更新成功！', '成功', { type: 'success' })
   console.log('头像上传成功:', result)
+  
+  // 刷新用户信息以获取最新的头像URL
+  await refreshUserInfo()
 }
 
 // 头像上传失败处理
