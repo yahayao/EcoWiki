@@ -16,6 +16,7 @@ public class CommentDTO {
     private String id;
     private Long articleId;
     private String author;
+    private String userAvatar;  // 用户头像URL
     private String content;
     private String createdAt;
     private Integer likes;
@@ -60,6 +61,14 @@ public class CommentDTO {
     
     public void setAuthor(String author) {
         this.author = author;
+    }
+    
+    public String getUserAvatar() {
+        return userAvatar;
+    }
+    
+    public void setUserAvatar(String userAvatar) {
+        this.userAvatar = userAvatar;
     }
     
     public String getContent() {

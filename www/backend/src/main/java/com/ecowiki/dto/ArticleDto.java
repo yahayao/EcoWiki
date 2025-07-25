@@ -34,6 +34,9 @@ public class ArticleDto {
     @Size(max = 50, message = "作者名称长度不能超过50个字符")
     private String author;
     
+    /** 作者头像URL */
+    private String authorAvatar;
+    
     /** 文章内容 */
     private String content;
     
@@ -93,6 +96,14 @@ public class ArticleDto {
     
     public void setAuthor(String author) {
         this.author = author;
+    }
+    
+    public String getAuthorAvatar() {
+        return authorAvatar;
+    }
+    
+    public void setAuthorAvatar(String authorAvatar) {
+        this.authorAvatar = authorAvatar;
     }
     
     public String getContent() {

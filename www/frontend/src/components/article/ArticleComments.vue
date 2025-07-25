@@ -57,8 +57,8 @@
       <div v-for="comment in sortedComments" :key="comment.id" class="comment-item">
         <div class="comment-avatar">
           <UserAvatar 
-            :username="user?.username"
-            :avatar-url="user?.avatarUrl"
+            :username="comment.author"
+            :avatar-url="comment.userAvatar"
             size="md"
             shape="circle"
           />
@@ -121,8 +121,8 @@
             <div v-for="reply in comment.replies" :key="reply.id" class="reply-item">
               <div class="comment-avatar small">
                 <UserAvatar 
-                  :username="user?.username"
-                  :avatar-url="user?.avatarUrl"
+                  :username="reply.author"
+                  :avatar-url="reply.userAvatar"
                   size="sm"
                   shape="circle"
                 />

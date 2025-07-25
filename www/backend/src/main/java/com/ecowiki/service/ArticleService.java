@@ -19,7 +19,9 @@ import com.ecowiki.dto.ArticleStatisticsDto;
 import com.ecowiki.dto.ArticleUpdateRequest;
 import com.ecowiki.entity.Article;
 import com.ecowiki.entity.Tag;
+import com.ecowiki.entity.User;
 import com.ecowiki.repository.ArticleRepository;
+import com.ecowiki.repository.UserRepository;
 
 /**
  * 文章服务类
@@ -57,6 +59,12 @@ public class ArticleService {
      */
     @Autowired
     private TagService tagService;
+    
+    /**
+     * 用户数据访问接口
+     */
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * 创建新文章
@@ -352,6 +360,12 @@ public class ArticleService {
         dto.setArticleId(article.getArticleId());
         dto.setTitle(article.getTitle());
         dto.setAuthor(article.getAuthor());
+        
+        // 根据作者用户名获取用户头像
+        Optional<User> userOpt = userRepository.findByUsername(article.getAuthor());
+        String authorAvatar = userOpt.map(User::getAvatarUrl).orElse(null);
+        dto.setAuthorAvatar(authorAvatar);
+        
         dto.setContent(article.getContent());
         dto.setPublishDate(article.getPublishDate());
         dto.setCategory(article.getCategory());

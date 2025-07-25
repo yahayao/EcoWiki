@@ -270,6 +270,10 @@ public class CommentService {
         String author = userOpt.map(User::getUsername).orElse("匿名用户");
         dto.setAuthor(author);
         
+        // 获取用户头像
+        String userAvatar = userOpt.map(User::getAvatarUrl).orElse(null);
+        dto.setUserAvatar(userAvatar);
+        
         dto.setContent(comment.getContent());
         dto.setCreatedAt(comment.getCommentTime().toString());
         dto.setLikes(comment.getLikes());
@@ -304,6 +308,10 @@ public class CommentService {
         Optional<User> userOpt = userRepository.findByUserId(reply.getUserId());
         String author = userOpt.map(User::getUsername).orElse("匿名用户");
         dto.setAuthor(author);
+        
+        // 获取用户头像
+        String userAvatar = userOpt.map(User::getAvatarUrl).orElse(null);
+        dto.setUserAvatar(userAvatar);
         
         dto.setContent(reply.getContent());
         dto.setCreatedAt(reply.getCommentTime().toString());
