@@ -1,42 +1,101 @@
-# EcoWiki 头像上传系统使用文档
+# EcoWiki 头像上传系统完整文档
+
+# 进入头像存储目录
+cd "d:\桌面\EcoWiki_project\EcoWiki\www\backend\uploads\avatars"
+
+# 查看所有头像文件
+dir
+
+# 删除特定用户的头像文件
+del "username_20250725_143021_a1b2c3d4.jpg"
+
+# 批量删除某个用户的所有头像
+del "username_*"
+
+# 删除所有头像文件（慎用！）
+del "*.*"
 
 ## 📋 系统概述
 
-EcoWiki 头像上传系统提供了完整的用户头像管理功能，包括文件上传、存储、访问和数据库更新。系统采用前后端分离架构，支持多种图片格式，具有文件大小限制和安全验证。
+EcoWiki 头像上传系统是一个完整的用户头像管理解决方案，支持安全的文件上传、存储和访问。系统采用前后端分离架构，提供 RESTful API 接口和现代化的 Vue.js 组件。
+
+### 🔧 技术栈
+- **后端**: Spring Boot 3.2.0, Spring Security, JPA/Hibernate
+- **前端**: Vue 3.5.13, TypeScript 5.8.0, Composition API
+- **存储**: 本地文件系统 + MySQL 数据库
+- **认证**: JWT Bearer Token
+
+### 🌟 主要特性
+- ✅ 多格式支持（JPG、PNG、GIF、WEBP）
+- ✅ 文件大小限制（最大 5MB）
+- ✅ JWT 认证保护
+- ✅ 自动文件命名和去重
+- ✅ 旧文件自动清理
+- ✅ 实时上传进度显示
+- ✅ 拖拽上传支持
+- ✅ 响应式设计
+
+---
 
 ## 🏗️ 系统架构
 
-### 后端架构
-- **Controller**: `AvatarUploadController` - 处理头像上传API
-- **Configuration**: `WebConfig` - 配置静态资源访问
-- **Entity**: `User` - 用户实体，包含avatarUrl字段
-- **Service**: `UserService` - 用户业务逻辑
-
-### 前端架构
-- **Component**: `AvatarUpload.vue` - 头像上传组件
-- **Integration**: 集成到`UserInformation.vue`中
-- **Composable**: 使用`useAuth`管理用户状态
-
-## 📊 数据库结构
-
-头像URL存储在用户表的`avatar_url`字段中：
-
-```sql
-ALTER TABLE `user` 
-ADD COLUMN `avatar_url` VARCHAR(255) COMMENT '头像URL';
+### 架构图
+```
+前端 Vue.js 应用 (localhost:5173)
+    ↓ HTTP POST /api/avatar/upload
+Vite 代理服务器
+    ↓ 转发请求
+后端 Spring Boot (localhost:8080/api)
+    ↓ AvatarUploadController
+文件系统存储 (uploads/avatars/)
+    ↓ 静态资源访问
+WebConfig 静态资源映射 (/uploads/avatars/**)
+    ↓ 数据库记录
+MySQL (user.avatar_url 字段)
 ```
 
-**字段说明**：
-- 类型：VARCHAR(255)
-- 可空：是
-- 存储内容：相对路径，如 `/avatars/username_20250725_143000_abc12345.jpg`
-- 完整URL：`http://localhost:8080/avatars/filename`
+### 关键配置说明
+1. **Context Path**: `server.servlet.context-path=/api`
+2. **Controller 映射**: `@RequestMapping("/avatar")` → 实际路径 `/api/avatar`
+3. **静态资源映射**: `/uploads/avatars/**` → `uploads/avatars/` 目录
+4. **前端 API Base**: `http://localhost:8080/api`
 
-## 🔧 配置说明
+---
 
-### 后端配置 (application.properties)
+## 🔧 后端实现
+
+### 1. 核心控制器 - AvatarUploadController.java
+
+**位置**: `src/main/java/com/ecowiki/controller/api/AvatarUploadController.java`
+
+```java
+@RestController
+@RequestMapping("/avatar")  // 注意：不是 /api/avatar
+public class AvatarUploadController {
+    
+    @PostMapping("/upload")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> uploadAvatar(
+            HttpServletRequest request,
+            @RequestParam("file") MultipartFile file) {
+        // 实现细节...
+    }
+}
+```
+
+**核心功能**:
+- JWT 令牌验证
+- 文件类型和大小验证
+- 唯一文件名生成
+- 数据库记录更新
+- 旧文件清理
+
+### 2. 配置文件 - application.properties
 
 ```properties
+# 服务器配置
+server.port=8080
+server.servlet.context-path=/api
+
 # 头像上传配置
 avatar.upload.path=uploads/avatars/
 avatar.max-size=5242880
@@ -49,21 +108,188 @@ spring.servlet.multipart.max-request-size=5MB
 spring.servlet.multipart.file-size-threshold=1MB
 ```
 
-### 前端配置
+### 3. 静态资源配置 - WebConfig.java
 
-在 `.env` 文件中配置：
-```env
-VITE_API_BASE_URL=http://localhost:8080
+**位置**: `src/main/java/com/ecowiki/config/WebConfig.java`
+
+```java
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // 头像文件访问：/uploads/avatars/** → uploads/avatars/
+        registry.addResourceHandler("/uploads/avatars/**")
+                .addResourceLocations("file:" + getAbsolutePath(avatarUploadPath))
+                .setCachePeriod(86400);  // 24小时缓存
+    }
+}
 ```
 
-## 📡 API接口文档
+### 4. 数据库表结构
 
-### 上传头像接口
+```sql
+-- 用户表中的头像字段
+CREATE TABLE `user` (
+  `user_id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+  `username` VARCHAR(50) UNIQUE NOT NULL,
+  `avatar_url` VARCHAR(255) COMMENT '头像URL路径',
+  -- 其他字段...
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
 
-**接口地址**: `POST /api/avatar/upload`
+---
+
+## 🎨 前端实现
+
+### 1. 环境配置 - .env
+
+**位置**: `frontend/.env`
+
+```env
+# API服务器地址
+VITE_API_BASE_URL=http://localhost:8080
+
+# 开发环境配置
+NODE_ENV=development
+VITE_APP_DEV_TOOLS=true
+```
+
+### 2. 核心组件 - AvatarUpload.vue
+
+**位置**: `src/components/common/AvatarUpload.vue`
+
+**主要功能**:
+- 头像预览显示
+- 拖拽上传支持
+- 上传进度指示
+- 文件验证提示
+- 错误处理
+
+**使用示例**:
+```vue
+<template>
+  <AvatarUpload 
+    :username="user?.username"
+    :current-avatar-url="user?.avatarUrl"
+    @upload-success="handleAvatarUploadSuccess"
+    @upload-error="handleAvatarUploadError"
+  />
+</template>
+
+<script setup lang="ts">
+import AvatarUpload from '@/components/common/AvatarUpload.vue'
+
+const handleAvatarUploadSuccess = (result) => {
+  console.log('头像上传成功:', result)
+  // 更新用户信息...
+}
+
+const handleAvatarUploadError = (error) => {
+  console.error('头像上传失败:', error)
+  // 显示错误信息...
+}
+</script>
+```
+
+### 3. API 接口调用
+
+**位置**: `src/api/index.ts`
+
+```typescript
+const api = axios.create({
+  baseURL: 'http://localhost:8080/api',
+  timeout: 10000,
+})
+
+// 头像上传请求示例
+const uploadAvatar = async (file: File) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  
+  const response = await api.post('/avatar/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    },
+    onUploadProgress: (progressEvent) => {
+      // 处理上传进度...
+    }
+  })
+  
+  return response.data
+}
+```
+
+---
+
+## 🚀 部署和使用
+
+### 1. 开发环境启动
+
+#### 后端启动
+```bash
+cd EcoWiki/www/backend
+mvn clean compile
+mvn spring-boot:run
+```
+服务器启动在: `http://localhost:8080`
+
+#### 前端启动
+```bash
+cd EcoWiki/www/frontend
+npm install
+npm run dev
+```
+开发服务器启动在: `http://localhost:5173`
+
+### 2. 目录结构
+
+启动后会自动创建以下目录结构：
+```
+EcoWiki/www/backend/
+├── uploads/
+│   └── avatars/              # 头像文件存储目录
+│       ├── user1_20250725_143021_a1b2c3d4.jpg
+│       ├── user2_20250725_143156_e5f6g7h8.png
+│       └── ...
+└── src/
+    └── main/
+        └── resources/
+            └── application.properties
+```
+
+### 3. 文件命名规则
+
+上传的头像文件按以下规则命名：
+```
+格式: {username}_{timestamp}_{uniqueId}.{extension}
+示例: admin_20250725_143021_a1b2c3d4.jpg
+
+其中:
+- username: 用户名
+- timestamp: 上传时间戳 (yyyyMMdd_HHmmss)
+- uniqueId: 8位随机UUID
+- extension: 原文件扩展名
+```
+
+---
+
+## 🔗 API 接口文档
+
+### POST /api/avatar/upload
+
+**描述**: 上传用户头像
+
+**请求方式**: `POST`
+
+**请求路径**: `/api/avatar/upload`
+
+**完整URL**: `http://localhost:8080/api/avatar/upload`
 
 **请求头**:
-```
+```http
 Authorization: Bearer {jwt_token}
 Content-Type: multipart/form-data
 ```
@@ -74,25 +300,38 @@ Content-Type: multipart/form-data
 | file | File | 是 | 头像图片文件 |
 
 **文件限制**:
-- 支持格式：JPG, JPEG, PNG, GIF, WEBP
-- 文件大小：最大5MB
-- MIME类型：image/jpeg, image/png, image/gif, image/webp
+- 支持格式: JPG, JPEG, PNG, GIF, WEBP
+- 最大大小: 5MB
+- MIME类型: image/jpeg, image/png, image/gif, image/webp
 
-**成功响应** (200):
+**响应示例**:
+
+**成功响应 (200)**:
 ```json
 {
   "code": 200,
   "message": "头像上传成功",
   "data": {
-    "avatarUrl": "/avatars/username_20250725_143000_abc12345.jpg",
-    "fullUrl": "http://localhost:8080/avatars/username_20250725_143000_abc12345.jpg",
-    "fileName": "username_20250725_143000_abc12345.jpg",
-    "uploadTime": "2025-07-25 14:30:00"
+    "avatarUrl": "/uploads/avatars/admin_20250725_143021_a1b2c3d4.jpg",
+    "fullUrl": "http://localhost:8080/uploads/avatars/admin_20250725_143021_a1b2c3d4.jpg",
+    "fileName": "admin_20250725_143021_a1b2c3d4.jpg",
+    "uploadTime": "2025-07-25 14:30:21"
   }
 }
 ```
 
 **错误响应**:
+
+**401 未授权**:
+```json
+{
+  "code": 401,
+  "message": "未提供认证令牌，请先登录",
+  "data": null
+}
+```
+
+**400 参数错误**:
 ```json
 {
   "code": 400,
@@ -101,181 +340,126 @@ Content-Type: multipart/form-data
 }
 ```
 
-**常见错误代码**:
-- 401: 未认证或令牌无效
-- 404: 用户不存在
-- 400: 文件验证失败
-- 500: 服务器内部错误
-
-## 🎨 前端组件使用
-
-### AvatarUpload 组件
-
-**基本用法**:
-```vue
-<template>
-  <AvatarUpload 
-    :username="user?.username"
-    :current-avatar-url="user?.avatarUrl"
-    @upload-success="handleUploadSuccess"
-    @upload-error="handleUploadError"
-  />
-</template>
-
-<script setup>
-import AvatarUpload from '@/components/common/AvatarUpload.vue'
-
-const handleUploadSuccess = (result) => {
-  console.log('上传成功:', result)
-  // 处理上传成功逻辑
-}
-
-const handleUploadError = (error) => {
-  console.error('上传失败:', error)
-  // 处理上传失败逻辑
-}
-</script>
-```
-
-**Props**:
-| 属性名 | 类型 | 默认值 | 说明 |
-|--------|------|--------|------|
-| username | string | '' | 用户名 |
-| currentAvatarUrl | string | '' | 当前头像URL |
-| size | 'small' \| 'medium' \| 'large' | 'medium' | 头像大小 |
-
-**Events**:
-| 事件名 | 参数 | 说明 |
-|--------|------|------|
-| upload-success | result: AvatarUploadResult | 上传成功时触发 |
-| upload-error | error: string | 上传失败时触发 |
-
-## 🔄 文件处理流程
-
-### 上传流程
-1. 用户选择图片文件
-2. 前端验证文件类型和大小
-3. 显示上传进度
-4. 发送FormData到后端
-5. 后端验证用户身份
-6. 后端验证文件安全性
-7. 删除旧头像文件（如果存在）
-8. 生成唯一文件名并保存
-9. 更新数据库用户记录
-10. 返回新头像URL
-
-### 文件命名规则
-```
-格式: {username}_{timestamp}_{uniqueId}.{extension}
-示例: johndoe_20250725_143000_abc12345.jpg
-```
-
-### 文件存储结构
-```
-uploads/
-└── avatars/
-    ├── user1_20250725_143000_abc12345.jpg
-    ├── user2_20250725_143100_def67890.png
-    └── ...
-```
-
-## 🌐 静态资源访问
-
-### URL映射
-- **存储路径**: `uploads/avatars/filename.jpg`
-- **访问URL**: `http://localhost:8080/avatars/filename.jpg`
-- **数据库存储**: `/avatars/filename.jpg`
-
-### WebConfig配置
-```java
-registry.addResourceHandler("/avatars/**")
-        .addResourceLocations("file:" + getAbsolutePath(avatarUploadPath))
-        .setCachePeriod(86400)  // 缓存24小时
-        .resourceChain(false);
-```
-
-## 🔒 安全考虑
-
-### 文件安全
-- 文件类型白名单验证
-- 文件大小限制（5MB）
-- MIME类型检查
-- 文件扩展名验证
-- 唯一文件名生成（防止覆盖）
-
-### 访问控制
-- JWT令牌验证
-- 用户身份验证
-- 只允许用户修改自己的头像
-
-### 防护措施
-- 自动删除旧头像文件
-- 错误处理和日志记录
-- 路径遍历攻击防护
-
-## 🚀 部署说明
-
-### 开发环境部署
-1. 确保后端Spring Boot应用运行在8080端口
-2. 确保前端Vue应用配置正确的API地址
-3. 创建头像存储目录：`uploads/avatars/`
-4. 配置文件上传权限
-
-### 生产环境部署
-1. 配置Nginx代理静态文件访问
-2. 设置文件存储目录权限
-3. 配置HTTPS和安全头
-4. 监控磁盘空间使用
-
-### Nginx配置示例
-```nginx
-location /avatars/ {
-    alias /path/to/uploads/avatars/;
-    expires 24h;
-    add_header Cache-Control "public, immutable";
+**500 服务器错误**:
+```json
+{
+  "code": 500,
+  "message": "文件保存失败: IOException details",
+  "data": null
 }
 ```
-
-## 🐛 故障排除
-
-### 常见问题
-
-**1. 头像上传失败，提示"系统数据信息重试"**
-- 检查JWT令牌是否有效
-- 确认用户是否存在
-- 检查文件格式和大小
-
-**2. 头像无法显示**
-- 检查静态资源配置
-- 确认文件路径正确性
-- 检查服务器端口和地址
-
-**3. 文件保存失败**
-- 检查目录权限
-- 确认磁盘空间充足
-- 查看后端日志
-
-### 调试技巧
-1. 检查浏览器开发者工具网络面板
-2. 查看后端控制台日志
-3. 验证文件系统权限
-4. 测试API接口独立功能
-
-## 📝 更新日志
-
-### 版本 1.0.0 (2025-07-25)
-- 实现完整的头像上传功能
-- 支持多种图片格式
-- 添加文件安全验证
-- 实现进度显示和错误处理
-- 提供完整的前后端集成
-
-## 🤝 开发团队
-
-- **后端开发**: EcoWiki Team
-- **前端开发**: EcoWiki Team
-- **系统架构**: EcoWiki Team
 
 ---
 
-如有问题或建议，请联系开发团队。
+## 🛡️ 安全机制
+
+### 1. 认证验证
+- 所有上传请求必须携带有效的 JWT 令牌
+- 令牌验证失败自动返回 401 状态码
+- 支持 Bearer Token 格式
+
+### 2. 文件验证
+- **扩展名检查**: 只允许 .jpg, .jpeg, .png, .gif, .webp
+- **MIME类型检查**: 验证文件真实类型
+- **文件大小限制**: 最大 5MB
+- **文件内容检查**: 确保是有效的图片文件
+
+### 3. 存储安全
+- 自动生成唯一文件名，避免文件覆盖
+- 文件存储在服务器本地，不直接暴露原始路径
+- 旧文件自动删除，节省存储空间
+
+---
+
+## 🔍 故障排除
+
+### 常见问题
+
+#### 1. 上传后返回 500 错误
+**可能原因**:
+- 文件系统权限不足
+- 上传目录不存在
+- JWT 令牌无效
+
+**解决方案**:
+```bash
+# 检查目录权限
+ls -la uploads/avatars/
+
+# 手动创建目录
+mkdir -p uploads/avatars/
+
+# 检查应用日志
+tail -f logs/spring.log
+```
+
+#### 2. 静态资源访问 404
+**可能原因**:
+- WebConfig 配置错误
+- 文件路径不匹配
+- 静态资源映射失效
+
+**解决方案**:
+1. 检查 WebConfig.java 中的路径映射
+2. 确认文件确实存在于 `uploads/avatars/` 目录
+3. 重启服务器重新加载配置
+
+#### 3. 前端无法上传
+**可能原因**:
+- CORS 配置问题
+- API 路径错误
+- 认证头丢失
+
+**解决方案**:
+1. 检查浏览器控制台错误信息
+2. 确认 JWT 令牌是否有效
+3. 验证 API 路径配置
+
+### 调试日志
+
+启用详细日志查看上传过程：
+
+```properties
+# application.properties
+logging.level.com.ecowiki.controller.api.AvatarUploadController=DEBUG
+logging.level.org.springframework.web.multipart=DEBUG
+logging.level.org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping=TRACE
+```
+
+---
+
+## 🔄 升级和维护
+
+### 1. 版本兼容性
+- Spring Boot 3.2.0+
+- Vue.js 3.5.13+
+- Java 17+
+- MySQL 8.0+
+
+### 2. 性能优化建议
+- 配置 CDN 加速静态资源访问
+- 启用 Gzip 压缩减少传输大小
+- 配置适当的缓存策略
+- 定期清理未使用的头像文件
+
+### 3. 扩展功能计划
+- [ ] 头像裁剪和缩放
+- [ ] 多尺寸头像生成
+- [ ] 云存储支持（阿里云OSS、AWS S3）
+- [ ] 头像审核机制
+- [ ] 批量上传支持
+
+---
+
+## 📞 技术支持
+
+如有问题或建议，请联系：
+
+- **项目仓库**: https://github.com/yahayao/EcoWiki
+- **开发团队**: EcoWiki Team
+- **当前版本**: v1.0.0
+- **最后更新**: 2025年7月25日
+
+---
+
+*本文档将随着系统功能的更新而持续维护。*
