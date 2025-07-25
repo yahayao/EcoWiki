@@ -13,7 +13,14 @@
 
     <!-- 发表评论 -->
     <div class="comment-form" v-if="isLoggedIn">
-      <div class="user-avatar">👤</div>
+      <!-- 使用新的头像组件显示当前用户头像 -->
+      <UserAvatar 
+        :username="currentUser"
+        :avatar-url="currentUserAvatar"
+        size="md"
+        shape="circle"
+        class="form-user-avatar"
+      />
       <div class="form-content">
         <textarea
           v-model="newComment"
@@ -49,7 +56,12 @@
       
       <div v-for="comment in sortedComments" :key="comment.id" class="comment-item">
         <div class="comment-avatar">
-          <span>{{ comment.author.charAt(0).toUpperCase() }}</span>
+          <UserAvatar 
+            :username="user?.username"
+            :avatar-url="user?.avatarUrl"
+            size="md"
+            shape="circle"
+          />
         </div>
         <div class="comment-content">
           <div class="comment-header">
@@ -108,7 +120,12 @@
           <div v-if="comment.replies && comment.replies.length" class="replies-list">
             <div v-for="reply in comment.replies" :key="reply.id" class="reply-item">
               <div class="comment-avatar small">
-                <span>{{ reply.author.charAt(0).toUpperCase() }}</span>
+                <UserAvatar 
+                  :username="user?.username"
+                  :avatar-url="user?.avatarUrl"
+                  size="sm"
+                  shape="circle"
+                />
               </div>
               <div class="comment-content">
                 <div class="comment-header">
@@ -155,6 +172,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { commentApi, type Comment, type Reply, type CommentQueryParams } from '@/api/comment'
 import toast from '@/utils/toast'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 
 const props = defineProps<{
   articleId: number
@@ -178,6 +196,7 @@ const hasMore = ref(true)
 const pageSize = ref(20)
 
 const currentUser = computed(() => user.value?.username || '匿名用户')
+const currentUserAvatar = computed(() => user.value?.avatarUrl || '')
 
 // 模拟评论数据 - 待后端评论API实现后替换
 onMounted(() => {
@@ -194,7 +213,11 @@ const loadComments = async () => {
     }
     
     const response = await commentApi.getComments(props.articleId, params)
-    comments.value = response.content
+    // 为评论数据添加头像信息（临时测试用）
+    comments.value = response.content.map(comment => ({
+      ...comment,
+      userAvatar: comment.userAvatar || '' // 如果没有头像URL，使用空字符串，这样会显示默认头像
+    }))
     hasMore.value = !response.last
   } catch (error) {
     console.error('加载评论失败:', error)
@@ -604,21 +627,15 @@ const loadMoreComments = async () => {
 .comment-avatar {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #4299e1, #667eea);
-  color: white;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
-  font-weight: 600;
   flex-shrink: 0;
 }
 
 .comment-avatar.small {
   width: 32px;
   height: 32px;
-  font-size: 0.9rem;
 }
 
 .comment-content {

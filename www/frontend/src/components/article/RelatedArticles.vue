@@ -32,7 +32,12 @@
         <p class="related-excerpt">{{ article.excerpt }}</p>
         <div class="related-meta">
           <div class="author-info">
-            <span class="author-avatar">{{ article.author.charAt(0).toUpperCase() }}</span>
+            <UserAvatar 
+              :username="article.author"
+              :avatar-url="article.authorAvatar || ''"
+              size="xs"
+              shape="circle"
+            />
             <span class="related-author">{{ article.author }}</span>
           </div>
           <span class="related-date">{{ formatDate(article.publishDate) }}</span>
@@ -75,12 +80,15 @@ import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { articleApi, type Article } from '@/api/article'
 import toast from '@/utils/toast'
+import UserAvatar from '@/components/common/UserAvatar.vue'
+import { useAuth } from '@/composables/useAuth'
 
 interface RelatedArticle {
   id: number
   title: string
   excerpt: string
   author: string
+  authorAvatar?: string
   category: string
   rating?: number
   publishDate: string
@@ -103,6 +111,9 @@ const emit = defineEmits<{
 
 const router = useRouter()
 
+// 获取用户信息（用于头像显示）
+const { user } = useAuth()
+
 // 状态管理
 const articles = ref<RelatedArticle[]>([])
 const loading = ref(false)
@@ -117,6 +128,7 @@ const convertToRelatedArticle = (article: Article): RelatedArticle => {
     title: article.title,
     excerpt: article.content.substring(0, 150) + '...',
     author: article.author,
+    authorAvatar: article.authorAvatar || '', // 添加头像字段
     category: article.tags.split(',')[0] || '未分类',
     rating: 4 + Math.random(), // 模拟评分
     publishDate: article.publishDate, // 使用正确的字段名
@@ -174,6 +186,7 @@ const loadMockData = () => {
       title: '深入理解现代Web技术架构',
       excerpt: '随着互联网技术的快速发展，现代Web应用的架构变得越来越复杂和精细。本文将带您深入了解当前主流的Web技术架构模式...',
       author: '技术专家',
+      authorAvatar: '', // 添加头像字段（空字符串将显示默认头像）
       category: '技术',
       rating: 4.8,
       publishDate: '2025-01-14T15:30:00Z',
@@ -186,6 +199,7 @@ const loadMockData = () => {
       title: '可持续发展与绿色技术创新',
       excerpt: '在全球气候变化的背景下，可持续发展已成为各行各业关注的焦点。绿色技术作为实现可持续发展的重要手段...',
       author: '环保专家',
+      authorAvatar: '', // 添加头像字段（空字符串将显示默认头像）
       category: '环保',
       rating: 4.6,
       publishDate: '2025-01-13T09:20:00Z',
@@ -461,19 +475,6 @@ const formatNumber = (num: number) => {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.author-avatar {
-  width: 24px;
-  height: 24px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-  font-weight: 600;
 }
 
 .related-author {

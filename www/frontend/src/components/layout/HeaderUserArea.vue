@@ -68,9 +68,13 @@
       <!-- 用户信息展示 -->
        <div class="user-menu-wrapper" @mouseenter="showMenu = true" @mouseleave="showMenu = false">
         <div class="user-info">
-          <div>
-            <img :src="userAvatar" alt="用户头像" class="user-avatar" />
-          </div>
+          <!-- 使用新的头像组件 -->
+          <UserAvatar 
+            :username="user?.username"
+            :avatar-url="user?.avatarUrl"
+            size="sm"
+            shape="circle"
+          />
           <span class="username">{{ user?.username }}</span>
         </div>
         <transition name="fade">
@@ -116,6 +120,7 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '../../composables/useAuth'
 import { userApi, USER_GROUPS } from '../../api/user'
 import { messageApi } from '../../api/message'
+import UserAvatar from '../common/UserAvatar.vue'
 
 /**
  * 组件事件定义

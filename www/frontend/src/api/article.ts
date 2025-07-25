@@ -56,6 +56,8 @@ export interface Article {
   title: string
   /** 文章作者 */
   author: string
+  /** 作者头像URL */
+  authorAvatar?: string
   /** 文章内容（支持Wiki语法） */
   content: string
   /** 发布日期（ISO格式字符串） */
