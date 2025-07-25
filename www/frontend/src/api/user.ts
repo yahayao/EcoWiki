@@ -949,11 +949,12 @@ export const userApi = {
       formData.append('avatar', avatarFile)
       console.log('发送头像更新请求:', {
         fileName: avatarFile.name,
-        fileSize: avatarFile.size
+        fileSize: avatarFile.size,
+        fileType: avatarFile.type
       })
       const response = await api.post('/profile/avatar', formData, {
         headers: {
-          'Content-Type': 'frontend/public/avatar-img',
+          'Content-Type': 'multipart/form-data',
         },
       })
 

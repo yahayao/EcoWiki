@@ -19,24 +19,14 @@
     <!-- 用户概览卡片 -->
     <div class="user-overview-card">
       <div class="user-profile-section">
-        <div class="avatar-container">
-          <div class="avatar-wrapper">
-            <img :src="userAvatar" alt="用户头像" class="user-avatar">
-            <div class="avatar-overlay">
-              <button class="avatar-edit-btn" @click="changeAvatar">
-                <svg viewBox="0 0 24 24" class="icon">
-                  <path d="M9,16.17L4.83,12L3.41,13.41L9,19L21,7L19.59,5.59L9,16.17Z"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <button class="change-avatar-btn" @click="changeAvatar">
-            <svg viewBox="0 0 24 24" class="icon">
-              <path d="M9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9A3,3 0 0,0 9,12M12,4.5C17,4.5 21.27,7.61 23,12C21.27,16.39 17,19.5 12,19.5C7,19.5 2.73,16.39 1,12C2.73,7.61 7,4.5 12,4.5M12,6.5C8.5,6.5 5.42,8.81 4,12C5.42,15.19 8.5,17.5 12,17.5C15.5,17.5 18.58,15.19 20,12C18.58,8.81 15.5,6.5 12,6.5Z"/>
-            </svg>
-            更换头像
-          </button>
-        </div>
+        <!-- 使用新的头像上传组件 -->
+        <AvatarUpload 
+          :username="user?.username"
+          :current-avatar-url="user?.avatarUrl"
+          @upload-success="handleAvatarUploadSuccess"
+          @upload-error="handleAvatarUploadError"
+        />
+        
         <div class="user-quick-info">
           <h2 class="user-name">{{ user?.username || '未知用户' }}</h2>
           <div class="user-status">
@@ -321,6 +311,7 @@ import { userApi } from '@/api/user'
 import type { UserResponse } from '@/api/user'
 import { ref, computed, onMounted } from 'vue'
 import toast from '@/utils/toast'
+import AvatarUpload from '@/components/common/AvatarUpload.vue'
 
 function formatDate(dateString?: string) {
   if (!dateString) return '无'
@@ -366,51 +357,21 @@ function startEdit() {
   }
 }
 
-// 头像相关方法
-const avatarInput = ref<HTMLInputElement>()
+// 头像上传成功处理
+const handleAvatarUploadSuccess = (result: {
+  avatarUrl: string
+  fullUrl: string
+  fileName: string
+  uploadTime: string
+}) => {
+  toast.show('头像更新成功！', '成功', { type: 'success' })
+  console.log('头像上传成功:', result)
+}
 
-const changeAvatar = () => {
-  // 创建隐藏的文件输入框
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = 'image/*'
-  input.style.display = 'none'
-  
-  input.onchange = async (event) => {
-    const file = (event.target as HTMLInputElement)?.files?.[0]
-    if (!file) return
-    
-    // 验证文件大小（限制5MB）
-    if (file.size > 5 * 1024 * 1024) {
-      toast.show('文件大小不能超过5MB', '错误', { type: 'error' })
-      return
-    }
-    
-    // 验证文件类型
-    if (!file.type.startsWith('image/')) {
-      toast.show('请选择图片文件', '错误', { type: 'error' })
-      return
-    }
-    
-    try {
-      toast.show('正在上传头像...', '提示', { type: 'info' })
-      const avatarUrl = await userApi.updateAvatar(file)
-      
-      // 更新本地用户信息
-      if (user.value) {
-        const updatedUser = { ...user.value, avatarUrl }
-        setUser(updatedUser, localStorage.getItem('token') || '', localStorage.getItem('refreshToken') || '')
-      }
-      
-      toast.show('头像更新成功', '成功', { type: 'success' })
-    } catch (error: any) {
-      toast.show(error.message || '头像更新失败', '错误', { type: 'error' })
-    }
-  }
-  
-  document.body.appendChild(input)
-  input.click()
-  document.body.removeChild(input)
+// 头像上传失败处理
+const handleAvatarUploadError = (error: string) => {
+  toast.show(`头像更新失败: ${error}`, '错误', { type: 'error' })
+  console.error('头像上传失败:', error)
 }
 
 // 编辑用户名

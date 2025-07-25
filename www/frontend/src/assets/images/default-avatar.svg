@@ -1,0 +1,9 @@
+<!-- 这是一个SVG格式的默认头像，可以保存为default-avatar.svg或在组件中直接使用 -->
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景圆圈 -->
+  <circle cx="60" cy="60" r="60" fill="#E5E7EB"/>
+  
+  <!-- 用户图标 -->
+  <path d="M60 25C67.7 25 74 31.3 74 39C74 46.7 67.7 53 60 53C52.3 53 46 46.7 46 39C46 31.3 52.3 25 60 25Z" fill="#9CA3AF"/>
+  <path d="M30 85C30 70.6 41.6 59 56 59H64C78.4 59 90 70.6 90 85V95H30V85Z" fill="#9CA3AF"/>
+</svg>
