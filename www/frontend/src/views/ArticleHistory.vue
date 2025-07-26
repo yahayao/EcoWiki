@@ -632,6 +632,10 @@ export default defineComponent({
 
 .versions-list {
   padding: 24px;
+  height: 800px;
+  min-height: 600px;
+  max-height: 1000px;
+  overflow-y: scroll;
 }
 
 .version-item {
