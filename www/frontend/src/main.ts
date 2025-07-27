@@ -34,11 +34,14 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 
+import CodeDiff from 'v-code-diff'
 // 创建Vue应用实例
 const app = createApp(App)
 
 // 创建Pinia状态管理实例
 const pinia = createPinia()
+
+app.use(CodeDiff)
 
 // 使用Pinia状态管理
 // Pinia是Vue3推荐的状态管理库，用于管理全局状态

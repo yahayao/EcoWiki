@@ -164,27 +164,49 @@
     </div>
 
     <!-- 版本对比器 -->
-    <div v-if="comparingVersions" class="version-compare-overlay" @click="closeCompare">
-      <div class="version-compare" @click.stop>
-        <div class="compare-header">
-          <h3>版本对比</h3>
-          <button @click="closeCompare" class="close-button">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="compare-content">
-          <div class="compare-panels">
-            <div class="compare-panel">
-              <h4>版本 {{ comparingVersions.oldVersion.versionNumber }} ({{ formatDate(comparingVersions.oldVersion.createdAt) }})</h4>
-              <div class="compare-text">{{ comparingVersions.oldContent }}</div>
+    <div v-if="comparingVersions || comparingLoading" class="version-compare-overlay" @click="closeCompare">
+        <div class="version-compare-container" @click.stop>
+          <div v-if="comparingLoading" class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>正在加载版本内容...</p>
+          </div>
+
+          <div v-else-if="comparingVersions" class="article-diff-container">
+            <div class="header">
+              <h3>文章修改对比:</h3>
+              <div class="controls">
+                <span>展示方式:</span>
+                <button 
+                  @click="viewMode = viewMode === 'line-by-line' ? 'side-by-side' : 'line-by-line'"
+                  class="view-toggle"
+                >
+                  {{ viewMode === 'line-by-line' ? '左右' : '合并' }}
+                </button>
+                <span>主题:</span>
+                <button 
+                  @click="diffTheme = diffTheme === 'light' ? 'dark' : 'light'"
+                  class="view-toggle"
+                >
+                  {{ diffTheme === 'light' ? '黑' : '白' }}
+                </button>
+                <button @click="closeCompare" class="close-compare">
+                  <i class="fas fa-times"></i> 关闭
+                </button>
+              </div>
             </div>
-            <div class="compare-panel">
-              <h4>版本 {{ comparingVersions.newVersion.versionNumber }} ({{ formatDate(comparingVersions.newVersion.createdAt) }})</h4>
-              <div class="compare-text">{{ comparingVersions.newContent }}</div>
-            </div>
+            <code-diff
+              v-if="controllerversion"
+              :old-string="comparingVersions.oldContent"
+              :new-string="comparingVersions.newContent"
+              :output-format="viewMode"
+              :theme="diffTheme"
+              :highlight="true"
+              :diffStyle="'word'"
+              :filename="'V'+comparingVersions.oldVersion.versionNumber"
+              :newFilename="'V'+comparingVersions.newVersion.versionNumber"
+            />
           </div>
         </div>
-      </div>
     </div>
     </div>
   </div>
@@ -197,7 +219,15 @@ import { articleApi, type ArticleVersion } from '@/api/article'
 
 export default defineComponent({
   name: 'ArticleHistory',
+
   setup() {
+    // 视图控制
+    const viewMode = ref<'line-by-line' | 'side-by-side'>('line-by-line'); // 修改为 split/unified
+    // 添加对比加载状态
+    const comparingLoading = ref(false)
+    const controllerversion = ref(false)
+    const diffTheme =ref<'light' | 'dark'>('light')
+
     const router = useRouter()
     const route = useRoute()
     
@@ -292,11 +322,20 @@ export default defineComponent({
       if (selectedVersions.value.length !== 2) return
       
       try {
-        const [oldVersionId, newVersionId] = selectedVersions.value.sort((a, b) => a - b)
+        
+         // 清空选择
+        const tempSelected = [...selectedVersions.value]
+        showCompareMode.value = false;
+        selectedVersions.value = [];
+        comparingLoading.value = true;
+
+        const [oldVersionId, newVersionId] = tempSelected.sort((a, b) => a - b)
         
         const oldVersion = versions.value.find(v => v.versionId === oldVersionId)!
         const newVersion = versions.value.find(v => v.versionId === newVersionId)!
-        
+        if (!oldVersion || !newVersion) {
+          throw new Error('无法找到选定的版本');
+        }
         const title = route.params.title as string
         const articleId = await articleApi.getArticleIdByTitle(title)
         
@@ -304,7 +343,9 @@ export default defineComponent({
           articleApi.getVersionContent(articleId, oldVersion.versionNumber),
           articleApi.getVersionContent(articleId, newVersion.versionNumber)
         ])
-        
+        console.log("oldContentResponse",oldContentResponse.content)
+        console.log("newContentResponse",newContentResponse.content)
+
         comparingVersions.value = {
           oldVersion,
           newVersion,
@@ -314,6 +355,9 @@ export default defineComponent({
         
       } catch (err) {
         alert('对比失败: ' + (err instanceof Error ? err.message : '未知错误'))
+      }finally{
+        comparingLoading.value = false
+        controllerversion.value = true
       }
     }
     
@@ -399,6 +443,10 @@ export default defineComponent({
     })
     
     return {
+      diffTheme,
+      controllerversion,
+      viewMode,
+      comparingLoading,
       loading,
       error,
       versions,
@@ -429,6 +477,80 @@ export default defineComponent({
 </script>
 
 <style scoped>
+
+.article-diff-container {
+  max-width: 1200px;
+  width: 1000px;
+  height: 800px;
+  min-height: 600px;
+  overflow-y: scroll;
+  min-height: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #e2e8f0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.controls {
+  display: flex;
+  gap: 15px;
+}
+
+.controls label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: #666;
+}
+
+/* 覆盖 vue-code-diff 默认样式 */
+:deep(.d2h-wrapper) {
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.d2h-file-header) {
+  display: none; /* 隐藏文件头 */
+}
+
+:deep(.d2h-code-side-line) {
+  color: #999;
+  background-color: #fafafa;
+}
+
+:deep(.d2h-code-line) {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 16px;
+  line-height: 1.8;
+  color: #333;
+}
+
+:deep(.d2h-del) {
+  background-color: #ffebee; /* 柔和的删除色 */
+  text-decoration: line-through;
+}
+
+:deep(.d2h-ins) {
+  background-color: #e8f5e9; /* 柔和的添加色 */
+}
+
+:deep(.d2h-info) {
+  background-color: #e3f2fd; /* 信息背景色 */
+  color: #1565c0;
+  font-size: 14px;
+}
+
+
 .article-history-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
