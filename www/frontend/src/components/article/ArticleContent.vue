@@ -8,17 +8,59 @@
       </div>
       <h1 class="article-title">{{ article.title }}</h1>
       <div class="article-info">
-        <div class="author-info">
-          <UserAvatar 
-            :username="article.author"
-            :avatar-url="article.authorAvatar || ''"
-            size="md"
-            shape="circle"
-          />
-          <div class="author-details">
-            <span class="author-name">{{ article.author }}</span>
+        <div class="author-section">
+          <div class="author-info">
+            <UserAvatar 
+              :username="article.author"
+              :avatar-url="article.authorAvatar || ''"
+              size="md"
+              shape="circle"
+            />
+            <div class="author-details">
+              <span class="author-name">{{ article.author }}</span>
+            </div>
+          </div>
+          
+          <!-- 贡献者信息 -->
+          <div class="contributors-section" v-if="contributorsInfo && contributorsInfo.length > 0">
+            <span class="contributors-label">贡献者 {{ contributorsInfo.length }}</span>
+            <div class="contributors-list" :class="{ 'horizontal': contributorsInfo.length > 2 }">
+              <template v-if="contributorsInfo.length <= 2">
+                <div 
+                  v-for="contributor in contributorsInfo" 
+                  :key="contributor.id" 
+                  class="contributor-item"
+                >
+                  <UserAvatar 
+                    :username="contributor.username"
+                    :avatar-url="contributor.avatarUrl || ''"
+                    size="sm"
+                    shape="circle"
+                  />
+                  <div class="contributor-info">
+                    <span class="contributor-name">{{ contributor.username }}</span>
+                    <span class="contributor-role">{{ contributor.displayName || contributor.username }}</span>
+                  </div>
+                </div>
+              </template>
+              <template v-else>
+                <div class="contributors-avatars">
+                  <UserAvatar 
+                    v-for="contributor in contributorsInfo" 
+                    :key="contributor.id"
+                    :username="contributor.username"
+                    :avatar-url="contributor.avatarUrl || ''"
+                    size="sm"
+                    shape="circle"
+                    class="contributor-avatar"
+                    :title="`${contributor.username} (${contributor.displayName})`"
+                  />
+                </div>
+              </template>
+            </div>
           </div>
         </div>
+        
         <div class="article-stats">
           <span class="publish-date">📅 发布于 {{ formatDate(article.publishDate) }}</span>
           <span class="update-date" v-if="article.updateTime && article.updateTime !== article.publishDate">
@@ -163,6 +205,25 @@ const tableOfContents = ref<{ id: string; level: number; title: string }[]>([])
 const isToCSidebarCollapsed = ref(true) // 默认关闭状态
 
 // 计算属性
+const contributorsInfo = computed(() => {
+  // 模拟贡献者数据，实际应该从API或数据库获取
+  const contributors = [
+    { 
+      id: 1, 
+      username: 'yahayao', 
+      displayName: 'yahaya',
+      avatarUrl: 'https://example.com/avatar1.jpg' 
+    },
+    { 
+      id: 2, 
+      username: 'yinianqingxian', 
+      displayName: 'qingxian',
+      avatarUrl: 'https://example.com/avatar2.jpg' 
+    },
+  ]
+  return contributors
+})
+
 const parsedContent = computed(() => {
   return wikiParser.parseToHtml(props.article.content || '')
 })
@@ -344,6 +405,12 @@ onMounted(() => {
   gap: 16px;
 }
 
+.author-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .author-info {
   display: flex;
   align-items: center;
@@ -379,6 +446,74 @@ onMounted(() => {
   gap: 4px;
   color: #718096;
   font-size: 0.9rem;
+}
+
+/* 贡献者样式 */
+.contributors-section {
+  margin: 8px 0;
+  padding: 12px 0;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.contributors-label {
+  display: block;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.contributors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.contributors-list.horizontal {
+  flex-direction: row;
+  align-items: center;
+}
+
+.contributor-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.contributor-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.contributor-name {
+  font-weight: 500;
+  color: #2d3748;
+  font-size: 0.9rem;
+}
+
+.contributor-role {
+  color: #718096;
+  font-size: 0.85rem;
+}
+
+/* 横向头像显示样式 */
+.contributors-avatars {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.contributor-avatar {
+  transition: transform 0.2s ease;
+}
+
+.contributor-avatar:hover {
+  transform: scale(1.1);
+  cursor: pointer;
 }
 
 /* 侧悬浮目录栏 */
@@ -1090,6 +1225,10 @@ onMounted(() => {
   .article-info {
     flex-direction: column;
     align-items: flex-start;
+  }
+  
+  .author-section {
+    width: 100%;
   }
   
   .article-actions {
