@@ -128,9 +128,6 @@ public class User {
     
     @Column
     private String avatarUrl; // 头像地址
-    
-    @Column
-    private String bio; // 个人简介
 
     @Column(name = "security_question")
     private String securityQuestion; // 安全问题
@@ -196,9 +193,6 @@ public class User {
     
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
-    
-    public String getBio() { return bio; }
-    public void setBio(String bio) { this.bio = bio; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
