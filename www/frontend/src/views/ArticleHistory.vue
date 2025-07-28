@@ -3,7 +3,7 @@
     <!-- 页面头部 -->
     <div class="container">
     <header class="page-header">
-      <div class="header-content">
+      <div class="page-header-content">
         <button @click="goBack" class="back-button">
           <i class="fas fa-arrow-left"></i>
           返回文章
@@ -171,40 +171,82 @@
             <p>正在加载版本内容...</p>
           </div>
 
-          <div v-else-if="comparingVersions" class="article-diff-container">
-            <div class="header">
-              <h3>文章修改对比:</h3>
-              <div class="controls">
-                <span>展示方式:</span>
-                <button 
-                  @click="viewMode = viewMode === 'line-by-line' ? 'side-by-side' : 'line-by-line'"
-                  class="view-toggle"
-                >
-                  {{ viewMode === 'line-by-line' ? '左右' : '合并' }}
-                </button>
-                <span>主题:</span>
-                <button 
-                  @click="diffTheme = diffTheme === 'light' ? 'dark' : 'light'"
-                  class="view-toggle"
-                >
-                  {{ diffTheme === 'light' ? '黑' : '白' }}
-                </button>
-                <button @click="closeCompare" class="close-compare">
-                  <i class="fas fa-times"></i> 关闭
+          <div v-else-if="comparingVersions" class="modern-diff-container">
+            <!-- 现代化头部 -->
+            <div class="diff-header">
+              <div class="header-left">
+                <div class="header-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                </div>
+                <div class="diff-header-content">
+                  <h2 class="diff-title">版本对比</h2>
+                  <div class="version-info">
+                    <span class="version-tag old-version">
+                      v{{ comparingVersions.oldVersion.versionNumber }}
+                    </span>
+                    <svg class="arrow-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M7.28 3.22a.75.75 0 0 0-1.06 1.06L9.94 8l-3.72 3.72a.75.75 0 1 0 1.06 1.06L12 8.28a.75.75 0 0 0 0-1.06L7.28 3.22Z"/>
+                    </svg>
+                    <span class="version-tag new-version">
+                      v{{ comparingVersions.newVersion.versionNumber }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="header-actions">
+                <div class="action-group">
+                  <button 
+                    @click="viewMode = viewMode === 'line-by-line' ? 'side-by-side' : 'line-by-line'"
+                    class="action-btn"
+                    :class="{ active: viewMode === 'side-by-side' }"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M1 1.75A.75.75 0 0 1 1.75 1h4.5a.75.75 0 0 1 0 1.5h-4.5A.75.75 0 0 1 1 1.75Zm0 5A.75.75 0 0 1 1.75 6h4.5a.75.75 0 0 1 0 1.5h-4.5A.75.75 0 0 1 1 6.75Zm0 5A.75.75 0 0 1 1.75 11h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75ZM9.75 1a.75.75 0 0 0 0 1.5h4.5a.75.75 0 0 0 0-1.5h-4.5ZM9 6.75A.75.75 0 0 1 9.75 6h4.5a.75.75 0 0 1 0 1.5h-4.5A.75.75 0 0 1 9 6.75ZM9.75 11a.75.75 0 0 0 0 1.5h4.5a.75.75 0 0 0 0-1.5h-4.5Z"/>
+                    </svg>
+                    {{ viewMode === 'line-by-line' ? '分屏' : '统一' }}
+                  </button>
+                  
+                  <button 
+                    @click="diffTheme = diffTheme === 'light' ? 'dark' : 'light'"
+                    class="action-btn"
+                    :class="{ active: diffTheme === 'dark' }"
+                  >
+                    <svg v-if="diffTheme === 'light'" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM2.5 8a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0Z"/>
+                    </svg>
+                    <svg v-else width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278Z"/>
+                    </svg>
+                    {{ diffTheme === 'light' ? '暗色' : '亮色' }}
+                  </button>
+                </div>
+                
+                <button @click="closeCompare" class="close-btn">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
+                  </svg>
                 </button>
               </div>
             </div>
-            <code-diff
-              v-if="controllerversion"
-              :old-string="comparingVersions.oldContent"
-              :new-string="comparingVersions.newContent"
-              :output-format="viewMode"
-              :theme="diffTheme"
-              :highlight="true"
-              :diffStyle="'word'"
-              :filename="'V'+comparingVersions.oldVersion.versionNumber"
-              :newFilename="'V'+comparingVersions.newVersion.versionNumber"
-            />
+
+            <!-- 代码差异显示区域 -->
+            <div class="diff-content">
+              <code-diff
+                v-if="controllerversion"
+                :old-string="comparingVersions.oldContent"
+                :new-string="comparingVersions.newContent"
+                :output-format="viewMode"
+                :theme="diffTheme"
+                :highlight="true"
+                :diffStyle="'word'"
+                :filename="`版本 ${comparingVersions.oldVersion.versionNumber}`"
+                :newFilename="`版本 ${comparingVersions.newVersion.versionNumber}`"
+                class="modern-code-diff"
+              />
+            </div>
           </div>
         </div>
     </div>
@@ -479,75 +521,385 @@ export default defineComponent({
 <style scoped>
 
 .article-diff-container {
-  max-width: 1200px;
-  width: 1000px;
-  height: 800px;
-  min-height: 600px;
-  overflow-y: scroll;
-  min-height: 600px;
-  margin: 0 auto;
-  padding: 20px;
-  background-color: #e2e8f0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  /* 保留作为备用，但被现代化样式替代 */
+  display: none;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+.header, .controls {
+  /* 保留作为备用，但被现代化样式替代 */
+  display: none;
 }
 
-.controls {
-  display: flex;
-  gap: 15px;
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .article-history-page {
+    max-width: 100%;
+    padding: 0 16px;
+  }
+  
+  .version-compare-container {
+    width: 98vw;
+    height: 95vh;
+  }
+  
+  .modern-diff-container {
+    border-radius: 12px;
+  }
+  
+  .diff-header {
+    padding: 20px 24px;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  
+  .header-left {
+    width: 100%;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .diff-title {
+    font-size: 1.25rem;
+  }
+  
+  .version-info {
+    margin-top: 4px;
+  }
 }
 
-.controls label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 14px;
-  color: #666;
+@media (max-width: 768px) {
+  .article-history-page {
+    padding: 0 12px;
+  }
+  
+  .version-compare-container {
+    width: 100vw;
+    height: 100vh;
+  }
+  
+  .modern-diff-container {
+    border-radius: 0;
+  }
+  
+  .diff-header {
+    padding: 16px 20px;
+  }
+  
+  .header-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .diff-title {
+    font-size: 1.125rem;
+  }
+  
+  .version-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .arrow-icon {
+    transform: rotate(90deg);
+  }
+  
+  .action-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .action-btn {
+    justify-content: center;
+    padding: 12px;
+  }
+  
+  :deep(.d2h-code-line) {
+    font-size: 12px;
+    padding: 2px 12px;
+  }
+  
+  :deep(.d2h-code-side-line) {
+    padding: 2px 8px;
+    min-width: 50px;
+  }
+  
+  :deep(.d2h-file-header) {
+    padding: 12px 16px;
+    font-size: 0.8rem;
+  }
+  
+  .diff-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .toolbar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .version-meta {
+    flex-direction: column;
+    gap: 8px;
+  }
 }
 
-/* 覆盖 vue-code-diff 默认样式 */
+@media (max-width: 480px) {
+  .article-history-page {
+    padding: 10px 8px;
+  }
+  
+  .diff-header {
+    padding: 12px 16px;
+  }
+  
+  .header-icon {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .diff-title {
+    font-size: 1rem;
+  }
+  
+  .version-tag {
+    padding: 4px 12px;
+    font-size: 0.8rem;
+  }
+  
+  .action-btn {
+    padding: 10px;
+    font-size: 0.8rem;
+  }
+  
+  .close-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  :deep(.d2h-code-line) {
+    font-size: 11px;
+    padding: 1px 8px;
+  }
+  
+  :deep(.d2h-file-header) {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+  }
+  
+  .page-header,
+  .history-content {
+    border-radius: 8px;
+    padding: 16px;
+  }
+  
+  .versions-list {
+    padding: 16px;
+  }
+  
+  .version-item {
+    padding: 16px;
+  }
+  
+  .version-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .version-actions {
+    align-self: flex-end;
+  }
+  
+  .back-button {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+}
+
+/* 现代化代码差异显示样式 */
 :deep(.d2h-wrapper) {
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 0;
+  background: #ffffff;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+  height: 100%;
+  overflow: hidden;
+  box-shadow: none;
 }
 
 :deep(.d2h-file-header) {
-  display: none; /* 隐藏文件头 */
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: none;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 16px 24px;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.875rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 
-:deep(.d2h-code-side-line) {
-  color: #999;
-  background-color: #fafafa;
+:deep(.d2h-file-wrapper) {
+  border: none;
+  border-radius: 0;
+}
+
+:deep(.d2h-code-wrapper) {
+  border: none;
+  max-height: calc(90vh - 200px);
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+:deep(.d2h-code-wrapper::-webkit-scrollbar) {
+  width: 8px;
+}
+
+:deep(.d2h-code-wrapper::-webkit-scrollbar-track) {
+  background: #f1f5f9;
+}
+
+:deep(.d2h-code-wrapper::-webkit-scrollbar-thumb) {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+:deep(.d2h-code-wrapper::-webkit-scrollbar-thumb:hover) {
+  background: #94a3b8;
 }
 
 :deep(.d2h-code-line) {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-size: 16px;
-  line-height: 1.8;
-  color: #333;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1e293b;
+  padding: 2px 16px;
+  border: none;
+  background: transparent;
+  font-feature-settings: 'liga' 1, 'calt' 1;
+}
+
+:deep(.d2h-code-side-line) {
+  color: #94a3b8;
+  background: #f8fafc;
+  font-weight: 500;
+  text-align: center;
+  padding: 2px 12px;
+  min-width: 60px;
+  border-right: 1px solid #e2e8f0;
+  font-feature-settings: 'tnum';
+  user-select: none;
 }
 
 :deep(.d2h-del) {
-  background-color: #ffebee; /* 柔和的删除色 */
-  text-decoration: line-through;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-left: 3px solid #ef4444;
+  position: relative;
+}
+
+:deep(.d2h-del)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
 }
 
 :deep(.d2h-ins) {
-  background-color: #e8f5e9; /* 柔和的添加色 */
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-left: 3px solid #22c55e;
+  position: relative;
+}
+
+:deep(.d2h-ins)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
 }
 
 :deep(.d2h-info) {
-  background-color: #e3f2fd; /* 信息背景色 */
-  color: #1565c0;
-  font-size: 14px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1e40af;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px 24px;
+  border: none;
+  border-left: 3px solid #3b82f6;
+  margin: 8px 0;
+  border-radius: 0 8px 8px 0;
+}
+
+:deep(.d2h-code-line-ctn) {
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+/* 深色主题的现代化样式 */
+:deep(.d2h-dark .d2h-wrapper) {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+:deep(.d2h-dark .d2h-file-header) {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: #e2e8f0;
+  border-bottom-color: #334155;
+}
+
+:deep(.d2h-dark .d2h-code-line) {
+  color: #e2e8f0;
+  background: transparent;
+}
+
+:deep(.d2h-dark .d2h-code-side-line) {
+  background: #1e293b;
+  color: #64748b;
+  border-right-color: #334155;
+}
+
+:deep(.d2h-dark .d2h-del) {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(239, 68, 68, 0.1) 100%);
+  border-left-color: #ef4444;
+}
+
+:deep(.d2h-dark .d2h-ins) {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(22, 163, 74, 0.1) 100%);
+  border-left-color: #22c55e;
+}
+
+:deep(.d2h-dark .d2h-info) {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(30, 64, 175, 0.1) 100%);
+  color: #60a5fa;
+  border-left-color: #3b82f6;
+}
+
+:deep(.d2h-dark .d2h-code-wrapper::-webkit-scrollbar-track) {
+  background: #1e293b;
+}
+
+:deep(.d2h-dark .d2h-code-wrapper::-webkit-scrollbar-thumb) {
+  background: #475569;
+}
+
+:deep(.d2h-dark .d2h-code-wrapper::-webkit-scrollbar-thumb:hover) {
+  background: #64748b;
 }
 
 
@@ -572,7 +924,7 @@ export default defineComponent({
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-.header-content {
+.page-header-content {
   display: flex;
   align-items: center;
   gap: 24px;
@@ -1024,89 +1376,227 @@ export default defineComponent({
   height: 200px;
 }
 
-/* 版本对比器样式 */
+/* 现代化版本对比器样式 */
 .version-compare-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  animation: overlay-fade-in 0.2s ease-out;
 }
 
-.version-compare {
-  background: white;
-  border-radius: 12px;
-  width: 95%;
-  max-width: 1400px;
-  max-height: 90vh;
+@keyframes overlay-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.version-compare-container {
+  width: 95vw;
+  max-width: 1600px;
+  height: 90vh;
+  max-height: 900px;
+  animation: modal-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modal-slide-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 32px, 0) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.modern-diff-container {
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 
+    0 32px 64px rgba(15, 23, 42, 0.2),
+    0 0 0 1px rgba(148, 163, 184, 0.1);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-}
-
-.compare-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24px;
-  border-bottom: 1px solid #e2e8f0;
-  background: #f8fafc;
-  border-radius: 12px 12px 0 0;
-}
-
-.compare-header h3 {
-  margin: 0;
-  color: #1a202c;
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.compare-content {
-  flex: 1;
   overflow: hidden;
 }
 
-.compare-panels {
+/* 现代化头部样式 */
+.diff-header {
   display: flex;
-  height: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 32px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+  position: relative;
 }
 
-.compare-panel {
-  flex: 1;
-  padding: 24px;
-  overflow-y: auto;
+.diff-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #94a3b8, transparent);
 }
 
-.compare-panel:first-child {
-  border-right: 1px solid #e2e8f0;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
-.compare-panel h4 {
-  margin: 0 0 16px;
-  color: #1a202c;
-  font-size: 1rem;
+.header-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+}
+
+.diff-header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.diff-title {
+  margin: 0;
+  font-size: 1.5rem;
   font-weight: 600;
+  color: #0f172a;
+  letter-spacing: -0.025em;
 }
 
-.compare-text {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #374151;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  background: #fafafa;
-  padding: 16px;
+.version-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.version-tag {
+  padding: 6px 16px;
+  border-radius: 24px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-feature-settings: 'tnum';
+}
+
+.old-version {
+  background: linear-gradient(135deg, #fef3c7, #fed7aa);
+  color: #92400e;
+  border: 1px solid #fbbf24;
+}
+
+.new-version {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #166534;
+  border: 1px solid #22c55e;
+}
+
+.arrow-icon {
+  color: #64748b;
+  opacity: 0.7;
+}
+
+/* 操作按钮组 */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.action-group {
+  display: flex;
+  gap: 8px;
+  padding: 4px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 
+    0 1px 3px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(148, 163, 184, 0.1);
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: #64748b;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  max-height: 50vh;
-  overflow-y: auto;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.action-btn:hover {
+  background: #f8fafc;
+  color: #475569;
+}
+
+.action-btn.active {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.close-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: #ffffff;
+  color: #64748b;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  box-shadow: 
+    0 1px 3px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(148, 163, 184, 0.1);
+}
+
+.close-btn:hover {
+  background: #f8fafc;
+  color: #475569;
+  transform: scale(1.05);
+}
+
+/* 内容区域 */
+.diff-content {
+  flex: 1;
+  padding: 0;
+  background: #ffffff;
+  overflow: hidden;
+  position: relative;
+}
+
+.modern-code-diff {
+  height: 100%;
+  width: 100%;
 }
 
 /* 响应式设计 */
@@ -1122,7 +1612,7 @@ export default defineComponent({
     padding: 0 12px;
   }
   
-  .header-content {
+  .page-header-content {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
