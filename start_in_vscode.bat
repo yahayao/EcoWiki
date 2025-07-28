@@ -6,8 +6,9 @@ echo.
 echo ==========================================
 echo     🌱 EcoWiki 开发环境启动器
 echo ==========================================
-echo     版本: v2.0 (包含自动依赖更新)
-echo     功能: 自动更新依赖 + 启动前后端服务
+echo     版本: v2.1 (标准开发流程)
+echo     功能: Maven构建 + npm安装 + 启动服务
+echo     流程: 后端mvn clean install → 前端npm install → 启动服务
 echo ==========================================
 echo.
 
@@ -55,20 +56,24 @@ echo.
 
 echo 🔄 更新后端依赖包...
 cd www\backend
-echo    - 检查Maven依赖更新...
-call mvn dependency:resolve-sources -q
+echo    - 执行Maven清理和安装...
+call mvn clean install -q
 if errorlevel 1 (
-    echo    ⚠️  Maven依赖解析警告，继续执行...
+    echo    ❌ Maven构建失败
+    echo    💡 请检查后端代码和依赖配置
+    cd ..\..
+    pause
+    exit /b 1
 ) else (
-    echo    ✅ Maven依赖检查完成
+    echo    ✅ Maven构建完成
 )
 cd ..\..
 
 echo.
 echo 🔄 更新前端依赖包...
 cd www\frontend
-echo    - 检查npm依赖更新...
-call npm install --silent
+echo    - 执行npm安装...
+call npm install
 if errorlevel 1 (
     echo    ❌ npm依赖安装失败
     echo    💡 请检查网络连接或依赖配置
@@ -87,8 +92,8 @@ echo ==========================================
 echo.
 
 echo 📦 启动后端服务（后台运行）...
-echo    - 编译并启动Spring Boot应用...
-:: 直接在后台启动后端服务，不打开新窗口
+echo    - 启动Spring Boot应用...
+:: 在后台启动后端服务
 cd www\backend
 start /min "EcoWiki Backend" cmd /c "echo [后端服务] 正在启动Spring Boot应用... && mvn spring-boot:run && echo [后端服务] 服务已停止 && pause"
 cd ..\..
@@ -98,11 +103,12 @@ echo    - 服务正在后台启动中，请稍候...
 
 echo.
 echo ⏰ 等待后端服务初始化...
-timeout /t 5 /nobreak >nul
+echo    - 检查后端健康状态...
+timeout /t 10 /nobreak >nul
 
 echo 🎨 启动前端服务（后台运行）...
 echo    - 启动Vite开发服务器...
-:: 直接在后台启动前端服务，不打开新窗口
+:: 在后台启动前端服务
 cd www\frontend
 start /min "EcoWiki Frontend" cmd /c "echo [前端服务] 正在启动Vite开发服务器... && npm run dev && echo [前端服务] 服务已停止 && pause"
 cd ..\..
@@ -118,6 +124,7 @@ echo.
 echo 📖 访问地址:
 echo    🌐 前端应用:     http://localhost:5173
 echo    🔧 后端API:      http://localhost:8080
+echo    🩺 后端健康检查:  http://localhost:8080/api/auth/health
 echo    👤 管理后台:     http://localhost:5173/admin
 echo    📊 API文档:      http://localhost:8080/swagger-ui.html
 echo.
@@ -129,11 +136,13 @@ echo 💡 使用提示:
 echo    - 服务在后台最小化窗口中运行
 echo    - 可在任务栏查看运行状态和日志
 echo    - 点击任务栏中的服务窗口可查看详细日志
-echo    - 首次启动可能需要1-2分钟完成初始化
+echo    - 后端完整构建首次启动可能需要2-3分钟
+echo    - 前端热重载启动通常需要30-60秒
 echo    - 如遇问题，请检查任务栏中的服务窗口错误信息
+echo    - 后端健康检查: http://localhost:8080/api/auth/health
 echo.
 echo ⏰ 等待服务完全启动中...
-timeout /t 3 /nobreak >nul
+timeout /t 5 /nobreak >nul
 echo.
 echo 🛑 按任意键停止所有服务并退出...
 pause >nul
