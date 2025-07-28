@@ -403,11 +403,11 @@ onMounted(() => {
 }
 
 .comments-section {
-  margin-top: 0;
+  margin-top: 32px;
 }
 
 .related-section {
-  margin: 32px 0 0;
+  margin: 32px 0;
 }
 
 /* 模态框样式 */
