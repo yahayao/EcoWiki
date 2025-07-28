@@ -95,6 +95,7 @@ interface RelatedArticle {
   views?: number
   likes?: number
   readTime?: number
+  tags?: string
 }
 
 const props = defineProps<{
@@ -464,11 +465,14 @@ const formatNumber = (num: number) => {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 20px;
+  padding: 18px;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  height: 260px; /* 调整为4:3比例 */
+  display: flex;
+  flex-direction: column;
 }
 
 .related-card::before {
@@ -520,10 +524,10 @@ const formatNumber = (num: number) => {
 }
 
 .related-title {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: #1a202c;
   font-weight: 600;
-  margin: 0 0 10px 0;
+  margin: 0 0 6px 0; /* 减少标题和摘要之间的间距 */
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -534,14 +538,20 @@ const formatNumber = (num: number) => {
 
 .related-excerpt {
   color: #718096;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  margin-bottom: 16px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin-bottom: 10px; /* 减少摘要底部间距 */
+  flex: 1; /* 让摘要占据剩余空间 */
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 3; /* 减少显示行数适应更小高度 */
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  white-space: pre-wrap; /* 保持换行和空格 */
+  word-wrap: break-word; /* 长单词换行 */
+  overflow-wrap: break-word; /* 确保换行兼容性 */
+  height: calc(1.4em * 3); /* 精确控制高度，避免半行显示 */
+  max-height: calc(1.4em * 3); /* 最大高度限制 */
 }
 
 .related-meta {
@@ -574,6 +584,7 @@ const formatNumber = (num: number) => {
   align-items: center;
   padding-top: 12px;
   border-top: 1px solid #e2e8f0;
+  margin-top: auto; /* 推到底部 */
 }
 
 .stat-item {
@@ -670,6 +681,10 @@ const formatNumber = (num: number) => {
     gap: 16px;
   }
   
+  .related-card {
+    height: 330px; /* 移动端固定高度 */
+  }
+  
   .section-title {
     font-size: 1.2rem;
   }
@@ -683,6 +698,7 @@ const formatNumber = (num: number) => {
 @media (max-width: 480px) {
   .related-card {
     padding: 16px;
+    height: 310px; /* 小屏幕进一步降低高度 */
   }
   
   .related-title {

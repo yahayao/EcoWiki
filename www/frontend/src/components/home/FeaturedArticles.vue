@@ -87,6 +87,11 @@
         <!-- 文章摘要 -->
         <p class="article-excerpt">{{ getArticleExcerpt(article.content) }}</p>
         
+        <!-- 文章标签 -->
+        <div v-if="article.tags" class="article-tags">
+          <span v-for="tag in getTagArray(article.tags)" :key="tag" class="tag">{{ tag }}</span>
+        </div>
+        
         <!-- 文章元信息 -->
         <div class="article-meta">
           <div class="article-author">
@@ -99,11 +104,6 @@
             <span class="author-name">{{ article.author }}</span>
           </div>
           <span class="article-date">{{ formatDate(article.publishDate) }}</span>
-        </div>
-        
-        <!-- 文章标签 -->
-        <div v-if="article.tags" class="article-tags">
-          <span v-for="tag in getTagArray(article.tags)" :key="tag" class="tag">{{ tag }}</span>
         </div>
       </div>
     </div>
@@ -148,17 +148,46 @@ const navigateToArticle = (articleTitle: string) => {
 
 /**
  * 获取文章内容摘要
- * 使用Wiki解析器提取文章的纯文本摘要
+ * 使用Wiki解析器提取文章的纯文本摘要，保持原有的换行格式
  * @param content 文章原始内容
  * @returns 格式化的摘要文本
  */
 const getArticleExcerpt = (content: string): string => {
   if (!content) return '暂无内容...'
   
-  // 使用wikiParser提取纯文本摘要
-  const htmlContent = wikiParser.parseToHtml(content)
-  const excerpt = wikiParser.extractSummary(htmlContent, 120)
-  return excerpt || '暂无内容...'
+  // 直接处理原始内容，保持换行和格式
+  let text = content
+    // 移除Wiki语法标记，但保持文本结构
+    .replace(/\[\[Category:[^\]]+\]\]/g, '') // 移除分类标签
+    .replace(/={1,6}\s*([^=\n]+)\s*={1,6}/g, '$1') // 移除标题符号，保留标题文本
+    .replace(/'''([^']+)'''/g, '$1') // 移除粗体标记
+    .replace(/''([^']+)''/g, '$1') // 移除斜体标记
+    .replace(/__([^_]+)__/g, '$1') // 移除下划线标记
+    .replace(/\[\[([^\]|]+)(\|[^\]]+)?\]\]/g, '$1') // 简化内部链接
+    .replace(/\[([^\s]+)\s+([^\]]+)\]/g, '$2') // 简化外部链接
+    .replace(/<[^>]+>/g, '') // 移除HTML标签
+    .replace(/\{\{[^}]+\}\}/g, '') // 移除模板
+    .replace(/^\s*[\*#]+\s*/gm, '') // 移除列表标记，保持列表内容
+    .trim()
+  
+  // 如果文本太长，截取前150个字符，但在合适的位置截断
+  if (text.length > 150) {
+    text = text.substring(0, 150)
+    // 尝试在句号、感叹号、问号处截断
+    const lastPunctuation = Math.max(
+      text.lastIndexOf('。'),
+      text.lastIndexOf('！'), 
+      text.lastIndexOf('？'),
+      text.lastIndexOf('.')
+    )
+    if (lastPunctuation > 100) {
+      text = text.substring(0, lastPunctuation + 1)
+    } else {
+      text = text + '...'
+    }
+  }
+  
+  return text || '暂无内容...'
 }
 
 /**
@@ -260,7 +289,7 @@ onMounted(() => {
 }
 
 .article-tags {
-  margin-top: 8px;
+  margin: 8px 0 12px 0;
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
@@ -280,11 +309,14 @@ onMounted(() => {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  padding: 24px;
+  padding: 20px;
   transition: all 0.3s ease;
   cursor: pointer;
   border: 1px solid rgba(226, 232, 240, 0.8);
   position: relative;
+  height: 280px; /* 调整为4:3比例，约280px高度 */
+  display: flex;
+  flex-direction: column;
 }
 
 .article-card:hover {
@@ -317,17 +349,34 @@ onMounted(() => {
 
 .article-title {
   font-size: 1.2rem;
-  margin: 0 0 12px 0;
+  margin: 0 0 8px 0; /* 减少标题和摘要之间的间距 */
   color: #1a202c;
   font-weight: 600;
   line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 标题最多2行 */
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.8rem; /* 确保标题区域高度一致 */
 }
 
 .article-excerpt {
   color: #718096;
-  line-height: 1.6;
-  margin-bottom: 16px;
-  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 12px; /* 减少摘要底部间距 */
+  font-size: 0.9rem;
+  flex: 1; /* 让摘要占据剩余空间 */
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* 精确控制行数 */
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: pre-line; /* 保持换行，折叠多余空格 */
+  word-wrap: break-word; /* 长单词换行 */
+  overflow-wrap: break-word; /* 确保换行兼容性 */
+  height: calc(1.5em * 3); /* 精确控制高度，避免半行显示 */
+  max-height: calc(1.5em * 3); /* 最大高度限制 */
 }
 
 .article-meta {
@@ -336,6 +385,7 @@ onMounted(() => {
   align-items: center;
   color: #a0aec0;
   font-size: 0.85rem;
+  margin-top: auto; /* 推到底部 */
 }
 
 .article-author {
@@ -358,11 +408,16 @@ onMounted(() => {
   .article-grid {
     grid-template-columns: 1fr;
   }
+  
+  .article-card {
+    height: 360px; /* 移动端稍微降低高度 */
+  }
 }
 
 @media (max-width: 480px) {
   .article-card {
     padding: 20px;
+    height: 340px; /* 小屏幕进一步降低高度 */
   }
 }
 </style>

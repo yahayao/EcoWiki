@@ -816,6 +816,9 @@ const editDraft = (draftId: number) => {
   border: 1px solid #e2e8f0;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
+  height: 320px; /* 调整为4:3比例，约320px高度 */
+  display: flex;
+  flex-direction: column;
 }
 
 .article-card:hover {
@@ -871,10 +874,13 @@ const editDraft = (draftId: number) => {
 
 .card-content {
   padding: 20px 24px;
+  flex: 1; /* 让内容区域占据剩余空间 */
+  display: flex;
+  flex-direction: column;
 }
 
 .article-title {
-  margin: 0 0 12px 0;
+  margin: 0 0 8px 0; /* 减少底部间距 */
   font-size: 20px;
   font-weight: 600;
   color: #1a202c;
@@ -887,15 +893,21 @@ const editDraft = (draftId: number) => {
 }
 
 .article-excerpt {
-  margin: 0 0 16px 0;
+  margin: 0 0 12px 0; /* 减少底部间距 */
   color: #718096;
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.5;
+  flex: 1; /* 让摘要占据剩余空间 */
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 3; /* 减少显示行数适应更小高度 */
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  white-space: pre-wrap; /* 保持换行和空格 */
+  word-wrap: break-word; /* 长单词换行 */
+  overflow-wrap: break-word; /* 确保换行兼容性 */
+  height: calc(1.5em * 3); /* 精确控制高度，避免半行显示 */
+  max-height: calc(1.5em * 3); /* 最大高度限制 */
 }
 
 .article-meta {
@@ -903,6 +915,7 @@ const editDraft = (draftId: number) => {
   flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 20px;
+  margin-top: auto; /* 推到底部 */
 }
 
 .meta-item {
@@ -1009,6 +1022,10 @@ const editDraft = (draftId: number) => {
   
   .article-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .article-card {
+    height: 300px; /* 移动端保持4:3比例 */
   }
   
   .card-actions {
