@@ -251,9 +251,13 @@
                 {{ article.likes }} 点赞
               </span>
               <span class="meta-item">
-                <svg viewBox="0 0 24 24" class="meta-icon">
-                  <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                </svg>
+                <UserAvatar 
+                  :username="article.author"
+                  :avatar-url="article.authorAvatar || ''"
+                  size="xs"
+                  shape="circle"
+                  class="meta-avatar"
+                />
                 {{ article.author }}
               </span>
             </div>
@@ -284,6 +288,7 @@ import { useRouter } from 'vue-router'
 import { userApi } from '@/api/user'
 import { articleApi } from '@/api/article'
 import toast from '@/utils/toast'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 
 const router = useRouter()
 
@@ -908,7 +913,7 @@ const editDraft = (draftId: number) => {
   font-size: 13px;
 }
 
-.meta-icon {
+.meta-icon, .meta-avatar {
   width: 14px;
   height: 14px;
   fill: currentColor;

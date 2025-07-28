@@ -73,7 +73,15 @@
         <div class="update-content">
           <span class="update-time">{{ formatDateTime(article.updateTime || article.publishDate) }}</span>
           <span class="update-title">{{ article.title }}</span>
-          <span class="update-author">{{ article.author }}</span>
+          <div class="update-author-info">
+            <UserAvatar 
+              :username="article.author"
+              :avatar-url="article.authorAvatar || ''"
+              size="xs"
+              shape="circle"
+            />
+            <span class="update-author">{{ article.author }}</span>
+          </div>
           <span v-if="article.category" class="update-category">{{ article.category }}</span>
         </div>
         
@@ -104,6 +112,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { articleApi, type Article } from '../../api/article'
 import { IconCross } from '../icons'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 
 // 路由实例
 const router = useRouter()
@@ -323,6 +332,12 @@ onMounted(() => {
   color: #1a202c;
   font-weight: 500;
   font-size: 0.95rem;
+}
+
+.update-author-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .update-author {

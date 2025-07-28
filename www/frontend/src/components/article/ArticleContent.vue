@@ -9,7 +9,12 @@
       <h1 class="article-title">{{ article.title }}</h1>
       <div class="article-info">
         <div class="author-info">
-          <span class="author-avatar">👤</span>
+          <UserAvatar 
+            :username="article.author"
+            :avatar-url="article.authorAvatar || ''"
+            size="md"
+            shape="circle"
+          />
           <div class="author-details">
             <span class="author-name">{{ article.author }}</span>
           </div>
@@ -135,6 +140,7 @@ import { useRouter } from 'vue-router'
 import { wikiParser } from '../../utils/wikiParser'
 import { articleApi, type Article } from '../../api/article'
 import { IconArticleTOC, IconTag } from '../icons'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 
 const props = defineProps<{
   article: Article

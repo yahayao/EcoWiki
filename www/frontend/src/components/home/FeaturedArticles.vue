@@ -89,10 +89,15 @@
         
         <!-- 文章元信息 -->
         <div class="article-meta">
-          <span class="article-author">
-            <span class="author-icon">👤</span>
-            {{ article.author }}
-          </span>
+          <div class="article-author">
+            <UserAvatar 
+              :username="article.author"
+              :avatar-url="article.authorAvatar || ''"
+              size="xs"
+              shape="circle"
+            />
+            <span class="author-name">{{ article.author }}</span>
+          </div>
           <span class="article-date">{{ formatDate(article.publishDate) }}</span>
         </div>
         
@@ -123,6 +128,7 @@ import { useRouter } from 'vue-router'
 import { articleApi, type Article } from '../../api/article'
 import { wikiParser } from '../../utils/wikiParser'
 import { IconFire, IconCross } from '../icons'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 
 // 路由实例
 const router = useRouter()
@@ -335,12 +341,12 @@ onMounted(() => {
 .article-author {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-weight: 500;
 }
 
-.author-icon {
-  font-size: 0.8rem;
+.author-name {
+  color: #4a5568;
 }
 
 .article-date {

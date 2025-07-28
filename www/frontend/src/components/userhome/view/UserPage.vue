@@ -205,16 +205,18 @@
           <div class="template-preview-full">
             <div class="user-header">
               <div class="user-avatar-large">
-                <img :src="user?.avatar || '/default-avatar.png'" alt="用户头像" />
+                <UserAvatar 
+                  :avatar-url="user?.avatarUrl || ''"
+                  :username="user?.username || '用户名'"
+                  size="xl"
+                  shape="circle"
+                  class="avatar-full-size"
+                />
               </div>
               <h1 class="user-name">{{ user?.username || '用户名' }}</h1>
               <div class="user-tags">
                 <span v-for="tag in templateData.tags" :key="tag" class="tag">{{ tag }}</span>
               </div>
-            </div>
-            
-            <div class="user-bio">
-              <p>{{ templateData.bio || '这里是您的个人简介...' }}</p>
             </div>
             
             <div class="quick-stats">
@@ -230,6 +232,10 @@
                 <span class="stat-number">{{ userStats.points }}</span>
                 <span class="stat-label">积分</span>
               </div>
+            </div>
+            
+            <div class="user-bio">
+              <p>{{ templateData.bio || '这里是您的个人简介...' }}</p>
             </div>
             
             <div v-if="templateData.socialLinks.length" class="social-links-preview">
@@ -260,6 +266,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useAuth } from '@/composables/useAuth'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 
 const { user } = useAuth()
 
@@ -1111,6 +1118,23 @@ const getCodePlaceholder = (tab: string) => {
   overflow: hidden;
   border: 4px solid white;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.template-preview-full .user-avatar-large .avatar-full-size {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  transition: none !important;
+}
+
+.template-preview-full .user-avatar-large .avatar-full-size:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  opacity: 1 !important;
 }
 
 .template-preview-full .user-avatar-large img {
