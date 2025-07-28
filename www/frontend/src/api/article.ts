@@ -306,6 +306,22 @@ class ArticleApi {
     },
   })
 
+  constructor() {
+    // 配置请求拦截器，自动添加JWT token
+    this.api.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('token')
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`
+        }
+        return config
+      },
+      (error) => {
+        return Promise.reject(error)
+      }
+    )
+  }
+
   /**
    * 创建新文章
    * 
@@ -741,6 +757,105 @@ class ArticleApi {
   }
 
   /**
+   * 获取文章贡献者列表
+   * 基于文章版本历史统计贡献者信息
+   * 
+   * @param {number} articleId - 文章ID
+   * @returns {Promise<Array>} 贡献者列表
+   */
+  async getArticleContributors(articleId: number): Promise<Array<{
+    username: string
+    displayName: string
+    avatarUrl: string
+    editCount: number
+    latestEdit: string
+  }>> {
+    try {
+      // 直接调用后端的贡献者API
+      const response = await this.api.get<ApiResponse<Array<{
+        username: string
+        displayName: string
+        avatarUrl: string
+        editCount: number
+        latestEdit: string
+      }>>>(`/articles/${articleId}/contributors`)
+      
+      if (response.data.code !== 200) {
+        throw new Error(response.data.message)
+      }
+      
+      return response.data.data
+      
+    } catch (error) {
+      console.error('API获取贡献者失败，使用版本历史回退方案:', error)
+      
+      // 如果API失败，回退到使用版本历史
+      try {
+      // 获取版本历史
+      const versionHistory = await this.getArticleVersions(articleId, 0, 100)
+      
+      if (!versionHistory.versions || versionHistory.versions.length === 0) {
+        return []
+      }
+      
+      // 获取文章信息以排除原作者
+      const article = await this.getArticleById(articleId)
+      const originalAuthor = article.author
+      
+      // 统计贡献者
+      const contributorMap = new Map<string, {
+        username: string
+        editCount: number
+        latestEdit: string
+      }>()
+      
+      versionHistory.versions.forEach(version => {
+        const author = version.author?.trim()
+        
+        // 排除原作者和空值
+        if (!author || author.toLowerCase() === originalAuthor?.toLowerCase()) {
+          return
+        }
+        
+        if (contributorMap.has(author)) {
+          const existing = contributorMap.get(author)!
+          existing.editCount++
+          if (new Date(version.createdAt) > new Date(existing.latestEdit)) {
+            existing.latestEdit = version.createdAt
+          }
+        } else {
+          contributorMap.set(author, {
+            username: author,
+            editCount: 1,
+            latestEdit: version.createdAt
+          })
+        }
+      })
+      
+      // 转换为数组并排序
+      return Array.from(contributorMap.entries())
+        .map(([username, data]) => ({
+          username: data.username,
+          displayName: data.username,
+          avatarUrl: this.generateDefaultAvatar(data.username), // 生成默认头像
+          editCount: data.editCount,
+          latestEdit: data.latestEdit
+        }))
+        .sort((a, b) => {
+          if (a.editCount !== b.editCount) {
+            return b.editCount - a.editCount
+          }
+          return new Date(b.latestEdit).getTime() - new Date(a.latestEdit).getTime()
+        })
+        
+      } catch (fallbackError) {
+        console.error('版本历史回退方案也失败:', fallbackError)
+        return []
+      }
+    }
+  }
+
+  /**
    * 获取文章版本历史列表
    * 
    * @param {number} articleId - 文章ID
@@ -832,6 +947,21 @@ class ArticleApi {
       throw new Error(response.data.message)
     }
     return response.data.data
+  }
+
+  /**
+   * 生成默认头像URL
+   * 
+   * @param {string} username - 用户名
+   * @returns {string} 默认头像URL
+   * @private
+   */
+  private generateDefaultAvatar(username: string): string {
+    if (!username) return ''
+    
+    // 使用 DiceBear API 生成默认头像
+    const encodedUsername = encodeURIComponent(username)
+    return `https://api.dicebear.com/7.x/initials/svg?seed=${encodedUsername}&backgroundColor=random`
   }
 }
 

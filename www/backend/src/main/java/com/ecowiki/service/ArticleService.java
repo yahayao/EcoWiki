@@ -1,9 +1,13 @@
 package com.ecowiki.service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,6 +22,7 @@ import com.ecowiki.dto.ArticleDto;
 import com.ecowiki.dto.ArticleStatisticsDto;
 import com.ecowiki.dto.ArticleUpdateRequest;
 import com.ecowiki.entity.Article;
+import com.ecowiki.entity.ArticleVersion;
 import com.ecowiki.entity.Tag;
 import com.ecowiki.entity.User;
 import com.ecowiki.repository.ArticleRepository;
@@ -65,6 +70,12 @@ public class ArticleService {
      */
     @Autowired
     private UserRepository userRepository;
+    
+    /**
+     * 用户服务接口
+     */
+    @Autowired
+    private UserService userService;
 
     /**
      * 创建新文章
@@ -127,6 +138,19 @@ public class ArticleService {
      * @throws RuntimeException 当文章不存在时抛出异常
      */
     public ArticleDto updateArticle(Long articleId, ArticleUpdateRequest request) {
+        // 调用带编辑者参数的重载方法，使用原作者作为默认编辑者
+        return updateArticle(articleId, request, null);
+    }
+
+    /**
+     * 更新文章内容（带编辑者信息）
+     * @param articleId 文章ID
+     * @param request 文章更新请求对象
+     * @param editorUsername 当前编辑者用户名（用于版本历史记录）
+     * @return 更新后的文章DTO
+     * @throws RuntimeException 当文章不存在时抛出异常
+     */
+    public ArticleDto updateArticle(Long articleId, ArticleUpdateRequest request, String editorUsername) {
         Optional<Article> optionalArticle = articleRepository.findById(articleId);
         if (optionalArticle.isEmpty()) {
             throw new RuntimeException("文章不存在");
@@ -155,9 +179,21 @@ public class ArticleService {
         // 如果内容有变化，创建新版本
         if (!oldContent.equals(newContent)) {
             try {
-                // 使用文章作者或默认作者创建版本
-                String author = savedArticle.getAuthor() != null ? savedArticle.getAuthor() : "系统";
-                articleVersionService.createVersion(articleId, newContent, author);
+                // 使用传入的编辑者用户名，如果为空则使用文章原作者
+                String versionAuthor;
+                if (editorUsername != null && !editorUsername.trim().isEmpty()) {
+                    versionAuthor = editorUsername;
+                } else {
+                    versionAuthor = savedArticle.getAuthor() != null ? savedArticle.getAuthor() : "系统";
+                }
+                
+                System.out.println("=== createVersion Debug ===");
+                System.out.println("文章ID: " + articleId);
+                System.out.println("传入的编辑者: " + editorUsername);
+                System.out.println("实际版本作者: " + versionAuthor);
+                System.out.println("原文章作者: " + savedArticle.getAuthor());
+                
+                articleVersionService.createVersion(articleId, newContent, versionAuthor);
             } catch (Exception e) {
                 // 版本创建失败不影响文章更新，只记录日志
                 System.err.println("Failed to create version for article " + articleId + ": " + e.getMessage());
@@ -385,5 +421,84 @@ public class ArticleService {
     public Long getArticleIdByTitle(String title) {
         Optional<Article> articleOpt = articleRepository.findByTitle(title);
         return articleOpt.map(Article::getArticleId).orElse(null);
+    }
+
+    /**
+     * 获取文章贡献者列表
+     * @param articleId 文章ID
+     * @return 贡献者列表
+     */
+    public List<Map<String, Object>> getArticleContributors(Long articleId) {
+        try {
+            // 通过版本历史获取贡献者
+            Page<ArticleVersion> versions = articleVersionService.getVersionHistory(articleId, 
+                PageRequest.of(0, 100));
+            
+            // 获取文章信息以排除原作者
+            Optional<Article> articleOpt = articleRepository.findById(articleId);
+            String originalAuthor = articleOpt.map(Article::getAuthor).orElse("");
+            
+            // 统计每个编辑者的贡献
+            Map<String, Map<String, Object>> contributorMap = new HashMap<>();
+            
+            for (ArticleVersion version : versions.getContent()) {
+                String author = version.getAuthor();
+                
+                // 排除原作者
+                if (author == null || author.equals(originalAuthor)) {
+                    continue;
+                }
+                
+                contributorMap.computeIfAbsent(author, k -> {
+                    Map<String, Object> contributor = new HashMap<>();
+                    contributor.put("username", k);
+                    contributor.put("displayName", k);
+                    
+                    // 尝试获取用户头像URL
+                    String avatarUrl = "";
+                    try {
+                        Optional<User> userOpt = userService.findByUsername(k);
+                        if (userOpt.isPresent()) {
+                            User user = userOpt.get();
+                            avatarUrl = user.getAvatarUrl() != null ? user.getAvatarUrl() : "";
+                        }
+                    } catch (Exception e) {
+                        System.err.println("获取用户头像失败: " + k + " - " + e.getMessage());
+                    }
+                    
+                    contributor.put("avatarUrl", avatarUrl);
+                    contributor.put("editCount", 0);
+                    contributor.put("latestEdit", version.getCreatedAt());
+                    return contributor;
+                });
+                
+                Map<String, Object> contributor = contributorMap.get(author);
+                contributor.put("editCount", (Integer) contributor.get("editCount") + 1);
+                
+                // 更新最新编辑时间
+                LocalDateTime currentLatest = (LocalDateTime) contributor.get("latestEdit");
+                if (version.getCreatedAt().isAfter(currentLatest)) {
+                    contributor.put("latestEdit", version.getCreatedAt());
+                }
+            }
+            
+            // 转换为列表并排序
+            return contributorMap.values().stream()
+                .sorted((a, b) -> {
+                    int editCountA = (Integer) a.get("editCount");
+                    int editCountB = (Integer) b.get("editCount");
+                    if (editCountA != editCountB) {
+                        return editCountB - editCountA; // 编辑次数多的在前
+                    }
+                    LocalDateTime timeA = (LocalDateTime) a.get("latestEdit");
+                    LocalDateTime timeB = (LocalDateTime) b.get("latestEdit");
+                    return timeB.compareTo(timeA); // 时间新的在前
+                })
+                .collect(Collectors.toList());
+                
+        } catch (Exception e) {
+            System.err.println("获取贡献者失败: " + e.getMessage());
+            return Collections.emptyList();
+        }
     }
 }

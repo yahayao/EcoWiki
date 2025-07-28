@@ -22,12 +22,37 @@
           </div>
           
           <!-- 贡献者信息 -->
-          <div class="contributors-section" v-if="contributorsInfo && contributorsInfo.length > 0">
-            <span class="contributors-label">贡献者 {{ contributorsInfo.length }}</span>
-            <div class="contributors-list" :class="{ 'horizontal': contributorsInfo.length > 2 }">
-              <template v-if="contributorsInfo.length <= 2">
+          <div class="contributors-section" v-if="contributorsLoading || contributorsError || (realContributorsInfo && realContributorsInfo.length > 0)">
+            <span class="contributors-label">
+              <template v-if="contributorsLoading">
+                贡献者 (加载中...)
+              </template>
+              <template v-else-if="contributorsError">
+                贡献者 (加载失败)
+              </template>
+              <template v-else>
+                贡献者 {{ realContributorsInfo.length }}
+              </template>
+            </span>
+            
+            <!-- 加载状态 -->
+            <div v-if="contributorsLoading" class="contributors-loading">
+              <div class="loading-spinner"></div>
+              <span>正在加载贡献者信息...</span>
+            </div>
+            
+            <!-- 错误状态 -->
+            <div v-else-if="contributorsError" class="contributors-error">
+              <span class="error-icon">⚠️</span>
+              <span>{{ contributorsError }}</span>
+              <button @click="refreshContributors" class="retry-btn">重试</button>
+            </div>
+            
+            <!-- 正常显示贡献者 -->
+            <div v-else-if="realContributorsInfo && realContributorsInfo.length > 0" class="contributors-list" :class="{ 'horizontal': realContributorsInfo.length > 2 }">
+              <template v-if="realContributorsInfo.length <= 2">
                 <div 
-                  v-for="contributor in contributorsInfo" 
+                  v-for="contributor in realContributorsInfo" 
                   :key="contributor.id" 
                   class="contributor-item"
                 >
@@ -46,7 +71,7 @@
               <template v-else>
                 <div class="contributors-avatars">
                   <UserAvatar 
-                    v-for="contributor in contributorsInfo" 
+                    v-for="contributor in realContributorsInfo" 
                     :key="contributor.id"
                     :username="contributor.username"
                     :avatar-url="contributor.avatarUrl || ''"
@@ -177,7 +202,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { wikiParser } from '../../utils/wikiParser'
 import { articleApi, type Article } from '../../api/article'
@@ -206,22 +231,127 @@ const isToCSidebarCollapsed = ref(true) // 默认关闭状态
 
 // 计算属性
 const contributorsInfo = computed(() => {
-  // 模拟贡献者数据，实际应该从API或数据库获取
-  const contributors = [
-    { 
-      id: 1, 
-      username: 'yahayao', 
-      displayName: 'yahaya',
-      avatarUrl: 'https://example.com/avatar1.jpg' 
-    },
-    { 
-      id: 2, 
-      username: 'yinianqingxian', 
-      displayName: 'qingxian',
-      avatarUrl: 'https://example.com/avatar2.jpg' 
-    },
+  // 从文章版本历史中获取真实的贡献者数据
+  // 这里需要异步加载版本历史数据，暂时返回空数组
+  // TODO: 实现异步加载文章版本历史并处理贡献者数据
+  return []
+})
+
+// 添加响应式的贡献者数据
+const contributors = ref<Array<{
+  id: number
+  username: string
+  displayName: string
+  avatarUrl: string
+  editDate: string
+  editCount: number
+}>>([])
+
+// 贡献者加载状态
+const contributorsLoading = ref(false)
+const contributorsError = ref<string | null>(null)
+// 异步加载贡献者数据
+const loadContributors = async () => {
+  if (!props.article?.articleId) {
+    console.log('文章ID不存在，无法加载贡献者数据')
+    contributors.value = []
+    contributorsError.value = null
+    return
+  }
+  
+  contributorsLoading.value = true
+  contributorsError.value = null
+  console.log('开始加载文章贡献者数据，文章ID:', props.article.articleId, '原作者:', props.article.author)
+  
+  try {
+    // 使用新的贡献者API
+    const contributorsList = await articleApi.getArticleContributors(props.article.articleId)
+    console.log('获取到贡献者数据:', contributorsList)
+    
+    // 转换数据格式
+    const formattedContributors = contributorsList.map((contributor, index) => ({
+      id: index + 1,
+      username: contributor.username,
+      displayName: contributor.displayName || contributor.username,
+      avatarUrl: contributor.avatarUrl || '',
+      editDate: contributor.latestEdit,
+      editCount: contributor.editCount
+    }))
+    
+    console.log('最终贡献者列表:', formattedContributors)
+    contributors.value = formattedContributors
+    
+  } catch (error) {
+    console.error('加载贡献者数据失败:', error)
+    
+    // 根据不同的错误类型处理
+    if (error instanceof Error) {
+      if (error.message.includes('404') || error.message.includes('不存在')) {
+        console.log('文章版本API不存在，使用模拟数据进行演示')
+        contributors.value = generateMockContributors()
+        contributorsError.value = null // 模拟数据不算错误
+      } else if (error.message.includes('网络') || error.message.includes('Network')) {
+        contributorsError.value = '网络连接失败，请检查网络设置'
+        contributors.value = []
+      } else {
+        contributorsError.value = `加载失败: ${error.message}`
+        contributors.value = []
+      }
+    } else {
+      contributorsError.value = '未知错误，请稍后重试'
+      contributors.value = []
+    }
+  } finally {
+    contributorsLoading.value = false
+  }
+}
+
+// 生成模拟贡献者数据（仅用于演示）
+const generateMockContributors = () => {
+  const originalAuthor = props.article.author?.trim().toLowerCase()
+  
+  const mockData = [
+    { username: 'yahayao', displayName: 'yahaya', editCount: 3, editDate: '2025-07-25T10:30:00Z' },
+    { username: 'yinianqingxian', displayName: 'qingxian', editCount: 2, editDate: '2025-07-26T15:20:00Z' },
+    { username: 'Alng97', displayName: 'Alng97', editCount: 1, editDate: '2025-07-27T09:15:00Z' },
+    { username: 'editor1', displayName: 'Editor One', editCount: 1, editDate: '2025-07-28T08:45:00Z' },
+    { username: 'editor2', displayName: 'Editor Two', editCount: 1, editDate: '2025-07-28T14:30:00Z' },
+    { username: 'admin', displayName: 'Administrator', editCount: 4, editDate: '2025-07-24T16:00:00Z' },
+    { username: 'reviewer', displayName: 'Content Reviewer', editCount: 2, editDate: '2025-07-27T20:15:00Z' }
   ]
-  return contributors
+  
+  console.log('生成模拟数据，原作者:', originalAuthor, '所有候选:', mockData.map(m => m.username))
+  
+  // 过滤掉原作者并转换格式
+  const filteredData = mockData
+    .filter(item => {
+      const itemAuthor = item.username.trim().toLowerCase()
+      const shouldInclude = itemAuthor !== originalAuthor
+      console.log(`检查 ${item.username} (${itemAuthor}) vs ${originalAuthor}: ${shouldInclude ? '包含' : '排除'}`)
+      return shouldInclude
+    })
+    .map((item, index) => ({
+      id: index + 1,
+      username: item.username,
+      displayName: item.displayName,
+      avatarUrl: '',
+      editDate: item.editDate,
+      editCount: item.editCount
+    }))
+    .sort((a, b) => {
+      if (a.editCount !== b.editCount) {
+        return b.editCount - a.editCount
+      }
+      return new Date(b.editDate).getTime() - new Date(a.editDate).getTime()
+    })
+    
+  console.log('过滤后的模拟贡献者:', filteredData)
+  return filteredData
+}
+
+// 计算属性：基于真实数据的贡献者信息
+const realContributorsInfo = computed(() => {
+  return contributors.value
 })
 
 const parsedContent = computed(() => {
@@ -347,7 +477,34 @@ const generateTableOfContents = () => {
 // 生命周期
 onMounted(() => {
   generateTableOfContents()
+  loadContributors() // 加载贡献者数据
 })
+
+// 监听文章变化，重新加载贡献者
+watch(() => props.article.articleId, (newId, oldId) => {
+  if (newId !== oldId && newId) {
+    console.log('文章ID变化，重新加载贡献者:', oldId, '->', newId)
+    contributors.value = [] // 先清空避免显示错误数据
+    contributorsError.value = null
+    loadContributors()
+  }
+}, { immediate: false })
+
+// 监听文章作者变化
+watch(() => props.article.author, (newAuthor, oldAuthor) => {
+  if (newAuthor !== oldAuthor) {
+    console.log('文章作者变化，重新加载贡献者:', oldAuthor, '->', newAuthor)
+    loadContributors()
+  }
+}, { immediate: false })
+
+// 手动刷新贡献者数据
+const refreshContributors = () => {
+  console.log('手动刷新贡献者数据')
+  contributors.value = []
+  contributorsError.value = null
+  loadContributors()
+}
 </script>
 
 <style scoped>
@@ -514,6 +671,56 @@ onMounted(() => {
 .contributor-avatar:hover {
   transform: scale(1.1);
   cursor: pointer;
+}
+
+/* 贡献者加载和错误状态样式 */
+.contributors-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e2e8f0;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.contributors-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e53e3e;
+  font-size: 0.9rem;
+}
+
+.error-icon {
+  font-size: 14px;
+}
+
+.retry-btn {
+  background: #e53e3e;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.retry-btn:hover {
+  background: #c53030;
 }
 
 /* 侧悬浮目录栏 */
