@@ -1,6 +1,7 @@
 # EcoWiki 项目文件结构文档
 
 ## 项目概述
+
 EcoWiki 是一个基于Spring Boot后端和Vue3前端的知识共享平台，支持用户注册、登录、文章管理、权限管理等功能。经过重构优化，整个项目结构更加清晰和可维护。
 
 ## 根目录结构
@@ -324,9 +325,11 @@ www/frontend/
 ## 数据库结构（MySQL 8.0+）
 
 ### 核心表结构
+
 基于`COMPLETE_DATABASE_INIT.sql`的完整数据库设计：
 
 #### 用户权限体系表
+
 - **`user`** - 用户基本信息表（移除了userGroup字段，改用关联表）
 - **`role`** - 角色定义表（user、moderator、admin、superadmin等）
 - **`permission`** - 权限定义表（细粒度权限控制）
@@ -334,16 +337,19 @@ www/frontend/
 - **`role_permissions`** - 角色权限多对多关联表
 
 #### 内容管理表
+
 - **`articles`** - 文章内容表（支持Wiki语法、标签、统计）
 - **`tags`** - 标签表（分类和标签管理）
 - **`article_tags`** - 文章标签多对多关联表
 
 #### 版本控制系统表
+
 - **`article_versions`** - 文章版本历史表（支持差异存储、压缩）
 - **`article_version_stats`** - 文章版本统计表（性能优化）
 - **`article_version_config`** - 版本控制配置表
 
 #### 互动功能表
+
 - **`messages`** - 消息通知表（用户间通信）
 
 ### 详细表结构定义
@@ -527,7 +533,9 @@ CREATE TABLE `messages` (
 ```
 
 ### 初始数据
+
 系统包含完整的初始数据插入：
+
 - **默认角色**：user、moderator、admin、superadmin
 - **基础权限**：文章管理、用户管理、系统管理等
 - **默认管理员账户**：superadmin / EcoWiki@2025
@@ -536,6 +544,7 @@ CREATE TABLE `messages` (
 ## 架构特点
 
 ### 后端架构（Spring Boot 3.x）
+
 - **分层架构**: Controller → Service → Repository → Entity
 - **安全机制**: JWT认证 + Spring Security
 - **权限管理**: 基于角色的访问控制（RBAC），支持细粒度权限
@@ -545,6 +554,7 @@ CREATE TABLE `messages` (
 - **配置管理**: 多环境配置支持（local、dev、prod）
 
 ### 前端架构（Vue 3.5.13 + TypeScript 5.8.0）
+
 - **组件化**: Vue3组合式API + TypeScript
 - **模块化结构**: 按功能分类组织组件（api、components、composables、types、utils、views）
 - **状态管理**: Pinia状态管理
@@ -555,6 +565,7 @@ CREATE TABLE `messages` (
 - **API集成**: Axios HTTP客户端 + 统一请求拦截器
 
 ### 核心功能模块
+
 1. **用户认证系统**: 注册、登录、JWT认证、忘记密码、权限验证
 2. **权限管理系统**: 用户角色管理、权限检查、细粒度权限控制、RBAC模型
 3. **文章管理系统**: 文章CRUD、Wiki语法解析、分类标签、搜索功能
@@ -567,6 +578,7 @@ CREATE TABLE `messages` (
 ### 技术栈详情
 
 #### 后端技术栈
+
 ```xml
 <!-- 核心框架 -->
 Spring Boot: 3.x
@@ -588,6 +600,7 @@ Java: 17+
 ```
 
 #### 前端技术栈
+
 ```json
 {
   "framework": "Vue 3.5.13",
@@ -608,23 +621,25 @@ Java: 17+
 ```
 
 ### 安全特性
+
 1. **身份认证**: JWT无状态认证 + 自动令牌刷新
 2. **权限控制**: 基于角色的访问控制（RBAC）
 3. **数据安全**: BCrypt密码哈希 + 敏感数据加密
 4. **通信安全**: HTTPS/TLS加密传输
-5. **防护机制**: 
+5. **防护机制**:
    - SQL注入防护（参数化查询）
    - XSS防护（DOMPurify过滤）
    - CSRF防护（令牌验证）
    - 请求限流（接口防刷）
 
 ### 性能优化
+
 1. **前端优化**:
    - 组件懒加载
    - 路由懒加载
    - 图片懒加载
    - Vite热更新
-   
+
 2. **后端优化**:
    - JPA查询优化
    - 数据库索引优化
@@ -640,6 +655,7 @@ Java: 17+
 ## 开发和部署
 
 ### 开发环境要求
+
 - **后端**: Java 17+, Maven 3.6+, MySQL 8.0+
 - **前端**: Node.js 18+, pnpm 7+, 现代浏览器
 - **开发工具**: VS Code, IntelliJ IDEA（可选）
@@ -648,6 +664,7 @@ Java: 17+
 ### 环境配置
 
 #### 数据库配置
+
 ```properties
 # application-local.properties（需要创建）
 spring.datasource.url=jdbc:mysql://localhost:3306/ecowiki?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8
@@ -656,6 +673,7 @@ spring.datasource.password=your_password
 ```
 
 #### 前端环境变量
+
 ```bash
 # 开发环境API地址
 VITE_API_BASE_URL=http://localhost:8080/api
@@ -664,6 +682,7 @@ VITE_API_BASE_URL=http://localhost:8080/api
 ### 启动方式
 
 #### 快速启动（推荐）
+
 ```bash
 # 使用VS Code启动脚本
 start_in_vscode.bat     # Windows环境
@@ -675,6 +694,7 @@ deploy.sh               # Linux/macOS一键部署
 ```
 
 #### 手动启动
+
 ```bash
 # 1. 启动后端
 cd www/backend
@@ -690,19 +710,23 @@ pnpm dev
 ### 系统初始化
 
 #### 数据库初始化
+
 ```bash
 # 执行完整数据库初始化脚本
 mysql -u username -p database_name < COMPLETE_DATABASE_INIT.sql
 ```
 
 #### 默认账户信息
+
 系统首次启动时会自动创建默认管理员账户：
+
 - **用户名**: `superadmin`
 - **密码**: `EcoWiki@2025`
 - **邮箱**: `admin@ecowiki.com`
 - **权限**: 超级管理员权限（所有功能访问权限）
 
 #### 基础数据初始化
+
 - **默认角色**: user、moderator、admin、superadmin
 - **基础权限**: 文章管理、用户管理、系统管理等细粒度权限
 - **系统配置**: 版本控制参数、安全设置等
@@ -710,6 +734,7 @@ mysql -u username -p database_name < COMPLETE_DATABASE_INIT.sql
 ### 构建部署
 
 #### 生产环境构建
+
 ```bash
 # 后端打包
 cd www/backend
@@ -721,6 +746,7 @@ pnpm build
 ```
 
 #### Docker部署（可选）
+
 ```dockerfile
 # Dockerfile示例
 FROM openjdk:17-jdk-slim
@@ -730,6 +756,7 @@ ENTRYPOINT ["java","-jar","/app.jar"]
 ```
 
 #### 服务器部署
+
 ```bash
 # 1. 部署后端JAR包
 java -jar -Dspring.profiles.active=prod ecowiki-backend.jar
@@ -741,12 +768,14 @@ java -jar -Dspring.profiles.active=prod ecowiki-backend.jar
 ### 开发工具和脚本
 
 #### 可用脚本
+
 - `start_in_vscode.bat` - VS Code环境快速启动
 - `deploy.bat` / `deploy.sh` - 一键部署脚本
 - `COMPLETE_DATABASE_INIT.sql` - 完整数据库初始化
 - `DATABASE_UPGRADE_GUIDE.md` - 数据库升级指南
 
 #### 测试和调试
+
 ```bash
 # 后端测试
 cd www/backend
@@ -763,16 +792,19 @@ pnpm type-check
 ### 监控和维护
 
 #### 日志配置
+
 - 后端日志: Spring Boot默认日志配置
 - 前端日志: 浏览器控制台 + 错误监控
 - 数据库日志: MySQL慢查询日志
 
 #### 性能监控
+
 - API响应时间监控
 - 数据库查询性能分析
 - 前端页面加载性能监控
 
 #### 备份策略
+
 - 数据库: 每日自动备份
 - 文件系统: 定期备份用户上传内容
 - 配置文件: 版本控制管理
@@ -780,6 +812,7 @@ pnpm type-check
 ## 重要更新和优化记录
 
 ### 2025年7月28日 - 项目结构文档完整重构 🔄
+
 1. **文档重构完成**
    - ✅ 基于实际代码文件结构完全重写文档
    - ✅ 修正前端组件目录结构（admin、review、userhome等）
@@ -803,6 +836,7 @@ pnpm type-check
    - ✅ 确认完整的审核系统集成
 
 ### 2025年7月22日 - 项目结构文档全面更新
+
 1. **文档完善**
    - 基于实际代码分析更新所有结构信息
    - 添加详细的技术栈版本信息
@@ -816,6 +850,7 @@ pnpm type-check
    - 权限管理系统RBAC模型说明
 
 ### 2025年1月15日 - 版本控制系统完成
+
 1. **文章版本管理系统**
    - 完整的版本历史记录
    - 差异存储算法优化
@@ -828,6 +863,7 @@ pnpm type-check
    - 存储空间优化算法
 
 ### 2024年6月30日 - 权限系统重构
+
 1. **RBAC权限系统**
    - 从User表userGroup字段迁移到独立关联表
    - 支持用户多角色、角色多权限
@@ -841,6 +877,7 @@ pnpm type-check
    - 防护机制加强
 
 ### 2024年1月15日 - 项目初始化
+
 1. **项目框架搭建**
    - Spring Boot 3.x后端框架
    - Vue 3 + TypeScript前端框架
@@ -857,27 +894,29 @@ pnpm type-check
 ## 注意事项
 
 ### 开发注意事项
-1. **环境配置**: 
+
+1. **环境配置**:
    - 必须创建`application-local.properties`文件配置数据库连接
    - 前端需要配置正确的API基地址
    - 确保MySQL 8.0+版本兼容性
 
-2. **权限系统**: 
+2. **权限系统**:
    - 所有API接口都需要进行权限验证
    - 管理员功能通过`@PreAuthorize`注解控制
    - 前端路由守卫配合后端权限检查
 
-3. **数据库迁移**: 
+3. **数据库迁移**:
    - 使用`COMPLETE_DATABASE_INIT.sql`进行完整初始化
    - 版本升级参考`DATABASE_UPGRADE_GUIDE.md`
    - 注意用户角色从userGroup字段到user_roles表的迁移
 
-4. **版本控制**: 
+4. **版本控制**:
    - 文章版本自动创建，支持差异存储
    - 大文章建议使用压缩存储
    - 定期执行版本归档和优化
 
 ### 部署注意事项
+
 1. **安全配置**:
    - 生产环境必须使用HTTPS
    - 修改默认管理员密码
@@ -897,6 +936,7 @@ pnpm type-check
    - 定期检查系统日志
 
 ### 维护注意事项
+
 1. **数据备份**:
    - 每日数据库自动备份
    - 文件系统定期快照

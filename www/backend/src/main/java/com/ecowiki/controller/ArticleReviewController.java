@@ -26,8 +26,6 @@ import com.ecowiki.entity.ArticleReview;
 import com.ecowiki.entity.ReviewHistory;
 import com.ecowiki.entity.ReviewerAssignment;
 import com.ecowiki.service.ArticleReviewService;
-import com.ecowiki.service.PermissionService;
-import com.ecowiki.service.UserService;
 
 /**
  * 文章审核控制器
@@ -47,12 +45,6 @@ public class ArticleReviewController {
     
     @Autowired
     private ArticleReviewService reviewService;
-    
-    @Autowired
-    private UserService userService;
-    
-    @Autowired
-    private PermissionService permissionService;
     
     /**
      * 创建审核申请

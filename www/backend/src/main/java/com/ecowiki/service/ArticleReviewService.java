@@ -272,17 +272,12 @@ public class ArticleReviewService {
                 // 自动发布文章
                 try {
                     switch (review.getReviewType()) {
-                        case CREATE:
-                        case UPDATE:
-                            // 这里应该调用文章服务的发布方法，暂时注释
+                        case CREATE, UPDATE -> // 这里应该调用文章服务的发布方法，暂时注释
                             // articleService.publishArticle(review.getArticleId());
                             logger.info("文章审核通过，需要手动发布: articleId={}", review.getArticleId());
-                            break;
-                        case DELETE:
-                            // 这里应该调用文章服务的删除方法，暂时注释
+                        case DELETE -> // 这里应该调用文章服务的删除方法，暂时注释
                             // articleService.deleteArticle(review.getArticleId());
                             logger.info("文章删除审核通过，需要手动删除: articleId={}", review.getArticleId());
-                            break;
                     }
                 } catch (Exception e) {
                     logger.error("自动发布文章失败: articleId={}", review.getArticleId(), e);
@@ -527,7 +522,7 @@ public class ArticleReviewService {
             String content = String.format("您有一个新的%s审核任务，文章ID: %d，请及时处理。",
                 review.getReviewType().getDescription(), review.getArticleId());
             
-            messageService.sendMessage(null, reviewerId.intValue(), title);
+            messageService.sendMessage(null, reviewerId.intValue(), title, content);
         } catch (Exception e) {
             logger.error("发送审核分配通知失败", e);
         }
@@ -544,7 +539,7 @@ public class ArticleReviewService {
                 approved ? "已通过" : "被拒绝",
                 review.getReviewReason() != null ? "原因: " + review.getReviewReason() : "");
             
-            messageService.sendMessage(null, review.getSubmitterId().intValue(), title);
+            messageService.sendMessage(null, review.getSubmitterId().intValue(), title, content);
         } catch (Exception e) {
             logger.error("发送审核结果通知失败", e);
         }
@@ -560,7 +555,7 @@ public class ArticleReviewService {
             String content = String.format("审核ID: %d 无法自动分配审核员，请手动处理。", review.getReviewId());
             
             for (User admin : adminUsers) {
-                messageService.sendMessage(null, admin.getUserId().intValue(), title);
+                messageService.sendMessage(null, admin.getUserId().intValue(), title, content);
             }
         } catch (Exception e) {
             logger.error("发送无审核员通知失败", e);

@@ -61,6 +61,7 @@ EcoWiki 是一个现代化的知识共享平台，基于 Spring Boot 3.x + Vue 3
    - 确保具有数据库创建权限
 
 2. **执行部署**
+
    ```cmd
    # 在项目根目录下执行
    deploy.bat
@@ -76,11 +77,13 @@ EcoWiki 是一个现代化的知识共享平台，基于 Spring Boot 3.x + Vue 3
 ### Linux/macOS 部署
 
 1. **赋予执行权限**
+
    ```bash
    chmod +x deploy.sh
    ```
 
 2. **执行部署**
+
    ```bash
    ./deploy.sh
    ```
@@ -90,6 +93,7 @@ EcoWiki 是一个现代化的知识共享平台，基于 Spring Boot 3.x + Vue 3
 ## 数据库结构
 
 ### 核心表
+
 - `user` - 用户表
 - `role` - 角色表  
 - `permission` - 权限表
@@ -100,11 +104,13 @@ EcoWiki 是一个现代化的知识共享平台，基于 Spring Boot 3.x + Vue 3
 - `article_tags` - 文章标签关联表
 
 ### 版本管理表（可选）
+
 - `article_versions` - 文章版本表
 - `article_version_stats` - 版本统计表
 - `article_version_config` - 版本配置表
 
 ### 系统视图
+
 - `v_user_permissions` - 用户权限汇总视图
 - `v_article_stats` - 文章统计视图
 - `v_article_version_summary` - 版本统计视图
@@ -112,12 +118,14 @@ EcoWiki 是一个现代化的知识共享平台，基于 Spring Boot 3.x + Vue 3
 ## 默认数据
 
 ### 预置角色
+
 1. **user** - 普通用户（查看文章、发表评论）
 2. **moderator** - 版主（管理文章和评论）
 3. **admin** - 管理员（用户和权限管理）
 4. **superadmin** - 超级管理员（全部权限）
 
 ### 预置权限
+
 - 文章管理：查看、编辑、删除文章
 - 评论管理：查看、发表、删除评论
 - 用户管理：查看、编辑、删除用户
@@ -125,21 +133,24 @@ EcoWiki 是一个现代化的知识共享平台，基于 Spring Boot 3.x + Vue 3
 - 内容管理：标签、分类管理
 
 ### 默认管理员账户
+
 - **用户名**: superadmin
 - **密码**: EcoWiki@2025
-- **邮箱**: admin@ecowiki.com
+- **邮箱**: <admin@ecowiki.com>
 
 **⚠️ 重要提醒**: 部署完成后请立即登录并修改默认密码！
 
 ## 启动服务
 
 ### 后端服务
+
 ```bash
 cd www/backend
 mvn spring-boot:run
 ```
 
 ### 前端服务
+
 ```bash
 cd www/frontend
 npm install  # 首次运行需要安装依赖
@@ -149,9 +160,11 @@ npm run dev
 ## 配置文件
 
 ### 后端配置
+
 部署脚本会自动创建 `www/backend/src/main/resources/application-local.properties` 文件，包含数据库连接配置。
 
 ### 手动配置
+
 如需手动配置，可参考以下模板：
 
 ```properties
@@ -245,7 +258,7 @@ spring.datasource.hikari.idle-timeout=300000
 ### 获取帮助
 
 - **项目主页**: [EcoWiki GitHub](https://github.com/yahayao/EcoWiki)
-- **开发博客**: https://www.edaylogy.com/1750395139677
+- **开发博客**: <https://www.edaylogy.com/1750395139677>
 - **文档中心**: 项目根目录下的各类文档文件
 - **问题反馈**: GitHub Issues
 
