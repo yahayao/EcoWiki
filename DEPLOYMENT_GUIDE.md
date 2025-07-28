@@ -2,24 +2,54 @@
 
 ## 概述
 
-本项目提供了完整的一键部署方案，包含数据库初始化和配置自动化。所有冗余的SQL文件已被清理，现在只需要一个统一的部署脚本即可完成整个系统的部署。
+EcoWiki 是一个现代化的知识共享平台，基于 Spring Boot 3.x + Vue 3 + TypeScript 构建。本项目提供了完整的一键部署方案，包含数据库初始化、配置自动化和环境检测。系统支持文章版本控制、权限管理、审核系统等高级功能。
+
+## 系统架构
+
+### 技术栈
+
+- **后端**: Spring Boot 3.2.0 + Spring Security + Spring Data JPA
+- **前端**: Vue 3.5.13 + TypeScript 5.8.0 + Vite 6.2.4 + Pinia
+- **数据库**: MySQL 8.0+ / MariaDB 10.3+
+- **构建工具**: Maven 3.6+ + pnpm
+- **运行环境**: Java 17+ + Node.js 18+
+
+### 核心特性
+
+- 🔐 基于JWT的身份认证和RBAC权限控制
+- 📝 文章版本控制系统，支持差异存储和历史回溯
+- 🔍 全文搜索和智能分类标签系统
+- 🛡️ 内容审核系统和安全防护机制
+- 📊 数据统计和性能监控
+- 🎨 响应式UI设计和现代化用户体验
 
 ## 文件说明
 
 ### 核心部署文件
+
 - `COMPLETE_DATABASE_INIT.sql` - 完整的数据库初始化脚本
 - `deploy.bat` - Windows 一键部署脚本
 - `deploy.sh` - Linux/macOS 一键部署脚本
 - `DEPLOYMENT_GUIDE.md` - 本部署指南
+- `start_in_vscode.bat` - VS Code 开发环境快速启动
 
-### 已清理的多余文件
-以下文件为多余或重复的SQL文件，建议删除：
-- `PERMISSION_GROUPS_INIT.sql`
-- `PERMISSION_ROLE_INIT.sql`
-- `UPGRADE_PERMISSION_HIERARCHY.sql`
-- `SIMPLE_PERMISSION_UPGRADE.sql`
-- `ARTICLE_VERSION_MIGRATION.sql`
-- `www/MANUAL_PERMISSION_HIERARCHY_SETUP.sql`
+### 项目结构说明
+
+- `www/backend/` - Spring Boot 后端项目
+- `www/frontend/` - Vue 3 前端项目
+- `describe/` - 项目文档和演示图片
+- `scripts/` - 部署和维护脚本
+
+### 已整合的功能模块
+
+本版本已集成以下功能模块，无需单独配置：
+
+- ✅ 用户权限管理系统 (RBAC)
+- ✅ 文章版本控制系统
+- ✅ 内容审核工作流
+- ✅ 消息通知系统
+- ✅ 头像上传功能
+- ✅ 分类标签管理
 
 ## 部署步骤
 
@@ -165,20 +195,32 @@ spring.datasource.hikari.idle-timeout=300000
 - **前端日志**: 浏览器开发者工具
 - **数据库日志**: MySQL 错误日志
 
-## 系统要求
+## 环境要求
 
-### 最低要求
+### 系统要求
+
+**最低要求:**
+
 - **操作系统**: Windows 10+ / Linux / macOS
 - **Java**: JDK 17+
-- **Node.js**: 16+
-- **MySQL**: 5.7+ 或 MariaDB 10.3+
+- **Node.js**: 18+
+- **pnpm**: 7+
+- **MySQL**: 8.0+ 或 MariaDB 10.3+
 - **内存**: 4GB+
 - **磁盘**: 10GB+
 
-### 推荐配置
+**推荐配置:**
+
 - **内存**: 8GB+
 - **CPU**: 4核+
 - **磁盘**: SSD 20GB+
+
+### 开发工具推荐
+
+- **IDE**: IntelliJ IDEA, VS Code
+- **数据库客户端**: MySQL Workbench, Navicat
+- **API测试**: Postman, Insomnia
+- **版本控制**: Git 2.30+
 
 ## 安全建议
 
@@ -190,14 +232,32 @@ spring.datasource.hikari.idle-timeout=300000
 
 ## 技术支持
 
-如遇到问题，请：
+### 故障排除指南
+
+如遇到问题，请按以下步骤排查：
+
 1. 查看错误日志
 2. 检查网络连接
 3. 验证配置文件
-4. 联系开发团队
+4. 重启相关服务
+5. 查阅文档或联系开发团队
+
+### 获取帮助
+
+- **项目主页**: [EcoWiki GitHub](https://github.com/yahayao/EcoWiki)
+- **开发博客**: https://www.edaylogy.com/1750395139677
+- **文档中心**: 项目根目录下的各类文档文件
+- **问题反馈**: GitHub Issues
+
+### 开发团队
+
+- **核心成员**: Alng、啊啊、倾仙、兔崽
+- **项目状态**: 持续开发中
+- **开源协议**: Apache 2.0 / GPL 3.0
 
 ---
 
 **EcoWiki 开发团队**  
-版本: 3.0  
-更新日期: 2025-01-15
+版本: 4.0  
+更新日期: 2025-07-28  
+文档状态: ✅ 已优化更新
