@@ -199,6 +199,8 @@ const handleImageLoad = () => {
   color: white;
   font-weight: 600;
   text-transform: uppercase;
+  border-radius: 50%;
+  border: 0.5px solid #fff;
 }
 
 /* 在线状态指示器 */
