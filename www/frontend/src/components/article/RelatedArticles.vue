@@ -159,15 +159,48 @@ const loadRelatedArticles = async () => {
   currentPage.value = 0 // 重置页码
   try {
     // 获取相关文章 - 基于分类、标签等进行推荐
-    const response = await articleApi.getArticles(0, props.maxResults || 6)
+    // 增加页面大小以获得更多候选文章用于过滤
+    const response = await articleApi.getArticles(0, (props.maxResults || 6) * 2)
     
     // 过滤掉当前文章，避免推荐自己
     const filteredArticles = response.content.filter(
       (article: Article) => article.articleId !== props.currentArticleId
     )
     
-    articles.value = filteredArticles.map(convertToRelatedArticle)
-    hasMore.value = response.totalElements > (props.maxResults || 6)
+    // 基于分类和标签进行智能排序
+    const sortedArticles = filteredArticles.sort((a, b) => {
+      let scoreA = 0
+      let scoreB = 0
+      
+      // 相同分类的文章得分更高
+      if (props.currentCategory && a.tags.includes(props.currentCategory)) {
+        scoreA += 10
+      }
+      if (props.currentCategory && b.tags.includes(props.currentCategory)) {
+        scoreB += 10
+      }
+      
+      // 相同标签的文章得分更高
+      if (props.currentTags) {
+        const aTagMatches = props.currentTags.filter(tag => a.tags.includes(tag)).length
+        const bTagMatches = props.currentTags.filter(tag => b.tags.includes(tag)).length
+        scoreA += aTagMatches * 5
+        scoreB += bTagMatches * 5
+      }
+      
+      // 按浏览量和点赞数排序
+      scoreA += (a.views || 0) * 0.01 + (a.likes || 0) * 0.1
+      scoreB += (b.views || 0) * 0.01 + (b.likes || 0) * 0.1
+      
+      return scoreB - scoreA
+    })
+    
+    // 取前N篇文章
+    const selectedArticles = sortedArticles.slice(0, props.maxResults || 6)
+    articles.value = selectedArticles.map(convertToRelatedArticle)
+    
+    // 判断是否还有更多数据
+    hasMore.value = filteredArticles.length > (props.maxResults || 6)
   } catch (error) {
     console.error('加载相关文章失败:', error)
     toast.show('加载相关文章失败', '错误', { type: 'error' })
@@ -216,23 +249,70 @@ const loadMore = async () => {
     // 递增页码以获取下一页数据
     currentPage.value++
     
-    // 加载更多相关文章
-    const response = await articleApi.getArticles(currentPage.value, 3)
+    // 加载更多相关文章，增加页面大小以获得更多候选文章
+    const response = await articleApi.getArticles(currentPage.value, 10)
     
     // 过滤掉当前文章和已存在的文章，避免重复
     const existingIds = new Set(articles.value.map(article => article.id))
-    const filteredArticles = response.content.filter(
+    let filteredArticles = response.content.filter(
       (article: Article) => article.articleId !== props.currentArticleId && 
                            !existingIds.has(article.articleId)
     )
     
-    if (filteredArticles.length > 0) {
-      const moreArticles = filteredArticles.map(convertToRelatedArticle)
-      articles.value.push(...moreArticles)
+    // 如果当前页没有新文章，尝试下一页
+    let retryCount = 0
+    while (filteredArticles.length === 0 && retryCount < 3 && response.content.length > 0) {
+      currentPage.value++
+      const nextResponse = await articleApi.getArticles(currentPage.value, 10)
+      if (nextResponse.content.length === 0) break
+      
+      filteredArticles = nextResponse.content.filter(
+        (article: Article) => article.articleId !== props.currentArticleId && 
+                             !existingIds.has(article.articleId)
+      )
+      retryCount++
     }
     
-    // 判断是否还有更多数据
-    hasMore.value = response.content.length === 3 && filteredArticles.length > 0
+    if (filteredArticles.length > 0) {
+      // 基于分类和标签进行智能排序
+      const sortedArticles = filteredArticles.sort((a, b) => {
+        let scoreA = 0
+        let scoreB = 0
+        
+        // 相同分类的文章得分更高
+        if (props.currentCategory && a.tags.includes(props.currentCategory)) {
+          scoreA += 10
+        }
+        if (props.currentCategory && b.tags.includes(props.currentCategory)) {
+          scoreB += 10
+        }
+        
+        // 相同标签的文章得分更高
+        if (props.currentTags) {
+          const aTagMatches = props.currentTags.filter(tag => a.tags.includes(tag)).length
+          const bTagMatches = props.currentTags.filter(tag => b.tags.includes(tag)).length
+          scoreA += aTagMatches * 5
+          scoreB += bTagMatches * 5
+        }
+        
+        // 按浏览量和点赞数排序
+        scoreA += (a.views || 0) * 0.01 + (a.likes || 0) * 0.1
+        scoreB += (b.views || 0) * 0.01 + (b.likes || 0) * 0.1
+        
+        return scoreB - scoreA
+      })
+      
+      // 取前3篇新文章添加到列表
+      const moreArticles = sortedArticles.slice(0, 3).map(convertToRelatedArticle)
+      articles.value.push(...moreArticles)
+      
+      // 判断是否还有更多数据 - 更智能的判断
+      hasMore.value = response.content.length >= 10 || filteredArticles.length > 3
+    } else {
+      // 没有找到新文章，可能已经到底了
+      hasMore.value = false
+      toast.show('已经没有更多相关文章了', '提示', { type: 'info' })
+    }
   } catch (error) {
     console.error('加载更多文章失败:', error)
     toast.show('加载更多失败', '错误', { type: 'error' })
