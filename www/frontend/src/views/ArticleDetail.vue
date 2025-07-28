@@ -187,8 +187,21 @@ const loadArticle = async () => {
     // 先通过标题获取文章ID
     const articleId = await articleApi.getArticleIdByTitle(articleTitle)
     
-    // 再通过ID获取文章详情
-    article.value = await articleApi.getArticleById(articleId)
+    // 同时获取文章详情和贡献者信息
+    const [articleData, contributorsData] = await Promise.allSettled([
+      articleApi.getArticleById(articleId),
+      articleApi.getArticleContributors(articleId)
+    ])
+    
+    // 处理文章数据
+    if (articleData.status === 'fulfilled') {
+      article.value = articleData.value
+      // 将贡献者信息附加到文章对象上，供ArticleContent组件使用
+      article.value.contributors = contributorsData.status === 'fulfilled' ? contributorsData.value : []
+      article.value.contributorsError = contributorsData.status === 'rejected' ? contributorsData.reason?.message || '加载贡献者失败' : null
+    } else {
+      throw articleData.reason
+    }
   } catch (err) {
     console.error('加载文章失败:', err)
     

@@ -74,6 +74,16 @@ export interface Article {
   comments: number
   /** 最后更新时间（ISO格式字符串） */
   updateTime: string
+  /** 贡献者列表（可选，用于预加载） */
+  contributors?: Array<{
+    username: string
+    displayName: string
+    avatarUrl: string
+    editCount: number
+    latestEdit: string
+  }>
+  /** 贡献者加载错误（可选） */
+  contributorsError?: string | null
 }
 
 /**

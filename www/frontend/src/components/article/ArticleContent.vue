@@ -259,6 +259,27 @@ const loadContributors = async () => {
     return
   }
   
+  // 如果文章对象中已经有预加载的贡献者数据，直接使用
+  if (props.article.contributors !== undefined) {
+    console.log('使用预加载的贡献者数据:', props.article.contributors)
+    
+    // 转换数据格式
+    const formattedContributors = props.article.contributors.map((contributor, index) => ({
+      id: index + 1,
+      username: contributor.username,
+      displayName: contributor.displayName || contributor.username,
+      avatarUrl: contributor.avatarUrl || '',
+      editDate: contributor.latestEdit,
+      editCount: contributor.editCount
+    }))
+    
+    contributors.value = formattedContributors
+    contributorsError.value = props.article.contributorsError || null
+    contributorsLoading.value = false
+    return
+  }
+  
+  // 如果没有预加载数据，则异步加载
   contributorsLoading.value = true
   contributorsError.value = null
   console.log('开始加载文章贡献者数据，文章ID:', props.article.articleId, '原作者:', props.article.author)
@@ -477,7 +498,7 @@ const generateTableOfContents = () => {
 // 生命周期
 onMounted(() => {
   generateTableOfContents()
-  loadContributors() // 加载贡献者数据
+  loadContributors() // 加载贡献者数据（会优先使用预加载数据）
 })
 
 // 监听文章变化，重新加载贡献者
@@ -490,11 +511,22 @@ watch(() => props.article.articleId, (newId, oldId) => {
   }
 }, { immediate: false })
 
+// 监听预加载的贡献者数据变化
+watch(() => props.article.contributors, (newContributors) => {
+  if (newContributors !== undefined) {
+    console.log('检测到预加载的贡献者数据变化，更新显示')
+    loadContributors() // 重新处理贡献者数据
+  }
+}, { immediate: false, deep: true })
+
 // 监听文章作者变化
 watch(() => props.article.author, (newAuthor, oldAuthor) => {
   if (newAuthor !== oldAuthor) {
     console.log('文章作者变化，重新加载贡献者:', oldAuthor, '->', newAuthor)
-    loadContributors()
+    // 只有在没有预加载数据时才重新加载
+    if (props.article.contributors === undefined) {
+      loadContributors()
+    }
   }
 }, { immediate: false })
 
