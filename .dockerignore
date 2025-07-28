@@ -1,0 +1,45 @@
+# Git
+.git
+.gitignore
+.github
+
+# Documentation
+README.md
+GITHUB_ACTIONS_README.md
+*.md
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Dependencies (will be installed during build)
+node_modules/
+target/
+
+# Build outputs
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Testing
+coverage/
+.nyc_output
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml

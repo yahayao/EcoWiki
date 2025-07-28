@@ -1,0 +1,101 @@
+name: Dependency Update
+
+on:
+  schedule:
+    # 每周一早上 8:00 UTC 运行
+    - cron: '0 8 * * 1'
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  update-backend-dependencies:
+    name: Update Backend Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Update Maven dependencies
+      working-directory: ./www/backend
+      run: |
+        mvn versions:update-properties
+        mvn versions:use-latest-releases
+
+    - name: Check for changes
+      id: verify-changed-files
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+        else
+          echo "changed=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create Pull Request for Backend
+      if: steps.verify-changed-files.outputs.changed == 'true'
+      uses: peter-evans/create-pull-request@v6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "chore: update backend dependencies"
+        title: "Update Backend Dependencies"
+        body: |
+          This PR updates the backend Maven dependencies to their latest versions.
+          
+          Please review the changes and test thoroughly before merging.
+        branch: update-backend-dependencies
+        delete-branch: true
+
+  update-frontend-dependencies:
+    name: Update Frontend Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 8
+
+    - name: Update frontend dependencies
+      working-directory: ./www/frontend
+      run: |
+        pnpm update --latest
+
+    - name: Check for changes
+      id: verify-changed-files
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+        else
+          echo "changed=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create Pull Request for Frontend
+      if: steps.verify-changed-files.outputs.changed == 'true'
+      uses: peter-evans/create-pull-request@v6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "chore: update frontend dependencies"
+        title: "Update Frontend Dependencies"
+        body: |
+          This PR updates the frontend npm dependencies to their latest versions.
+          
+          Please review the changes and test thoroughly before merging.
+        branch: update-frontend-dependencies
+        delete-branch: true

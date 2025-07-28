@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: ecowiki-dev-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: ecowiki_dev
+      MYSQL_USER: ecowiki
+      MYSQL_PASSWORD: ecowiki123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
+    networks:
+      - ecowiki-dev-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: ecowiki-dev-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - ecowiki-dev-network
+
+  # PhpMyAdmin (数据库管理界面)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: ecowiki-phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root123
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - ecowiki-dev-network
+
+  # Redis Commander (Redis 管理界面)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: ecowiki-redis-commander
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8082:8081"
+    depends_on:
+      - redis
+    networks:
+      - ecowiki-dev-network
+
+volumes:
+  mysql_dev_data:
+    driver: local
+
+networks:
+  ecowiki-dev-network:
+    driver: bridge
