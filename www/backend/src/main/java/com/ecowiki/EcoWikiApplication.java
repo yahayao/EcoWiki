@@ -30,7 +30,7 @@ public class EcoWikiApplication {
     
     /**
      * 应用程序主入口方法
-     * idea测试纯测试
+     * idea测试纯测试-------------idea测试two
      * @param args 命令行参数
      */
     public static void main(String[] args) {
