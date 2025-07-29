@@ -74,9 +74,8 @@ const showPreview = ref(false)
 const togglePreview = () => {
   showPreview.value = !showPreview.value
 }
-const pageContent = ref(
-  '<!-- 在这里编辑您的个人主页内容 -->\n\n== 欢迎来到我的主页 ==\n\n这里是个人主页的示例内容...'
-)
+const pageContent = ref('')
+
 const saveSuccessful = ref(false)
 
 // 文章表单数据
@@ -311,7 +310,7 @@ const loadArticle = async () => {
 === 联系方式 ===
 
 如有任何问题，欢迎通过以下方式联系我：
-* 用户讨论页：[[User talk:${user.value?.username}]]
+
 `
     
     pageContent.value = defaultContent

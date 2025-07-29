@@ -157,7 +157,7 @@ const router = useRouter()
 /**
  * 认证状态，获取用户信息和登录状态
  */
-const { userDisplayName, isAuthenticated, user } = useAuth()
+const { userDisplayName, isAuthenticated, user, isSuperAdmin } = useAuth()
 
 // ======================== 响应式状态管理 ========================
 
@@ -345,6 +345,22 @@ const loadArticle = async () => {
     return
   }
 
+  // 检查用户页面编辑权限
+  if (articleTitle.startsWith('User:')) {
+    // 超级管理员可以编辑任何用户页面
+    if (!isSuperAdmin.value) {
+      const currentUsername = user.value?.username || userDisplayName.value
+      const expectedUserPage = `User:${currentUsername}`
+      
+      if (articleTitle !== expectedUserPage) {
+        toast.warning('您只能编辑自己的用户页面')
+        loading.value = false
+        router.push(`/wiki/${articleTitle}`)
+        return
+      }
+    }
+  }
+
   try {
     // 先通过标题获取文章ID
     const articleId = await articleApi.getArticleIdByTitle(articleTitle)
@@ -387,6 +403,21 @@ const handleSave = async () => {
   if (!canSave.value) {
     toast.warning('请填写所有必填字段')
     return
+  }
+
+  // 检查用户页面编辑权限
+  const articleTitle = currentTitle.value
+  if (articleTitle.startsWith('User:')) {
+    // 超级管理员可以编辑任何用户页面
+    if (!isSuperAdmin.value) {
+      const currentUsername = user.value?.username || userDisplayName.value
+      const expectedUserPage = `User:${currentUsername}`
+      
+      if (articleTitle !== expectedUserPage) {
+        toast.warning('您只能编辑自己的用户页面')
+        return
+      }
+    }
   }
 
   // 在保存前提取分类作为标签
