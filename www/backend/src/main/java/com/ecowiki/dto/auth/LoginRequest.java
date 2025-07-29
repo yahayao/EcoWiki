@@ -1,4 +1,4 @@
-package com.ecowiki.dto;
+package com.ecowiki.dto.auth;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

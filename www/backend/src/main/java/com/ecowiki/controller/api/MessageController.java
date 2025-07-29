@@ -20,9 +20,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecowiki.dto.ApiResponse;
-import com.ecowiki.dto.BroadcastMessageRequest;
-import com.ecowiki.dto.MessageDto;
-import com.ecowiki.dto.SendMessageRequest;
+import com.ecowiki.dto.message.BroadcastMessageRequest;
+import com.ecowiki.dto.message.MessageDto;
+import com.ecowiki.dto.message.SendMessageRequest;
 import com.ecowiki.entity.User;
 import com.ecowiki.security.JwtUtil;
 import com.ecowiki.service.MessageService;

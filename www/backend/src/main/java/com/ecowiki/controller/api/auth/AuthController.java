@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecowiki.dto.ApiResponse;
-import com.ecowiki.dto.LoginRequest;
-import com.ecowiki.dto.ResetPasswordRequest;
-import com.ecowiki.dto.UpdateProfileRequest;
-import com.ecowiki.dto.UserRegistrationDto;
+import com.ecowiki.dto.auth.LoginRequest;
+import com.ecowiki.dto.auth.ResetPasswordRequest;
+import com.ecowiki.dto.user.UpdateProfileRequest;
+import com.ecowiki.dto.user.UserRegistrationDto;
 import com.ecowiki.entity.User;
 import com.ecowiki.security.JwtUtil;
 import com.ecowiki.service.UserService;

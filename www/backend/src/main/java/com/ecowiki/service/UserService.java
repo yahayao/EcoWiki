@@ -34,8 +34,8 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.ecowiki.dto.LoginRequest;
-import com.ecowiki.dto.UserRegistrationDto;
+import com.ecowiki.dto.auth.LoginRequest;
+import com.ecowiki.dto.user.UserRegistrationDto;
 import com.ecowiki.entity.Role;
 import com.ecowiki.entity.User;
 import com.ecowiki.entity.UserRole;

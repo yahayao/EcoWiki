@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecowiki.dto.ApiResponse;
-import com.ecowiki.dto.TagDto;
-import com.ecowiki.dto.TagStatisticsDto;
+import com.ecowiki.dto.tag.TagDto;
+import com.ecowiki.dto.tag.TagStatisticsDto;
 import com.ecowiki.service.TagService;
 
 /**

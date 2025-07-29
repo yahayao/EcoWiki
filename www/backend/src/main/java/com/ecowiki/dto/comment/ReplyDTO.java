@@ -1,43 +1,34 @@
-package com.ecowiki.dto;
-
-import java.util.List;
+package com.ecowiki.dto.comment;
 
 /**
- * 评论DTO类
+ * 回复DTO类
  * 
- * 用于前端交互的评论数据传输对象
+ * 用于前端交互的回复数据传输对象
  * 
  * @author EcoWiki Team
  * @version 1.0.0
  * @since 2025-01-21
  */
-public class CommentDTO {
-    
+public class ReplyDTO {
     private String id;
-    private Long articleId;
+    private String commentId;
     private String author;
     private String userAvatar;  // 用户头像URL
     private String content;
     private String createdAt;
     private Integer likes;
     private Boolean isLiked;
-    private List<ReplyDTO> replies;
-    
-    // 默认构造函数
-    public CommentDTO() {}
-    
-    // 带参数的构造函数
-    public CommentDTO(String id, Long articleId, String author, String content, 
-                     String createdAt, Integer likes, Boolean isLiked) {
+    public ReplyDTO() {}
+    public ReplyDTO(String id, String commentId, String author, String content, String createdAt, Integer likes, Boolean isLiked) {
         this.id = id;
-        this.articleId = articleId;
+        this.commentId = commentId;
         this.author = author;
         this.content = content;
         this.createdAt = createdAt;
         this.likes = likes;
         this.isLiked = isLiked;
     }
-    
+
     // Getter和Setter方法
     public String getId() {
         return id;
@@ -47,12 +38,12 @@ public class CommentDTO {
         this.id = id;
     }
     
-    public Long getArticleId() {
-        return articleId;
+    public String getCommentId() {
+        return commentId;
     }
     
-    public void setArticleId(Long articleId) {
-        this.articleId = articleId;
+    public void setCommentId(String commentId) {
+        this.commentId = commentId;
     }
     
     public String getAuthor() {
@@ -101,13 +92,5 @@ public class CommentDTO {
     
     public void setIsLiked(Boolean isLiked) {
         this.isLiked = isLiked;
-    }
-    
-    public List<ReplyDTO> getReplies() {
-        return replies;
-    }
-    
-    public void setReplies(List<ReplyDTO> replies) {
-        this.replies = replies;
     }
 }

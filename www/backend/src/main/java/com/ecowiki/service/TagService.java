@@ -13,8 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ecowiki.dto.TagDto;
-import com.ecowiki.dto.TagStatisticsDto;
+import com.ecowiki.dto.tag.TagDto;
+import com.ecowiki.dto.tag.TagStatisticsDto;
 import com.ecowiki.entity.Tag;
 import com.ecowiki.repository.TagRepository;
 

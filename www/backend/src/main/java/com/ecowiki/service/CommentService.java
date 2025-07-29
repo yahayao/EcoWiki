@@ -12,8 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ecowiki.dto.CommentDTO;
-import com.ecowiki.dto.ReplyDTO;
+import com.ecowiki.dto.comment.CommentDTO;
+import com.ecowiki.dto.comment.ReplyDTO;
 import com.ecowiki.entity.Comment;
 import com.ecowiki.entity.CommentLike;
 import com.ecowiki.entity.User;

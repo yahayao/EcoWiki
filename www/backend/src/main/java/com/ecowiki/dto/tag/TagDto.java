@@ -1,4 +1,4 @@
-package com.ecowiki.dto;
+package com.ecowiki.dto.tag;
 
 import java.time.LocalDateTime;
 
@@ -13,26 +13,12 @@ import java.time.LocalDateTime;
  * @since 2024-01-01
  */
 public class TagDto {
-    
-    /** 标签ID */
     private Long tagId;
-    
-    /** 标签名称 */
     private String tagName;
-    
-    /** 标签描述 */
     private String description;
-    
-    /** 创建时间 */
     private LocalDateTime createdTime;
-    
-    /** 使用此标签的文章数量 */
     private Integer articleCount;
-    
-    // ==================== 构造函数 ====================
-    
     public TagDto() {}
-    
     public TagDto(Long tagId, String tagName, String description, LocalDateTime createdTime, Integer articleCount) {
         this.tagId = tagId;
         this.tagName = tagName;
@@ -40,7 +26,7 @@ public class TagDto {
         this.createdTime = createdTime;
         this.articleCount = articleCount;
     }
-    
+
     // ==================== Getter和Setter方法 ====================
     
     public Long getTagId() {

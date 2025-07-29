@@ -1,4 +1,4 @@
-package com.ecowiki.dto;
+package com.ecowiki.dto.article;
 
 /**
  * 文章统计数据DTO

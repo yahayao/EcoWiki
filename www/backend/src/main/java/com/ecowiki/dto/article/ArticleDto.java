@@ -1,4 +1,4 @@
-package com.ecowiki.dto;
+package com.ecowiki.dto.article;
 
 import java.time.LocalDateTime;
 
@@ -60,19 +60,31 @@ public class ArticleDto {
     /** 评论数 */
     private Integer comments;
     
-    /** 最后更新时间 */
+    /** 更新时间 */
     private LocalDateTime updateTime;
-    
-    // 构造函数
+
+    // 无参构造函数
     public ArticleDto() {}
-    
-    public ArticleDto(String title, String author, String content, String category) {
+
+    // 带参构造函数
+    public ArticleDto(Long articleId, String title, String author, String authorAvatar, 
+                     String content, LocalDateTime publishDate, String category, 
+                     Integer views, Integer likes, String tags, Integer comments, 
+                     LocalDateTime updateTime) {
+        this.articleId = articleId;
         this.title = title;
         this.author = author;
+        this.authorAvatar = authorAvatar;
         this.content = content;
+        this.publishDate = publishDate;
         this.category = category;
+        this.views = views;
+        this.likes = likes;
+        this.tags = tags;
+        this.comments = comments;
+        this.updateTime = updateTime;
     }
-    
+
     // Getters and Setters
     public Long getArticleId() {
         return articleId;

@@ -1,4 +1,4 @@
-package com.ecowiki.dto;
+package com.ecowiki.dto.user;
 
 import org.hibernate.validator.constraints.URL;
 
@@ -9,7 +9,6 @@ import jakarta.validation.constraints.Size;
  * 用户个人资料更新请求DTO
  */
 public class UpdateProfileRequest {
-    
     @Size(min = 3, max = 50, message = "用户名长度必须在3-50个字符之间")
     private String username;
     

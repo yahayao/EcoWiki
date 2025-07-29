@@ -1,4 +1,4 @@
-package com.ecowiki.dto;
+package com.ecowiki.dto.message;
 
 import java.time.LocalDateTime;
 
@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
  * 用于前后端传输消息数据，包含发送者和接收者的用户信息
  */
 public class MessageDto {
-    
     private Integer messageId;
     private Integer recipientUserId;
     private String recipientUsername;
@@ -17,10 +16,7 @@ public class MessageDto {
     private String content;
     private LocalDateTime sendTime;
     private String status;
-    
-    // 构造函数
     public MessageDto() {}
-    
     public MessageDto(Integer messageId, Integer recipientUserId, String recipientUsername,
                      Integer senderUserId, String senderUsername, String content,
                      LocalDateTime sendTime, String status) {
@@ -33,7 +29,7 @@ public class MessageDto {
         this.sendTime = sendTime;
         this.status = status;
     }
-    
+
     // Getters and Setters
     public Integer getMessageId() {
         return messageId;
@@ -99,5 +95,3 @@ public class MessageDto {
         this.status = status;
     }
 }
-
-

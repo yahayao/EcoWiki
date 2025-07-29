@@ -22,10 +22,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecowiki.dto.ApiResponse;
-import com.ecowiki.dto.ArticleCreateRequest;
-import com.ecowiki.dto.ArticleDto;
-import com.ecowiki.dto.ArticleStatisticsDto;
-import com.ecowiki.dto.ArticleUpdateRequest;
+import com.ecowiki.dto.article.ArticleCreateRequest;
+import com.ecowiki.dto.article.ArticleDto;
+import com.ecowiki.dto.article.ArticleStatisticsDto;
+import com.ecowiki.dto.article.ArticleUpdateRequest;
 import com.ecowiki.entity.User;
 import com.ecowiki.security.JwtUtil;
 import com.ecowiki.service.ArticleService;

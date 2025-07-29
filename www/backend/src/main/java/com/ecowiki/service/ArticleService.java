@@ -17,10 +17,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ecowiki.dto.ArticleCreateRequest;
-import com.ecowiki.dto.ArticleDto;
-import com.ecowiki.dto.ArticleStatisticsDto;
-import com.ecowiki.dto.ArticleUpdateRequest;
+import com.ecowiki.dto.article.ArticleCreateRequest;
+import com.ecowiki.dto.article.ArticleDto;
+import com.ecowiki.dto.article.ArticleStatisticsDto;
+import com.ecowiki.dto.article.ArticleUpdateRequest;
 import com.ecowiki.entity.Article;
 import com.ecowiki.entity.ArticleVersion;
 import com.ecowiki.entity.Tag;

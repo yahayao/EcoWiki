@@ -1,4 +1,4 @@
-package com.ecowiki.dto;
+package com.ecowiki.dto.permission;
 
 import java.time.LocalDateTime;
 

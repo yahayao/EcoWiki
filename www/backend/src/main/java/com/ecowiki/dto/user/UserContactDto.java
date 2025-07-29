@@ -1,4 +1,4 @@
-package com.ecowiki.dto;
+package com.ecowiki.dto.user;
 
 /**
  * 用户联系人数据传输对象

@@ -13,7 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ecowiki.dto.MessageDto;
+import com.ecowiki.dto.message.MessageDto;
 import com.ecowiki.entity.Message;
 import com.ecowiki.entity.User;
 import com.ecowiki.repository.MessageRepository;

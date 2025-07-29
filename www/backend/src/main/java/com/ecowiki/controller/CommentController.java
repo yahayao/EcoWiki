@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecowiki.dto.ApiResponse;
-import com.ecowiki.dto.CommentDTO;
-import com.ecowiki.dto.ReplyDTO;
+import com.ecowiki.dto.comment.CommentDTO;
+import com.ecowiki.dto.comment.ReplyDTO;
 import com.ecowiki.service.CommentService;
 import com.ecowiki.service.CommentService.CommentStats;
 import com.ecowiki.service.CommentService.LikeResult;
