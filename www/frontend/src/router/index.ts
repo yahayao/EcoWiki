@@ -56,6 +56,7 @@ import UserList from '../components/admin/views/UserList.vue'
 import PermissionManagement from '../components/admin/views/PermissionManagement.vue'
 import RolePermissionAssignment from '../components/admin/views/RolePermissionAssignment.vue'
 import ArticleManagement from '../components/admin/views/ArticleManagement.vue'
+import ReviewManagement from '../components/admin/views/ReviewManagement.vue'
 
 //import ForgotPassword from '../components/auth/Forgotpanel.vue'
 /**
@@ -90,6 +91,7 @@ const routes = [
       { path: 'settings'        , name: 'AdminSettings'       , component: SystemSettings           },// 系统设置页面
       { path: 'users'           , name: 'AdminUsers'          , component: UserList                 },// 用户管理页面
       { path: 'articles'        , name: 'AdminArticles'       , component: ArticleManagement        },// 文章管理页面
+      { path: 'reviews'         , name: 'AdminReviews'        , component: ReviewManagement         },// 审核管理页面
       { path: 'permissions'     , name: 'AdminPermissions'    , component: PermissionManagement     },// 权限管理页面
       { path: 'role-permissions', name: 'AdminRolePermissions', component: RolePermissionAssignment } // 角色权限分配页面
     ]
