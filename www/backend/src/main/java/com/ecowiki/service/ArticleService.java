@@ -21,10 +21,10 @@ import com.ecowiki.dto.article.ArticleCreateRequest;
 import com.ecowiki.dto.article.ArticleDto;
 import com.ecowiki.dto.article.ArticleStatisticsDto;
 import com.ecowiki.dto.article.ArticleUpdateRequest;
-import com.ecowiki.entity.Article;
-import com.ecowiki.entity.ArticleVersion;
-import com.ecowiki.entity.Tag;
-import com.ecowiki.entity.User;
+import com.ecowiki.entity.article.Article;
+import com.ecowiki.entity.article.ArticleVersion;
+import com.ecowiki.entity.tag.Tag;
+import com.ecowiki.entity.user.User;
 import com.ecowiki.repository.ArticleRepository;
 import com.ecowiki.repository.UserRepository;
 

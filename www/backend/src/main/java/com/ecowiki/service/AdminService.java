@@ -37,7 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ecowiki.dto.user.UserWithRoleDto;
-import com.ecowiki.entity.User;
+import com.ecowiki.entity.user.User;
 import com.ecowiki.repository.UserRepository;
 
 @Service

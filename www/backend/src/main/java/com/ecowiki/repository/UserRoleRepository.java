@@ -10,8 +10,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ecowiki.entity.UserRole;
-import com.ecowiki.entity.UserRoleId;
+import com.ecowiki.entity.user.UserRole;
+import com.ecowiki.entity.user.UserRoleId;
 
 /**
  * 用户角色关联数据访问接口

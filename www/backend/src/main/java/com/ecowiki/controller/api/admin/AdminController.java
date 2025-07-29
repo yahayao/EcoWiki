@@ -23,14 +23,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecowiki.dto.ApiResponse;
+import com.ecowiki.dto.article.ArticleCreateRequest;
+import com.ecowiki.dto.article.ArticleDto;
 import com.ecowiki.dto.article.ArticleUpdateRequest;
 import com.ecowiki.dto.user.UserContactDto;
 import com.ecowiki.dto.user.UserWithRoleDto;
-import com.ecowiki.dto.article.ArticleCreateRequest;
-import com.ecowiki.dto.article.ArticleDto;
-import com.ecowiki.entity.Permission;
-import com.ecowiki.entity.RolePermission;
-import com.ecowiki.entity.User;
+import com.ecowiki.entity.user.Permission;
+import com.ecowiki.entity.user.RolePermission;
+import com.ecowiki.entity.user.User;
 import com.ecowiki.repository.PermissionRepository;
 import com.ecowiki.repository.RolePermissionRepository;
 import com.ecowiki.repository.RoleRepository;
@@ -330,7 +330,7 @@ public class AdminController {
      * @return 角色实体列表，需管理员权限
      */
     @GetMapping("/roles/details")
-    public ResponseEntity<ApiResponse<java.util.List<com.ecowiki.entity.Role>>> getAllRolesDetails(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<java.util.List<com.ecowiki.entity.user.Role>>> getAllRolesDetails(HttpServletRequest request) {
         try {
             User currentUser = getCurrentUser(request);
             if (!permissionService.isAdmin(currentUser)) {
@@ -338,7 +338,7 @@ public class AdminController {
                     .body(ApiResponse.error("权限不足，需要管理员权限"));
             }
             
-            java.util.List<com.ecowiki.entity.Role> roles = roleRepository.findAllByOrderByRoleId();
+            java.util.List<com.ecowiki.entity.user.Role> roles = roleRepository.findAllByOrderByRoleId();
             return ResponseEntity.ok(ApiResponse.success(roles, "获取角色详情成功"));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -353,7 +353,7 @@ public class AdminController {
      * @return 新建角色实体，仅超级管理员可用
      */
     @org.springframework.web.bind.annotation.PostMapping("/roles")
-    public ResponseEntity<ApiResponse<com.ecowiki.entity.Role>> createRole(
+    public ResponseEntity<ApiResponse<com.ecowiki.entity.user.Role>> createRole(
             @RequestBody Map<String, String> roleData,
             HttpServletRequest request) {
         try {
@@ -377,13 +377,13 @@ public class AdminController {
                     .body(ApiResponse.error("角色名称已存在"));
             }
             
-            com.ecowiki.entity.Role role = new com.ecowiki.entity.Role();
+            com.ecowiki.entity.user.Role role = new com.ecowiki.entity.user.Role();
             role.setRoleName(roleName);
             role.setDescription(description);
             role.setCreatedAt(java.time.LocalDateTime.now());
             role.setUpdatedAt(java.time.LocalDateTime.now());
             
-            com.ecowiki.entity.Role savedRole = roleRepository.save(role);
+            com.ecowiki.entity.user.Role savedRole = roleRepository.save(role);
             return ResponseEntity.ok(ApiResponse.success(savedRole, "角色创建成功"));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -399,7 +399,7 @@ public class AdminController {
      * @return 更新后的角色实体，仅超级管理员可用
      */
     @PutMapping("/roles/{roleId}")
-    public ResponseEntity<ApiResponse<com.ecowiki.entity.Role>> updateRole(
+    public ResponseEntity<ApiResponse<com.ecowiki.entity.user.Role>> updateRole(
             @PathVariable Integer roleId,
             @RequestBody Map<String, String> roleData,
             HttpServletRequest request) {
@@ -410,13 +410,13 @@ public class AdminController {
                     .body(ApiResponse.error("权限不足，需要超级管理员权限"));
             }
             
-            Optional<com.ecowiki.entity.Role> roleOpt = roleRepository.findById(roleId);
+            Optional<com.ecowiki.entity.user.Role> roleOpt = roleRepository.findById(roleId);
             if (!roleOpt.isPresent()) {
                 return ResponseEntity.badRequest()
                     .body(ApiResponse.error("角色不存在"));
             }
             
-            com.ecowiki.entity.Role role = roleOpt.get();
+            com.ecowiki.entity.user.Role role = roleOpt.get();
             String newRoleName = roleData.get("roleName");
             String newDescription = roleData.get("description");
             
@@ -434,7 +434,7 @@ public class AdminController {
             }
             
             role.setUpdatedAt(java.time.LocalDateTime.now());
-            com.ecowiki.entity.Role updatedRole = roleRepository.save(role);
+            com.ecowiki.entity.user.Role updatedRole = roleRepository.save(role);
             
             return ResponseEntity.ok(ApiResponse.success(updatedRole, "角色更新成功"));
         } catch (Exception e) {
@@ -460,13 +460,13 @@ public class AdminController {
                     .body(ApiResponse.error("权限不足，需要超级管理员权限"));
             }
             
-            Optional<com.ecowiki.entity.Role> roleOpt = roleRepository.findById(roleId);
+            Optional<com.ecowiki.entity.user.Role> roleOpt = roleRepository.findById(roleId);
             if (!roleOpt.isPresent()) {
                 return ResponseEntity.badRequest()
                     .body(ApiResponse.error("角色不存在"));
             }
             
-            com.ecowiki.entity.Role role = roleOpt.get();
+            com.ecowiki.entity.user.Role role = roleOpt.get();
             
             // 防止删除基础角色
             if ("superadmin".equals(role.getRoleName()) || "admin".equals(role.getRoleName())) {

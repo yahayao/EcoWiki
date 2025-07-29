@@ -1,13 +1,11 @@
 package com.ecowiki.service;
 
-import com.ecowiki.entity.Article;
-import com.ecowiki.entity.ArticleVersion;
-import com.ecowiki.entity.ArticleVersionStats;
-import com.ecowiki.repository.ArticleRepository;
-import com.ecowiki.repository.ArticleVersionRepository;
-import com.ecowiki.repository.ArticleVersionStatsRepository;
-import com.ecowiki.util.CompressionUtil;
-import com.ecowiki.util.DiffUtil;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -17,10 +15,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.ecowiki.entity.article.Article;
+import com.ecowiki.entity.article.ArticleVersion;
+import com.ecowiki.entity.article.ArticleVersionStats;
+import com.ecowiki.repository.ArticleRepository;
+import com.ecowiki.repository.ArticleVersionRepository;
+import com.ecowiki.repository.ArticleVersionStatsRepository;
+import com.ecowiki.util.CompressionUtil;
+import com.ecowiki.util.DiffUtil;
 
 /**
  * 文章版本服务类

@@ -9,8 +9,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ecowiki.entity.RolePermission;
-import com.ecowiki.entity.RolePermissionId;
+import com.ecowiki.entity.user.RolePermission;
+import com.ecowiki.entity.user.RolePermissionId;
 
 /**
  * 角色权限关联数据访问接口
@@ -124,5 +124,5 @@ public interface RolePermissionRepository extends JpaRepository<RolePermission, 
      * 根据角色ID查找权限详情
      */
     @Query("SELECT p FROM Permission p JOIN RolePermission rp ON p.permissionId = rp.permissionId WHERE rp.roleId = :roleId ORDER BY p.permissionId")
-    List<com.ecowiki.entity.Permission> findPermissionsByRoleId(@Param("roleId") Integer roleId);
+    List<com.ecowiki.entity.user.Permission> findPermissionsByRoleId(@Param("roleId") Integer roleId);
 }

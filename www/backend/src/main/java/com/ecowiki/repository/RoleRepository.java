@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import com.ecowiki.entity.Role;
+import com.ecowiki.entity.user.Role;
 
 /**
  * 角色数据访问接口

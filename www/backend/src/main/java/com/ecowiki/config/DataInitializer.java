@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import com.ecowiki.entity.Role;
-import com.ecowiki.entity.User;
+import com.ecowiki.entity.user.Role;
+import com.ecowiki.entity.user.User;
 import com.ecowiki.repository.RoleRepository;
 import com.ecowiki.repository.UserRepository;
 import com.ecowiki.service.UserService;

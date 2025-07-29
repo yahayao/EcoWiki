@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.ecowiki.dto.ApiResponse;
-import com.ecowiki.entity.User;
+import com.ecowiki.entity.user.User;
 import com.ecowiki.security.JwtUtil;
 import com.ecowiki.service.UserService;
 

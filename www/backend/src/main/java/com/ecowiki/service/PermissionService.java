@@ -3,7 +3,7 @@ package com.ecowiki.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.ecowiki.entity.User;
+import com.ecowiki.entity.user.User;
 
 /**
  * 权限服务类

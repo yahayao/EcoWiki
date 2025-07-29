@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.ecowiki.entity.ArticleReview;
-import com.ecowiki.entity.ReviewPermissionConfig;
+import com.ecowiki.entity.article.ArticleReview;
+import com.ecowiki.entity.review.ReviewPermissionConfig;
 
 /**
  * 审核权限配置Repository接口

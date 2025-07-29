@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecowiki.dto.ApiResponse;
-import com.ecowiki.entity.ArticleVersion;
-import com.ecowiki.entity.ArticleVersionStats;
+import com.ecowiki.entity.article.ArticleVersion;
+import com.ecowiki.entity.article.ArticleVersionStats;
 import com.ecowiki.service.ArticleVersionService;
 
 import jakarta.validation.constraints.Min;

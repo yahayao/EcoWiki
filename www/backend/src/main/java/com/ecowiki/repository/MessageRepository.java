@@ -11,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ecowiki.entity.Message;
+import com.ecowiki.entity.message.Message;
 
 /**
  * 消息数据访问接口

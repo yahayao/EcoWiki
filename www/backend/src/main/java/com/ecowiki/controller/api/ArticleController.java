@@ -26,7 +26,7 @@ import com.ecowiki.dto.article.ArticleCreateRequest;
 import com.ecowiki.dto.article.ArticleDto;
 import com.ecowiki.dto.article.ArticleStatisticsDto;
 import com.ecowiki.dto.article.ArticleUpdateRequest;
-import com.ecowiki.entity.User;
+import com.ecowiki.entity.user.User;
 import com.ecowiki.security.JwtUtil;
 import com.ecowiki.service.ArticleService;
 import com.ecowiki.service.ArticleVersionService;

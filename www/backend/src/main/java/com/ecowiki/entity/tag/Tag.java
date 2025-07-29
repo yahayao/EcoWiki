@@ -1,8 +1,10 @@
-package com.ecowiki.entity;
+package com.ecowiki.entity.tag;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+
+import com.ecowiki.entity.article.Article;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

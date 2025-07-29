@@ -14,8 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ecowiki.dto.message.MessageDto;
-import com.ecowiki.entity.Message;
-import com.ecowiki.entity.User;
+import com.ecowiki.entity.message.Message;
+import com.ecowiki.entity.user.User;
 import com.ecowiki.repository.MessageRepository;
 import com.ecowiki.repository.UserRepository;
 

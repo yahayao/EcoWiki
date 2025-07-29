@@ -1,4 +1,4 @@
-package com.ecowiki.entity;
+package com.ecowiki.entity.user;
 
 import java.time.LocalDateTime;
 

@@ -20,7 +20,7 @@ import com.ecowiki.dto.auth.LoginRequest;
 import com.ecowiki.dto.auth.ResetPasswordRequest;
 import com.ecowiki.dto.user.UpdateProfileRequest;
 import com.ecowiki.dto.user.UserRegistrationDto;
-import com.ecowiki.entity.User;
+import com.ecowiki.entity.user.User;
 import com.ecowiki.security.JwtUtil;
 import com.ecowiki.service.UserService;
 

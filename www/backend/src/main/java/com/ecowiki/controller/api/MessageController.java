@@ -23,7 +23,7 @@ import com.ecowiki.dto.ApiResponse;
 import com.ecowiki.dto.message.BroadcastMessageRequest;
 import com.ecowiki.dto.message.MessageDto;
 import com.ecowiki.dto.message.SendMessageRequest;
-import com.ecowiki.entity.User;
+import com.ecowiki.entity.user.User;
 import com.ecowiki.security.JwtUtil;
 import com.ecowiki.service.MessageService;
 import com.ecowiki.service.UserService;

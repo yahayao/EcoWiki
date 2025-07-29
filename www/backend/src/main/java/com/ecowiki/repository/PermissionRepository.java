@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.ecowiki.entity.Permission;
+import com.ecowiki.entity.user.Permission;
 
 /**
  * 权限数据访问接口

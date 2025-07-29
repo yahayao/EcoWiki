@@ -14,9 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ecowiki.dto.comment.CommentDTO;
 import com.ecowiki.dto.comment.ReplyDTO;
-import com.ecowiki.entity.Comment;
-import com.ecowiki.entity.CommentLike;
-import com.ecowiki.entity.User;
+import com.ecowiki.entity.comment.Comment;
+import com.ecowiki.entity.comment.CommentLike;
+import com.ecowiki.entity.user.User;
 import com.ecowiki.repository.CommentLikeRepository;
 import com.ecowiki.repository.CommentRepository;
 import com.ecowiki.repository.UserRepository;

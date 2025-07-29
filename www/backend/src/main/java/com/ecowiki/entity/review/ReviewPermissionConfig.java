@@ -1,6 +1,8 @@
-package com.ecowiki.entity;
+package com.ecowiki.entity.review;
 
 import java.time.LocalDateTime;
+
+import com.ecowiki.entity.article.ArticleReview;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

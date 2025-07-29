@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ecowiki.dto.tag.TagDto;
 import com.ecowiki.dto.tag.TagStatisticsDto;
-import com.ecowiki.entity.Tag;
+import com.ecowiki.entity.tag.Tag;
 import com.ecowiki.repository.TagRepository;
 
 /**

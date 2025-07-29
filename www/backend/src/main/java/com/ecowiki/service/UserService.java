@@ -36,9 +36,9 @@ import org.springframework.stereotype.Service;
 
 import com.ecowiki.dto.auth.LoginRequest;
 import com.ecowiki.dto.user.UserRegistrationDto;
-import com.ecowiki.entity.Role;
-import com.ecowiki.entity.User;
-import com.ecowiki.entity.UserRole;
+import com.ecowiki.entity.user.Role;
+import com.ecowiki.entity.user.User;
+import com.ecowiki.entity.user.UserRole;
 import com.ecowiki.repository.RoleRepository;
 import com.ecowiki.repository.UserRepository;
 import com.ecowiki.repository.UserRoleRepository;

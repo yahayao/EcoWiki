@@ -19,11 +19,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ecowiki.entity.ArticleReview;
-import com.ecowiki.entity.ReviewHistory;
-import com.ecowiki.entity.ReviewPermissionConfig;
-import com.ecowiki.entity.ReviewerAssignment;
-import com.ecowiki.entity.User;
+import com.ecowiki.entity.article.ArticleReview;
+import com.ecowiki.entity.review.ReviewHistory;
+import com.ecowiki.entity.review.ReviewPermissionConfig;
+import com.ecowiki.entity.review.ReviewerAssignment;
+import com.ecowiki.entity.user.User;
 import com.ecowiki.repository.ArticleReviewRepository;
 import com.ecowiki.repository.ReviewHistoryRepository;
 import com.ecowiki.repository.ReviewPermissionConfigRepository;

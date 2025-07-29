@@ -1,10 +1,12 @@
-package com.ecowiki.entity;
+package com.ecowiki.entity.article;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.annotations.UpdateTimestamp;
+
+import com.ecowiki.entity.tag.Tag;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;

@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.ecowiki.entity.ReviewHistory;
+import com.ecowiki.entity.review.ReviewHistory;
 
 /**
  * 审核历史Repository接口

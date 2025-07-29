@@ -1,4 +1,4 @@
-package com.ecowiki.entity;
+package com.ecowiki.entity.article;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
