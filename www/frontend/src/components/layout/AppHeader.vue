@@ -96,36 +96,22 @@ defineEmits<{
 }>()
 
 /**
- * 处理搜索功能
+ * 处理搜索事件
+ * @param searchTerm 搜索关键词
  * 
- * 接收来自搜索组件的搜索请求，可以实现路由跳转或API调用。
- * 当前为基础实现，可根据需求扩展为更复杂的搜索逻辑。
- * 
- * @param {string} searchTerm - 用户输入的搜索关键词
- * 
- * @example
- * // 搜索组件触发搜索事件时调用
- * handleSearch("环保知识")
- * 
- * @todo 
- * - 实现路由跳转到搜索结果页
- * - 集成搜索API调用
- * - 添加搜索历史记录
- * - 实现搜索建议功能
+ * 当用户在搜索框中输入关键词并触发搜索时调用。
+ * 现在HeaderSearch组件已经直接处理路由跳转，
+ * 这里主要用于记录搜索行为或其他全局操作。
  */
 const handleSearch = (searchTerm: string) => {
   // 记录搜索行为用于调试和分析
   console.log('搜索内容:', searchTerm)
   
-  // TODO: 实现具体的搜索逻辑
-  // 1. 可以触发路由跳转到搜索结果页
-  // router.push({ name: 'SearchResults', query: { q: searchTerm } })
-  
-  // 2. 可以调用搜索API获取结果
-  // await articleApi.searchArticles(searchTerm)
-  
-  // 3. 可以更新全局搜索状态
-  // searchStore.setSearchTerm(searchTerm)
+  // 注意：搜索路由跳转现在由HeaderSearch组件直接处理
+  // 这里可以添加其他全局搜索相关的逻辑，比如：
+  // - 记录搜索历史
+  // - 更新全局搜索状态
+  // - 发送搜索统计信息
 }
 </script>
 

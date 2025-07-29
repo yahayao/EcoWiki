@@ -39,6 +39,7 @@ import ArticleDetail from '../views/ArticleDetail.vue'
 import ArticleEdit from '../views/ArticleEdit.vue'
 import ArticleHistory from '../views/ArticleHistory.vue'
 import CreatePage from '../views/CreatePage.vue'
+// import SearchResults from '../views/SearchResults.vue' // 已废弃：改用 HeaderSearch 下拉弹窗
 
 // 导入用户个人资料组件
 import UserProfile from '../components/userhome/UserProfile.vue'
@@ -63,6 +64,7 @@ import ArticleManagement from '../components/admin/views/ArticleManagement.vue'
  */
 const routes = [
   { path: '/', name: 'Home', component: DynamicHome },
+  // { path: '/search', name: 'SearchResults', component: SearchResults }, // 已废弃：改用 HeaderSearch 下拉弹窗
   { path: '/wiki/:title', name: 'ArticleDetail', component: ArticleDetail },
   { path: '/wiki/:title/history', name: 'ArticleHistory', component: ArticleHistory },
   { path: '/edit/:title', name: 'ArticleEdit', component: ArticleEdit },
