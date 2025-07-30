@@ -1,4 +1,4 @@
-package com.ecowiki.repository;
+package com.ecowiki.repository.article;
 
 import java.time.LocalDateTime;
 import java.util.List;

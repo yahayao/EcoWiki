@@ -24,11 +24,11 @@ import com.ecowiki.entity.review.ReviewHistory;
 import com.ecowiki.entity.review.ReviewPermissionConfig;
 import com.ecowiki.entity.review.ReviewerAssignment;
 import com.ecowiki.entity.user.User;
-import com.ecowiki.repository.ArticleReviewRepository;
-import com.ecowiki.repository.ReviewHistoryRepository;
-import com.ecowiki.repository.ReviewPermissionConfigRepository;
-import com.ecowiki.repository.ReviewerAssignmentRepository;
-import com.ecowiki.repository.UserRepository;
+import com.ecowiki.repository.article.ArticleReviewRepository;
+import com.ecowiki.repository.review.ReviewHistoryRepository;
+import com.ecowiki.repository.review.ReviewPermissionConfigRepository;
+import com.ecowiki.repository.review.ReviewerAssignmentRepository;
+import com.ecowiki.repository.user.UserRepository;
 
 /**
  * 文章审核服务类

@@ -18,9 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ecowiki.entity.article.Article;
 import com.ecowiki.entity.article.ArticleVersion;
 import com.ecowiki.entity.article.ArticleVersionStats;
-import com.ecowiki.repository.ArticleRepository;
-import com.ecowiki.repository.ArticleVersionRepository;
-import com.ecowiki.repository.ArticleVersionStatsRepository;
+import com.ecowiki.repository.article.ArticleRepository;
+import com.ecowiki.repository.article.ArticleVersionRepository;
+import com.ecowiki.repository.article.ArticleVersionStatsRepository;
 import com.ecowiki.util.CompressionUtil;
 import com.ecowiki.util.DiffUtil;
 

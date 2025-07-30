@@ -38,7 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ecowiki.dto.user.UserWithRoleDto;
 import com.ecowiki.entity.user.User;
-import com.ecowiki.repository.UserRepository;
+import com.ecowiki.repository.user.UserRepository;
 
 @Service
 @Transactional

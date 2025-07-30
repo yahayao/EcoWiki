@@ -16,8 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ecowiki.dto.message.MessageDto;
 import com.ecowiki.entity.message.Message;
 import com.ecowiki.entity.user.User;
-import com.ecowiki.repository.MessageRepository;
-import com.ecowiki.repository.UserRepository;
+import com.ecowiki.repository.message.MessageRepository;
+import com.ecowiki.repository.user.UserRepository;
 
 /**
  * 消息服务类

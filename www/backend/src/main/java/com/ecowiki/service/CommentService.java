@@ -17,9 +17,9 @@ import com.ecowiki.dto.comment.ReplyDTO;
 import com.ecowiki.entity.comment.Comment;
 import com.ecowiki.entity.comment.CommentLike;
 import com.ecowiki.entity.user.User;
-import com.ecowiki.repository.CommentLikeRepository;
-import com.ecowiki.repository.CommentRepository;
-import com.ecowiki.repository.UserRepository;
+import com.ecowiki.repository.comment.CommentLikeRepository;
+import com.ecowiki.repository.comment.CommentRepository;
+import com.ecowiki.repository.user.UserRepository;
 
 /**
  * 评论服务类

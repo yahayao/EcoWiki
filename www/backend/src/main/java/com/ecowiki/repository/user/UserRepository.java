@@ -1,4 +1,4 @@
-package com.ecowiki.repository;
+package com.ecowiki.repository.user;
 
 import java.util.Optional;
 

@@ -1,4 +1,4 @@
-package com.ecowiki.repository;
+package com.ecowiki.repository.message;
 
 import java.util.List;
 

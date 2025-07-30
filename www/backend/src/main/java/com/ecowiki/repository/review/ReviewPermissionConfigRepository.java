@@ -1,4 +1,4 @@
-package com.ecowiki.repository;
+package com.ecowiki.repository.review;
 
 import java.util.List;
 import java.util.Optional;

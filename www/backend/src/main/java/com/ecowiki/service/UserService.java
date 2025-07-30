@@ -39,9 +39,9 @@ import com.ecowiki.dto.user.UserRegistrationDto;
 import com.ecowiki.entity.user.Role;
 import com.ecowiki.entity.user.User;
 import com.ecowiki.entity.user.UserRole;
-import com.ecowiki.repository.RoleRepository;
-import com.ecowiki.repository.UserRepository;
-import com.ecowiki.repository.UserRoleRepository;
+import com.ecowiki.repository.user.RoleRepository;
+import com.ecowiki.repository.user.UserRepository;
+import com.ecowiki.repository.user.UserRoleRepository;
 
 @Service
 public class UserService {

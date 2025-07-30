@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 
 import com.ecowiki.entity.user.Role;
 import com.ecowiki.entity.user.User;
-import com.ecowiki.repository.RoleRepository;
-import com.ecowiki.repository.UserRepository;
+import com.ecowiki.repository.user.RoleRepository;
+import com.ecowiki.repository.user.UserRepository;
 import com.ecowiki.service.UserService;
 
 /**

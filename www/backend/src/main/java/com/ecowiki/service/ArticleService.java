@@ -25,8 +25,8 @@ import com.ecowiki.entity.article.Article;
 import com.ecowiki.entity.article.ArticleVersion;
 import com.ecowiki.entity.tag.Tag;
 import com.ecowiki.entity.user.User;
-import com.ecowiki.repository.ArticleRepository;
-import com.ecowiki.repository.UserRepository;
+import com.ecowiki.repository.article.ArticleRepository;
+import com.ecowiki.repository.user.UserRepository;
 
 /**
  * 文章服务类
