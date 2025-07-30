@@ -1,4 +1,4 @@
-package com.ecowiki.controller;
+package com.ecowiki.controller.tag;
 
 import java.util.List;
 

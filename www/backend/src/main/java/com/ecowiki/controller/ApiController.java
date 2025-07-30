@@ -1,4 +1,4 @@
-package com.ecowiki.controller.api;
+package com.ecowiki.controller;
 
 import java.util.HashMap;
 import java.util.Map;

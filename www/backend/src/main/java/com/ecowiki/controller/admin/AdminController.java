@@ -1,4 +1,4 @@
-package com.ecowiki.controller.api.admin;
+package com.ecowiki.controller.admin;
 
 import java.util.List;
 import java.util.Map;

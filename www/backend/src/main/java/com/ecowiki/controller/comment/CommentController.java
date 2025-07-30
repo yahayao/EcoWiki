@@ -1,4 +1,4 @@
-package com.ecowiki.controller;
+package com.ecowiki.controller.comment;
 
 import java.util.Map;
 

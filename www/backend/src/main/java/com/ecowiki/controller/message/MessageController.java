@@ -1,4 +1,4 @@
-package com.ecowiki.controller.api;
+package com.ecowiki.controller.message;
 
 import java.util.List;
 import java.util.Optional;

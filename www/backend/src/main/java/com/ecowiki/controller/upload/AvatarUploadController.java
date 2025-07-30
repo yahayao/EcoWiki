@@ -1,4 +1,4 @@
-package com.ecowiki.controller.api;
+package com.ecowiki.controller.upload;
 
 import java.io.IOException;
 import java.nio.file.Files;

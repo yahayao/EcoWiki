@@ -1,4 +1,4 @@
-package com.ecowiki.controller;
+package com.ecowiki.controller.article;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
