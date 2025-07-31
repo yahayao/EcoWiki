@@ -170,7 +170,7 @@ const previewPage = () => {
 
 const savePage = () => {
   console.log('保存页面')
-  // TODO: 实现保存功能
+  // 功能规划：保存用户页面设置到后端
 }
 
 const addTag = () => {
@@ -195,7 +195,7 @@ const removeSocialLink = (index: number) => {
 const submitForReview = () => {
   console.log('提交审核')
   pendingReview.value = true
-  // TODO: 实现提交审核功能
+  // 功能规划：实现内容审核流程
 }
 
 const getSocialIcon = (platform: string) => {

@@ -210,7 +210,6 @@ const loadArticle = async () => {
     
     // 如果文章不存在，自动跳转到新建页面
     if (errorMessage.includes('不存在') || errorMessage.includes('未找到') || errorMessage.includes('404')) {
-      console.log(`文章 "${articleTitle}" 不存在，自动跳转到新建页面`)
       // 跳转到编辑页面，会自动进入新建模式
       router.push(`/edit/${articleTitle}`)
       return
@@ -234,7 +233,6 @@ const showLoginModal = () => {
 // 浮动按钮事件处理
 const handleView = () => {
   // 查看历史或其他操作
-  console.log('查看操作')
 }
 
 const handleEdit = () => {
@@ -249,12 +247,10 @@ const handleHistory = () => {
 
 const handleFavorite = () => {
   // 收藏文章
-  console.log('收藏文章')
 }
 
 const handleMore = () => {
   // 更多操作
-  console.log('更多操作')
 }
 
 // 监听路由变化

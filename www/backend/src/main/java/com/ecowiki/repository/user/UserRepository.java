@@ -94,4 +94,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return 非激活用户总数
      */
     long countByActiveFalse();
+    
+    /**
+     * 根据用户组查找用户
+     * @param userGroups 用户组集合
+     * @return 匹配的用户列表
+     */
+    @Query("SELECT u FROM User u WHERE u.userGroup IN :userGroups AND u.active = true")
+    java.util.List<User> findByUserGroupIn(@org.springframework.data.repository.query.Param("userGroups") java.util.Set<String> userGroups);
 }

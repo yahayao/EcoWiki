@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.ecowiki.dto.ApiResponse;
+import com.ecowiki.util.LoggerUtil;
 
 /**
  * 全局异常处理器
@@ -79,6 +80,9 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Object>> handleRuntimeException(RuntimeException e) {
+        // 记录业务异常日志
+        LoggerUtil.warn("业务异常: {}", e.getMessage(), e);
+        
         // 过滤敏感信息，确保不向客户端暴露系统内部细节
         String safeMessage = getSafeErrorMessage(e.getMessage());
         return ResponseEntity.badRequest()
@@ -109,7 +113,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleGenericException(Exception e) {
         // 在服务端记录完整错误信息，便于问题排查和系统监控
-        System.err.println("系统错误: " + e.getMessage());
+        LoggerUtil.error("系统异常", e);
         
         // 向客户端返回通用错误信息，不暴露系统内部实现细节
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

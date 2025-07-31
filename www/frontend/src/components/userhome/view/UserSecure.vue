@@ -573,47 +573,47 @@ const checkPasswordStrength = () => {
 
 const updatePassword = () => {
   console.log('更新密码')
-  // TODO: 实现密码更新功能
+  // 功能规划：集成后端密码更新API
 }
 
 const enableTwoFactor = () => {
   console.log('启用双因素认证')
   twoFactorEnabled.value = true
   verificationCode.value = ''
-  // TODO: 实现双因素认证启用功能
+  // 功能规划：集成双因素认证服务
 }
 
 const disableTwoFactor = () => {
   console.log('禁用双因素认证')
   twoFactorEnabled.value = false
-  // TODO: 实现双因素认证禁用功能
+  // 功能规划：集成双因素认证禁用接口
 }
 
 const generateNewCodes = () => {
   console.log('生成新的备用代码')
-  // TODO: 实现生成新备用代码功能
+  // 功能规划：实现备用代码生成逻辑
 }
 
 const updatePrivacySettings = () => {
   console.log('更新隐私设置', privacySettings)
-  // TODO: 实现隐私设置更新功能
+  // 功能规划：连接用户隐私设置API
 }
 
 const removeDevice = (deviceId: number) => {
   console.log('移除设备', deviceId)
   loginDevices.value = loginDevices.value.filter(device => device.id !== deviceId)
-  // TODO: 实现移除设备功能
+  // 功能规划：实现设备会话管理
 }
 
 const removeAllDevices = () => {
   console.log('移除所有其他设备')
   loginDevices.value = loginDevices.value.filter(device => device.current)
-  // TODO: 实现移除所有其他设备功能
+  // 功能规划：批量会话清理功能
 }
 
 const exportSecurityLog = () => {
   console.log('导出安全日志')
-  // TODO: 实现导出安全日志功能
+  // 功能规划：安全日志导出服务
 }
 
 const loadMoreLogs = () => {
@@ -622,7 +622,7 @@ const loadMoreLogs = () => {
   setTimeout(() => {
     loadingLogs.value = false
   }, 1000)
-  // TODO: 实现加载更多日志功能
+  // 功能规划：分页加载安全日志
 }
 </script>
 

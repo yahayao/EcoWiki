@@ -105,8 +105,6 @@ const resetHomeState = () => {
 
   // 重置滚动位置
   window.scrollTo(0, 0)
-
-  console.log('首页状态已重置')
 }
 
 // ✅ 在首页挂载时执行

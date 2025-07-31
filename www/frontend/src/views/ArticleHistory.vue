@@ -385,8 +385,6 @@ export default defineComponent({
           articleApi.getVersionContent(articleId, oldVersion.versionNumber),
           articleApi.getVersionContent(articleId, newVersion.versionNumber)
         ])
-        console.log("oldContentResponse",oldContentResponse.content)
-        console.log("newContentResponse",newContentResponse.content)
 
         comparingVersions.value = {
           oldVersion,

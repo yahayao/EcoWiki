@@ -459,13 +459,10 @@ public class ArticleReviewService {
             .map(ReviewPermissionConfig::getRoleName)
             .collect(Collectors.toSet());
         
-        // 查找具有指定角色的用户
-        List<User> users = userRepository.findAll();
+        // 查找具有指定角色的用户（优化：使用角色过滤而非全量加载）
+        Set<String> eligibleRoleSet = eligibleRoles.stream().collect(Collectors.toSet());
+        List<User> users = userRepository.findByUserGroupIn(eligibleRoleSet);
         return users.stream()
-            .filter(user -> {
-                List<String> userRoles = getUserRoleNames(user.getUserId());
-                return userRoles.stream().anyMatch(eligibleRoles::contains);
-            })
             .map(User::getUserId)
             .filter(userId -> !isReviewerOverloaded(userId))
             .collect(Collectors.toList());
@@ -563,12 +560,11 @@ public class ArticleReviewService {
     }
     
     /**
-     * 获取管理员用户列表
+     * 获取管理员用户列表（优化：直接查询管理员角色用户）
      */
     private List<User> getAdminUsers() {
-        return userRepository.findAll().stream()
-            .filter(user -> permissionService.isAdmin(user) || permissionService.isSuperAdmin(user))
-            .collect(Collectors.toList());
+        Set<String> adminGroups = Set.of("admin", "superadmin");
+        return userRepository.findByUserGroupIn(adminGroups);
     }
     
     /**

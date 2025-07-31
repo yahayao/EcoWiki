@@ -103,7 +103,6 @@ const currentHome = ref(getHomeComponent())
  * // updateHome() 会被自动调用
  */
 function updateHome() {
-  console.log('updateHome called, homeStyle:', localStorage.getItem('homeStyle'))
   currentHome.value = getHomeComponent()
 }
 
