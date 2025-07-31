@@ -205,32 +205,32 @@ public class User {
     public String getSecurityAnswer() { return securityAnswer; }
     public void setSecurityAnswer(String securityAnswer) { this.securityAnswer = securityAnswer; }
     
-    // 临时权限检查方法 - 这些方法现在需要通过UserService来实现
-    // 为了保持向后兼容性，暂时返回false，实际使用时应该通过UserService检查
+    // 权限检查方法 - 基于安全设计原则，权限检查应该通过UserService来实现
+    // 这些方法保持最小实现，实际权限检查应该使用UserService
     public boolean isAdmin() {
-        // TODO: 这个方法现在应该通过UserService.getUserRoleName()来实现
+        // 实体类不应该包含业务逻辑，权限检查应该通过UserService.hasRole()来实现
         return false;
     }
     
     public boolean isSuperAdmin() {
-        // TODO: 这个方法现在应该通过UserService.getUserRoleName()来实现
+        // 实体类不应该包含业务逻辑，权限检查应该通过UserService.hasRole()来实现
         return false;
     }
     
     public boolean hasPermission(String requiredGroup) {
-        // TODO: 这个方法现在应该通过UserService来实现权限检查
+        // 实体类不应该包含业务逻辑，权限检查应该通过UserService.hasPermission()来实现
         return false;
     }
     
-    // 临时兼容性方法 - 角色信息现在存储在User_Roles表中
+    // 兼容性方法 - 角色信息现在存储在User_Roles表中
     public String getUserGroup() {
-        // TODO: 这个方法现在应该通过UserService.getUserRoleName()来实现
+        // 角色信息应该通过UserService.getUserRoles()来获取
         return "user"; // 返回默认值以保持兼容性
     }
     
     public void setUserGroup(String userGroup) {
-        // TODO: 这个方法现在应该通过UserService来实现角色设置
-        // 暂时不做任何操作，保持兼容性
+        // 角色设置应该通过UserService.assignRole()来实现
+        // 实体类不应该包含业务逻辑
     }
     
     @PrePersist

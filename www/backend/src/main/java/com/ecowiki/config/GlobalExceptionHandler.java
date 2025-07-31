@@ -144,8 +144,20 @@ public class GlobalExceptionHandler {
             return "数据处理失败";
         }
         
-        // TODO: 可根据需要添加更多敏感信息过滤规则
-        // 例如：文件路径、内存地址、系统配置等
+        // 过滤其他敏感信息
+        if (originalMessage != null) {
+            String lowerMessage = originalMessage.toLowerCase();
+            if (lowerMessage.contains("password") || 
+                lowerMessage.contains("token") ||
+                lowerMessage.contains("secret") ||
+                lowerMessage.contains("key") ||
+                lowerMessage.contains("file not found") ||
+                lowerMessage.contains("access denied") ||
+                lowerMessage.contains("connection") ||
+                lowerMessage.contains("timeout")) {
+                return "操作失败，请稍后重试";
+            }
+        }
         
         // 不包含敏感信息的消息原样返回
         return originalMessage;

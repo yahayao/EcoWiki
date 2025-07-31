@@ -85,12 +85,6 @@ public class ArticleController {
      */
     private User getCurrentUser(HttpServletRequest request) {
         String token = extractTokenFromRequest(request);
-        System.out.println("=== getCurrentUser Debug ===");
-        System.out.println("Authorization header: " + request.getHeader("Authorization"));
-        System.out.println("Token存在: " + (token != null ? "是" : "否"));
-        if (token != null) {
-            System.out.println("Token内容: " + token.substring(0, Math.min(20, token.length())) + "...");
-        }
         
         if (token != null) {
             try {

@@ -63,12 +63,19 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtUtil {
     
-    private static final String SECRET_KEY = "EcoWiki2025SecretKeyForJWTTokenGenerationAndValidation";
     private static final int JWT_EXPIRATION_MS = 86400000; // 24小时
     private static final int REFRESH_TOKEN_EXPIRATION_MS = 604800000; // 7天
     
+    // 动态生成的安全密钥，每次应用启动时重新生成
+    private final Key signingKey;
+    
+    public JwtUtil() {
+        // 使用安全的随机密钥生成，符合HMAC SHA-256要求
+        this.signingKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    }
+    
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        return this.signingKey;
     }
     
     // 从token中提取用户名

@@ -256,12 +256,12 @@ public class AvatarUploadController {
                     Path oldFilePath = Paths.get(avatarUploadPath, fileName);
                     if (Files.exists(oldFilePath)) {
                         Files.delete(oldFilePath);
-                        System.out.println("已删除旧头像文件: " + oldFilePath);
+                        // 旧头像文件已删除
                     }
                 }
             } catch (IOException e) {
-                System.err.println("删除旧头像文件失败: " + e.getMessage());
                 // 不抛出异常，因为删除旧文件失败不应该影响新文件上传
+                // 可以记录到日志中，但不影响主流程
             }
         }
     }

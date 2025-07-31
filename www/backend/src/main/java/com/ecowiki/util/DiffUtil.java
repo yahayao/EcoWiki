@@ -1,9 +1,12 @@
 package com.ecowiki.util;
 
-import org.springframework.stereotype.Component;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
+
+import org.springframework.stereotype.Component;
 
 /**
  * 差异计算工具类
@@ -57,19 +60,6 @@ public class DiffUtil {
         String[] baseLines = LINE_SPLIT_PATTERN.split(baseText);
         List<String> resultLines = new ArrayList<>();
         
-        // 调试日志
-        System.out.println("=== DiffUtil.applyDiff DEBUG ===");
-        System.out.println("Base text lines count: " + baseLines.length);
-        System.out.println("Base text:");
-        for (int i = 0; i < baseLines.length; i++) {
-            System.out.println("  [" + i + "] " + baseLines[i]);
-        }
-        System.out.println("Diff lines count: " + diffLines.size());
-        System.out.println("Diff lines:");
-        for (DiffLine diff : diffLines) {
-            System.out.println("  " + diff.getType().getSymbol() + diff.getLineNumber() + ":" + diff.getContent());
-        }
-        
         // 将差异按行号分组
         Map<Integer, List<DiffLine>> diffsByLine = new HashMap<>();
         for (DiffLine diff : diffLines) {
@@ -98,7 +88,6 @@ public class DiffUtil {
                 // 没有差异，直接复制基础行
                 if (lineNum < baseLines.length) {
                     resultLines.add(baseLines[lineNum]);
-                    System.out.println("Copying base line [" + lineNum + "]: " + baseLines[lineNum]);
                 }
             } else {
                 // 先处理UNCHANGED，再处理ADDED
@@ -109,14 +98,13 @@ public class DiffUtil {
                         case UNCHANGED:
                             if (lineNum < baseLines.length) {
                                 resultLines.add(baseLines[lineNum]);
-                                System.out.println("Unchanged line [" + lineNum + "]: " + baseLines[lineNum]);
                             }
                             break;
                         case ADDED:
                             addedLines.add(diff);
                             break;
                         case REMOVED:
-                            System.out.println("Removing line [" + lineNum + "]: " + diff.getContent());
+                            // 移除行，不做处理
                             break;
                     }
                 }
@@ -124,22 +112,17 @@ public class DiffUtil {
                 // 添加所有新增的行
                 for (DiffLine addedLine : addedLines) {
                     resultLines.add(addedLine.getContent());
-                    System.out.println("Adding line after [" + lineNum + "]: " + addedLine.getContent());
                 }
                 
                 // 如果没有UNCHANGED和REMOVED，但是基础行存在，则复制基础行
                 if (lineDiffs.stream().noneMatch(d -> d.getType() == DiffType.UNCHANGED || d.getType() == DiffType.REMOVED) 
                     && lineNum < baseLines.length) {
                     resultLines.add(baseLines[lineNum]);
-                    System.out.println("Default copying line [" + lineNum + "]: " + baseLines[lineNum]);
                 }
             }
         }
         
         String result = String.join("\n", resultLines);
-        System.out.println("Final result:");
-        System.out.println(result);
-        System.out.println("=== DiffUtil.applyDiff DEBUG END ===");
         
         return result;
     }
