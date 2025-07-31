@@ -60,6 +60,7 @@ import wikiParser from '@/utils/wikiParser'
 import { useEditorOperations } from '@/composables/useEditorOperations'
 import router from '@/router'
 import { articleApi, type Article, type ArticleCreateRequest, type ArticleUpdateRequest } from '@/api/article'
+import { draftApi } from '@/api/draft'
 
 const { userDisplayName, isAuthenticated, user } = useAuth()
 
@@ -343,7 +344,7 @@ const handleSave = async () => {
     saveSuccessful.value = false
 
     if (isEditMode.value) {
-      // 更新文章
+      // 更新文章 - 提交到草稿表等待审核
       const updateData: ArticleUpdateRequest = {
         title: currentTitle.value,
         content: articleForm.content.trim(),
@@ -351,29 +352,18 @@ const handleSave = async () => {
         tags: articleForm.tags.trim()
       }
       
-      const updated = await articleApi.updateArticle(originalArticle.value!.articleId, updateData)
-      
-      // 更新原始文章数据，防止离开页面时显示未保存提示
-      originalArticle.value = updated
-      
-      // 同步更新当前表单，确保完全一致
-      articleForm = {
-        content: updated.content || '',
-        category: updated.category || '',
-        tags: updated.tags || '',
-        author: updated.author
-      }
+      const draft = await draftApi.submitArticleEdit(originalArticle.value!.articleId, updateData)
       
       saveSuccessful.value = true
       
-      toast.success('文章更新成功！')
+      toast.success('文章修改已提交审核，请等待管理员审核！')
       
-      // 使用setTimeout确保状态更新后再导航
+      // 导航到文章页面或首页
       setTimeout(() => {
-        router.push(`/wiki/${updated.title}`)
+        router.push(`/wiki/${originalArticle.value!.title}`)
       }, 100)
     } else {
-      // 创建文章，确保使用当前登录用户作为作者
+      // 创建文章 - 提交到草稿表等待审核
       const currentAuthor = user.value?.username || userDisplayName.value || '未知用户'
       const createData: ArticleCreateRequest = {
         title: currentTitle.value,
@@ -383,27 +373,15 @@ const handleSave = async () => {
         author: currentAuthor
       }
       
-      const created = await articleApi.createArticle(createData)
-      
-      // 创建成功后，设置为编辑模式并更新原始数据
-      originalArticle.value = created
-      articleExists.value = true
-      
-      // 同步更新当前表单
-      articleForm = {
-        content: created.content || '',
-        category: created.category || '',
-        tags: created.tags || '',
-        author: created.author
-      }
+      const draft = await draftApi.submitNewArticle(createData)
       
       saveSuccessful.value = true
       
-      toast.success('文章创建成功！')
+      toast.success('新文章已提交审核，请等待管理员审核！')
       
-      // 使用setTimeout确保状态更新后再导航
+      // 导航到首页
       setTimeout(() => {
-        router.push(`/wiki/${created.title}`)
+        router.push('/')
       }, 100)
     }
   } catch (error) {

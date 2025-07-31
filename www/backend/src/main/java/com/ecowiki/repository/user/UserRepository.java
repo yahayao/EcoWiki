@@ -96,10 +96,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByActiveFalse();
     
     /**
-     * 根据用户组查找用户
-     * @param userGroups 用户组集合
+     * 根据角色ID查找用户
+     * @param roleIds 角色ID集合
      * @return 匹配的用户列表
      */
-    @Query("SELECT u FROM User u WHERE u.userGroup IN :userGroups AND u.active = true")
-    java.util.List<User> findByUserGroupIn(@org.springframework.data.repository.query.Param("userGroups") java.util.Set<String> userGroups);
+    @Query("SELECT DISTINCT u FROM User u JOIN UserRole ur ON u.userId = ur.userId WHERE ur.roleId IN :roleIds AND u.active = true")
+    java.util.List<User> findByRoleIdsIn(@org.springframework.data.repository.query.Param("roleIds") java.util.Set<Integer> roleIds);
 }

@@ -137,6 +137,7 @@ import LoadingState from '../components/common/LoadingState.vue'
 
 // API和工具导入
 import { articleApi, type Article, type ArticleCreateRequest, type ArticleUpdateRequest } from '../api/article'
+import { draftApi, type DraftSubmissionResult } from '../api/draft'
 import { wikiParser } from '../utils/wikiParser'
 import toast from '../utils/toast'
 import { useAuth } from '../composables/useAuth'
@@ -433,38 +434,30 @@ const handleSave = async () => {
     saveSuccessful.value = false
 
     if (isEditMode.value) {
-      // 更新文章
-      const updateData: ArticleUpdateRequest = {
+      // 提交文章编辑到草稿表等待审核
+      const updateData = {
         title: currentTitle.value,
         content: articleForm.value.content.trim(),
         category: articleForm.value.category.trim(),
         tags: articleForm.value.tags.trim()
       }
       
-      const updated = await articleApi.updateArticle(originalArticle.value!.articleId, updateData)
-      
-      // 更新原始文章数据，防止离开页面时显示未保存提示
-      originalArticle.value = updated
-      
-      // 同步更新当前表单，确保完全一致
-      articleForm.value = {
-        title: '', // 不设置标题，因为标题来自路由参数
-        content: updated.content || '',
-        category: updated.category || '',
-        tags: updated.tags || '',
-        author: updated.author
-      }
+      const result: DraftSubmissionResult = await draftApi.submitArticleEdit(originalArticle.value!.articleId, updateData)
       
       saveSuccessful.value = true
       
-      toast.success('文章更新成功！')
+      toast.success('文章修改已提交审核，请耐心等待管理员审核！')
+      
+      // 跳转回文章详情页，并显示审核状态提示
+      await router.push(`/article/${encodeURIComponent(currentTitle.value)}`)
+      return
       
       // 使用setTimeout确保状态更新后再导航
       setTimeout(() => {
         router.push(`/wiki/${updated.title}`)
       }, 100)
     } else {
-      // 创建文章，确保使用当前登录用户作为作者
+      // 创建文章 - 提交到草稿表等待审核
       const currentAuthor = user.value?.username || userDisplayName.value || '未知用户'
       const createData: ArticleCreateRequest = {
         title: currentTitle.value,
@@ -474,28 +467,15 @@ const handleSave = async () => {
         author: currentAuthor
       }
       
-      const created = await articleApi.createArticle(createData)
-      
-      // 创建成功后，设置为编辑模式并更新原始数据
-      originalArticle.value = created
-      articleExists.value = true
-      
-      // 同步更新当前表单
-      articleForm.value = {
-        title: created.title,
-        content: created.content || '',
-        category: created.category || '',
-        tags: created.tags || '',
-        author: created.author
-      }
+      const draft = await draftApi.submitNewArticle(createData)
       
       saveSuccessful.value = true
       
-      toast.success('文章创建成功！')
+      toast.success('新文章已提交审核，请等待管理员审核！')
       
-      // 使用setTimeout确保状态更新后再导航
+      // 导航到首页或个人页面
       setTimeout(() => {
-        router.push(`/wiki/${created.title}`)
+        router.push('/')
       }, 100)
     }
   } catch (error) {

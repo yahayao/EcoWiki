@@ -78,7 +78,9 @@ export { userApi } from './user'
 export { TagApi } from './tag'
 export { messageApi } from './message'
 export { commentApi } from './comment'
+export { draftApi } from './draft'
 
 // 导出主要类型接口
 export type { Article, ArticleVersion, CreateVersionRequest } from './article'
 export type { Comment, Reply, CreateCommentRequest } from './comment'
+export type { ArticleDraft, ReviewDraftRequest, DraftSubmissionResult } from './draft'

@@ -28,6 +28,7 @@ import com.ecowiki.repository.article.ArticleReviewRepository;
 import com.ecowiki.repository.review.ReviewHistoryRepository;
 import com.ecowiki.repository.review.ReviewPermissionConfigRepository;
 import com.ecowiki.repository.review.ReviewerAssignmentRepository;
+import com.ecowiki.repository.user.RoleRepository;
 import com.ecowiki.repository.user.UserRepository;
 
 /**
@@ -59,6 +60,9 @@ public class ArticleReviewService {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private RoleRepository roleRepository;
     
     @Autowired
     private MessageService messageService;
@@ -459,9 +463,15 @@ public class ArticleReviewService {
             .map(ReviewPermissionConfig::getRoleName)
             .collect(Collectors.toSet());
         
-        // 查找具有指定角色的用户（优化：使用角色过滤而非全量加载）
-        Set<String> eligibleRoleSet = eligibleRoles.stream().collect(Collectors.toSet());
-        List<User> users = userRepository.findByUserGroupIn(eligibleRoleSet);
+        // 将角色名称转换为角色ID
+        Set<Integer> roleIds = eligibleRoles.stream()
+            .map(roleName -> roleRepository.findByRoleName(roleName))
+            .filter(Objects::nonNull)
+            .map(role -> role.getRoleId())
+            .collect(Collectors.toSet());
+        
+        // 查找具有指定角色的用户
+        List<User> users = userRepository.findByRoleIdsIn(roleIds);
         return users.stream()
             .map(User::getUserId)
             .filter(userId -> !isReviewerOverloaded(userId))
@@ -563,8 +573,16 @@ public class ArticleReviewService {
      * 获取管理员用户列表（优化：直接查询管理员角色用户）
      */
     private List<User> getAdminUsers() {
-        Set<String> adminGroups = Set.of("admin", "superadmin");
-        return userRepository.findByUserGroupIn(adminGroups);
+        Set<String> adminGroupNames = Set.of("admin", "superadmin");
+        
+        // 将角色名称转换为角色ID
+        Set<Integer> adminRoleIds = adminGroupNames.stream()
+            .map(roleName -> roleRepository.findByRoleName(roleName))
+            .filter(Objects::nonNull)
+            .map(role -> role.getRoleId())
+            .collect(Collectors.toSet());
+        
+        return userRepository.findByRoleIdsIn(adminRoleIds);
     }
     
     /**

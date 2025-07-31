@@ -28,6 +28,7 @@ import com.ecowiki.dto.article.ArticleStatisticsDto;
 import com.ecowiki.dto.article.ArticleUpdateRequest;
 import com.ecowiki.entity.user.User;
 import com.ecowiki.security.JwtUtil;
+import com.ecowiki.service.ArticleDraftService;
 import com.ecowiki.service.ArticleService;
 import com.ecowiki.service.ArticleVersionService;
 import com.ecowiki.service.UserService;
@@ -77,6 +78,12 @@ public class ArticleController {
      */
     @Autowired
     private ArticleVersionService articleVersionService;
+    
+    /**
+     * 文章草稿服务，用于处理文章审核流程
+     */
+    @Autowired
+    private ArticleDraftService articleDraftService;
 
     /**
      * 获取当前请求用户实体
@@ -125,22 +132,39 @@ public class ArticleController {
     }
 
     /**
-     * 创建新文章
+     * 创建新文章（提交到草稿表等待审核）
      * @param request 文章创建请求体
-     * @return 创建成功的文章信息
+     * @param httpRequest HTTP请求
+     * @return 创建的草稿信息
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<ArticleDto>> createArticle(@Validated @RequestBody ArticleCreateRequest request) {
+    public ResponseEntity<ApiResponse<Object>> createArticle(
+            @Validated @RequestBody ArticleCreateRequest request,
+            HttpServletRequest httpRequest) {
+        
+        User currentUser = getCurrentUser(httpRequest);
+        if (currentUser == null) {
+            return ResponseEntity.ok(ApiResponse.error(401, "请先登录"));
+        }
+        
         try {
-            ArticleDto article = articleService.createArticle(request);
+            // 提交新文章到草稿表等待审核
+            var draft = articleDraftService.submitNewArticleDraft(request, currentUser.getUserId());
+            
+            // 返回提示信息，告知用户文章已提交审核
+            Map<String, Object> result = new HashMap<>();
+            result.put("draftId", draft.getDraftId());
+            result.put("status", "submitted_for_review");
+            result.put("message", "新文章已提交，等待管理员审核");
+            
             return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(article, "文章创建成功"));
+                .body(ApiResponse.success(result, "文章已提交审核，请耐心等待"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("创建文章失败: " + e.getMessage()));
+                .body(ApiResponse.error("提交文章失败: " + e.getMessage()));
         }
     }
 
@@ -203,34 +227,38 @@ public class ArticleController {
     }
 
     /**
-     * 更新文章内容
+     * 更新文章内容（提交到草稿表等待审核）
      * @param id 文章ID
      * @param request 文章更新请求体
-     * @return 更新后的文章信息
+     * @param httpRequest HTTP请求
+     * @return 提交的草稿信息
      */
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<ArticleDto>> updateArticle(
+    public ResponseEntity<ApiResponse<Object>> updateArticle(
             @PathVariable Long id,
             @Validated @RequestBody ArticleUpdateRequest request,
             HttpServletRequest httpRequest) {
+        
+        User currentUser = getCurrentUser(httpRequest);
+        if (currentUser == null) {
+            return ResponseEntity.ok(ApiResponse.error(401, "请先登录"));
+        }
+        
         try {
-            // 获取当前编辑用户
-            User currentUser = getCurrentUser(httpRequest);
-            String editorUsername = (currentUser != null) ? currentUser.getUsername() : "匿名用户";
+            // 提交文章编辑到草稿表等待审核
+            var draft = articleDraftService.submitArticleEditDraft(id, request, currentUser.getUserId());
             
-            System.out.println("=== updateArticle Debug ===");
-            System.out.println("文章ID: " + id);
-            System.out.println("当前编辑用户: " + (currentUser != null ? currentUser.getUsername() : "null"));
-            System.out.println("编辑者用户名: " + editorUsername);
+            // 返回提示信息，告知用户文章已提交审核
+            Map<String, Object> result = new HashMap<>();
+            result.put("draftId", draft.getDraftId());
+            result.put("status", "submitted_for_review");
+            result.put("message", "文章修改已提交，等待管理员审核");
             
-            ArticleDto article = articleService.updateArticle(id, request, editorUsername);
-            return ResponseEntity.ok(ApiResponse.success(article, "文章更新成功"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(e.getMessage()));
+            return ResponseEntity.ok(ApiResponse.success(result, "文章修改已提交审核，请耐心等待"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.ok(ApiResponse.error(400, e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("更新文章失败: " + e.getMessage()));
+            return ResponseEntity.ok(ApiResponse.error(500, "提交文章修改失败: " + e.getMessage()));
         }
     }
 

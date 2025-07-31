@@ -109,6 +109,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { articleApi, type ArticleCreateRequest } from '@/api/article'
+import { draftApi } from '@/api/draft'
 import toast from '@/utils/toast'
 
 const router = useRouter()
@@ -252,19 +253,13 @@ const createPage = async () => {
       author: user.value?.username || '当前用户'
     }
     
-    // 调用API创建文章
-    const response = await articleApi.createArticle(articleData)
+    // 调用API提交草稿等待审核
+    const response = await draftApi.submitNewArticle(articleData)
     
-    toast.success('页面创建成功！', '成功')
+    toast.success('页面已提交审核，请等待管理员审核！', '成功')
     
-    // 根据用户选择决定后续操作
-    if (form.value.openAfterCreate) {
-      // 跳转到编辑页面
-      router.push(`/edit/${encodeURIComponent(form.value.title)}`)
-    } else {
-      // 跳转到文章详情页
-      router.push(`/wiki/${encodeURIComponent(form.value.title)}`)
-    }
+    // 审核制度下，新创建的页面不会立即存在，跳转到首页
+    router.push('/')
     
   } catch (error: any) {
     console.error('创建页面失败:', error)

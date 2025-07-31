@@ -104,6 +104,14 @@
                   <span class="nav-text">文章管理</span>
                 </div>
               </li>
+              <li class="nav-item" :class="{ active: activeSection === 'drafts' }" @click="setActiveSection('drafts')">
+                <div class="nav-item-content">
+                  <svg viewBox="0 0 24 24" class="nav-icon">
+                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                  </svg>
+                  <span class="nav-text">草稿审核</span>
+                </div>
+              </li>
               <li class="nav-item" :class="{ active: activeSection === 'reviews' }" @click="setActiveSection('reviews')">
                 <div class="nav-item-content">
                   <svg viewBox="0 0 24 24" class="nav-icon">
@@ -158,6 +166,7 @@
         <!-- 使用 v-show 控制显示，ref 控制缓存 -->
         <SystemSettings v-show="activeSection === 'settings'" ref="systemSettingsRef" />
         <ArticleManagement v-show="activeSection === 'articles'" ref="articleManagementRef" />
+        <DraftReviewDashboard v-show="activeSection === 'drafts'" ref="draftReviewDashboardRef" />
         <ReviewManagement v-show="activeSection === 'reviews'" ref="reviewManagementRef" />
         <UserList v-show="activeSection === 'users'" ref="userListRef" />
         <PermissionManagement v-show="activeSection === 'permissions'" ref="permissionManagementRef" />
@@ -195,6 +204,7 @@ import UserList from './views/UserList.vue'  // 用户列表页面
 import PermissionManagement from './views/PermissionManagement.vue'  // 权限管理页面
 import RolePermissionAssignment from './views/RolePermissionAssignment.vue'  // 角色权限分配页面
 import ReviewManagement from './views/ReviewManagement.vue'  // 审核管理页面
+import DraftReviewDashboard from './views/DraftReviewDashboard.vue'  // 草稿审核页面
 
 // === 实例化依赖 ===
 const router = useRouter()
@@ -210,6 +220,7 @@ const pendingChangesKey = ref(0)  // 用于强制重新计算待处理变更的�
 // === 子组件 ref 定义 ===
 const systemSettingsRef = ref<any>(null)
 const articleManagementRef = ref<any>(null)
+const draftReviewDashboardRef = ref<any>(null)
 const reviewManagementRef = ref<any>(null)
 const userListRef = ref<any>(null)
 const permissionManagementRef = ref<any>(null)
@@ -220,6 +231,7 @@ const activeSection = computed(() => {
   const path = route.path
   if (path.includes('/admin/settings')) return 'settings'
   if (path.includes('/admin/articles')) return 'articles'
+  if (path.includes('/admin/drafts')) return 'drafts'
   if (path.includes('/admin/reviews')) return 'reviews'
   if (path.includes('/admin/users')) return 'users'
   if (path.includes('/admin/permissions')) return 'permissions'
@@ -240,6 +252,9 @@ const setActiveSection = (section: string) => {
       break
     case 'articles':
       routePath += 'articles'
+      break
+    case 'drafts':
+      routePath += 'drafts'
       break
     case 'reviews':
       routePath += 'reviews'
@@ -280,6 +295,16 @@ const refreshSettings = () => {
     case 'articles':
       if (articleManagementRef.value && typeof articleManagementRef.value.refreshData === 'function') {
         articleManagementRef.value.refreshData()
+      }
+      break
+    case 'drafts':
+      if (draftReviewDashboardRef.value && typeof draftReviewDashboardRef.value.refreshData === 'function') {
+        draftReviewDashboardRef.value.refreshData()
+      }
+      break
+    case 'reviews':
+      if (reviewManagementRef.value && typeof reviewManagementRef.value.refreshData === 'function') {
+        reviewManagementRef.value.refreshData()
       }
       break
     case 'users':
