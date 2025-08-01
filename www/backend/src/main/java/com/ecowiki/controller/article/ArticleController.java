@@ -475,10 +475,16 @@ public class ArticleController {
     }
 
     /**
-     * 点赞文章
+     * 为文章点赞
+     * <p>
+     * 用户为指定文章添加点赞，支持用户对喜欢内容的互动表达。
+     * 同一用户对同一文章只能点赞一次，重复点赞会被忽略。
+     * 
      * @param id 文章ID
-     * @param request HTTP请求
-     * @return 点赞结果
+     * @param request HTTP请求对象，用于获取当前用户信息
+     * @return ResponseEntity 包含操作结果的响应
+     * @apiNote 需要用户登录，未登录返回401状态码
+     * @since 1.0
      */
     @PostMapping("/{id}/like")
     public ResponseEntity<ApiResponse<Void>> likeArticle(@PathVariable Long id, HttpServletRequest request) {
@@ -501,10 +507,16 @@ public class ArticleController {
     }
 
     /**
-     * 取消点赞
+     * 取消文章点赞
+     * <p>
+     * 用户取消对指定文章的点赞，支持用户撤回之前的互动操作。
+     * 如果用户之前未点赞该文章，此操作不会产生任何影响。
+     * 
      * @param id 文章ID
-     * @param request HTTP请求
-     * @return 取消点赞结果
+     * @param request HTTP请求对象，用于获取当前用户信息
+     * @return ResponseEntity 包含操作结果的响应
+     * @apiNote 需要用户登录，未登录返回401状态码
+     * @since 1.0
      */
     @DeleteMapping("/{id}/like")
     public ResponseEntity<ApiResponse<Void>> unlikeArticle(@PathVariable Long id, HttpServletRequest request) {
@@ -607,9 +619,15 @@ public class ArticleController {
     
     /**
      * 收藏文章
+     * <p>
+     * 用户将指定文章添加到个人收藏列表，便于后续快速访问。
+     * 收藏的文章可以在用户个人中心查看，支持个人内容管理功能。
+     * 
      * @param id 文章ID
-     * @param request HTTP请求
-     * @return 收藏结果
+     * @param request HTTP请求对象，用于获取当前用户信息
+     * @return ResponseEntity 包含操作结果的响应
+     * @apiNote 需要用户登录，未登录返回401状态码
+     * @since 1.0
      */
     @PostMapping("/{id}/favorite")
     public ResponseEntity<ApiResponse<Void>> favoriteArticle(@PathVariable Long id, HttpServletRequest request) {
@@ -633,9 +651,15 @@ public class ArticleController {
 
     /**
      * 取消收藏文章
+     * <p>
+     * 用户从个人收藏列表中移除指定文章，撤回之前的收藏操作。
+     * 如果用户之前未收藏该文章，此操作不会产生任何影响。
+     * 
      * @param id 文章ID
-     * @param request HTTP请求
-     * @return 取消收藏结果
+     * @param request HTTP请求对象，用于获取当前用户信息
+     * @return ResponseEntity 包含操作结果的响应
+     * @apiNote 需要用户登录，未登录返回401状态码
+     * @since 1.0
      */
     @DeleteMapping("/{id}/favorite")
     public ResponseEntity<ApiResponse<Void>> unfavoriteArticle(@PathVariable Long id, HttpServletRequest request) {

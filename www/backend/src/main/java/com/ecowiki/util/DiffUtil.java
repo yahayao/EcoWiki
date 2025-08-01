@@ -9,11 +9,30 @@ import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;
 
 /**
- * 差异计算工具类
- * 实现了Myers diff算法的简化版本，用于计算文本差异
+ * 文本差异计算工具类
+ * <p>
+ * 实现了基于Myers算法的文本差异比较功能，用于计算两个文本版本之间的变更内容。
+ * 主要用于文章版本管理和变更追踪功能。
+ * <p>
+ * <b>核心功能：</b>
+ * - 逐行文本差异计算
+ * - 支持添加、删除、无变化三种类型
+ * - 差异比例和统计信息计算
+ * - 详细的差异行信息输出
+ * <p>
+ * <b>算法特点：</b>
+ * - 基于Myers差分算法的简化实现
+ * - 时间复杂度为O(N*M)，适用于中等规模文本
+ * - 准确识别文本的增删改变化
+ * <p>
+ * <b>使用场景：</b>
+ * - Wiki文章版本对比
+ * - 内容变更历史记录
+ * - 编辑审核和回退功能
  * 
- * @author EcoWiki
+ * @author EcoWiki Development Team
  * @version 1.0
+ * @since 2025-08-01
  */
 @Component
 public class DiffUtil {
@@ -22,6 +41,13 @@ public class DiffUtil {
     
     /**
      * 计算两个文本之间的差异
+     * <p>
+     * 使用逐行比较的方式，计算出新旧文本之间的详细差异信息，
+     * 包括每行的变更类型（添加、删除、无变化）和统计数据。
+     * 
+     * @param oldText 原始文本内容
+     * @param newText 新版本文本内容
+     * @return DiffResult 包含差异行列表、差异比例、统计信息的结果对象
      */
     public DiffResult calculateDiff(String oldText, String newText) {
         if (oldText == null) oldText = "";
@@ -53,6 +79,13 @@ public class DiffUtil {
     
     /**
      * 应用差异到基础文本
+     * <p>
+     * 将计算出的差异信息应用到基础文本上，生成最终的文本内容。
+     * 这个方法可以用于文本的合并或重建操作。
+     * 
+     * @param baseText 基础文本内容
+     * @param diffLines 差异行列表
+     * @return String 应用差异后的最终文本
      */
     public String applyDiff(String baseText, List<DiffLine> diffLines) {
         if (baseText == null) baseText = "";
