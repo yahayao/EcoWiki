@@ -25,7 +25,11 @@ import com.ecowiki.entity.article.Article;
 import com.ecowiki.entity.article.ArticleVersion;
 import com.ecowiki.entity.tag.Tag;
 import com.ecowiki.entity.user.User;
+import com.ecowiki.entity.user.UserArticleFavorite;
+import com.ecowiki.entity.user.UserArticleLike;
 import com.ecowiki.repository.article.ArticleRepository;
+import com.ecowiki.repository.user.UserArticleFavoriteRepository;
+import com.ecowiki.repository.user.UserArticleLikeRepository;
 import com.ecowiki.repository.user.UserRepository;
 
 /**
@@ -76,6 +80,18 @@ public class ArticleService {
      */
     @Autowired
     private UserService userService;
+    
+    /**
+     * 用户文章收藏数据访问接口
+     */
+    @Autowired
+    private UserArticleFavoriteRepository userArticleFavoriteRepository;
+    
+    /**
+     * 用户文章点赞数据访问接口
+     */
+    @Autowired
+    private UserArticleLikeRepository userArticleLikeRepository;
 
     /**
      * 创建新文章
@@ -340,24 +356,48 @@ public class ArticleService {
     /**
      * 点赞文章
      * @param articleId 文章ID
-     * @throws RuntimeException 当文章不存在时抛出异常
+     * @param userId 用户ID
+     * @throws RuntimeException 当文章不存在或已点赞时抛出异常
      */
-    public void likeArticle(Long articleId) {
+    public void likeArticle(Long articleId, Long userId) {
         if (!articleRepository.existsById(articleId)) {
             throw new RuntimeException("文章不存在");
         }
+        
+        // 检查是否已经点赞
+        if (userArticleLikeRepository.existsByUserIdAndArticleId(userId, articleId)) {
+            throw new RuntimeException("您已经点赞过这篇文章");
+        }
+        
+        // 创建点赞记录
+        UserArticleLike like = new UserArticleLike(userId, articleId);
+        userArticleLikeRepository.save(like);
+        
+        // 增加文章点赞数
         articleRepository.incrementLikes(articleId);
     }
 
     /**
      * 取消点赞文章
      * @param articleId 文章ID
-     * @throws RuntimeException 当文章不存在时抛出异常
+     * @param userId 用户ID
+     * @throws RuntimeException 当文章不存在或未点赞时抛出异常
      */
-    public void unlikeArticle(Long articleId) {
+    public void unlikeArticle(Long articleId, Long userId) {
         if (!articleRepository.existsById(articleId)) {
             throw new RuntimeException("文章不存在");
         }
+        
+        // 检查是否已点赞
+        Optional<UserArticleLike> likeOpt = userArticleLikeRepository.findByUserIdAndArticleId(userId, articleId);
+        if (likeOpt.isEmpty()) {
+            throw new RuntimeException("您还没有点赞这篇文章");
+        }
+        
+        // 删除点赞记录
+        userArticleLikeRepository.delete(likeOpt.get());
+        
+        // 减少文章点赞数
         articleRepository.decrementLikes(articleId);
     }
 
@@ -500,5 +540,142 @@ public class ArticleService {
             System.err.println("获取贡献者失败: " + e.getMessage());
             return Collections.emptyList();
         }
+    }
+    
+    // ========== 收藏相关方法 ==========
+    
+    /**
+     * 收藏文章
+     * @param articleId 文章ID
+     * @param userId 用户ID
+     * @throws RuntimeException 当文章不存在或已收藏时抛出异常
+     */
+    public void favoriteArticle(Long articleId, Long userId) {
+        if (!articleRepository.existsById(articleId)) {
+            throw new RuntimeException("文章不存在");
+        }
+        
+        // 检查是否已经收藏
+        if (userArticleFavoriteRepository.existsByUserIdAndArticleId(userId, articleId)) {
+            throw new RuntimeException("您已经收藏过这篇文章");
+        }
+        
+        // 创建收藏记录
+        UserArticleFavorite favorite = new UserArticleFavorite(userId, articleId);
+        userArticleFavoriteRepository.save(favorite);
+    }
+
+    /**
+     * 取消收藏文章
+     * @param articleId 文章ID
+     * @param userId 用户ID
+     * @throws RuntimeException 当文章不存在或未收藏时抛出异常
+     */
+    public void unfavoriteArticle(Long articleId, Long userId) {
+        if (!articleRepository.existsById(articleId)) {
+            throw new RuntimeException("文章不存在");
+        }
+        
+        // 检查是否已收藏
+        Optional<UserArticleFavorite> favoriteOpt = userArticleFavoriteRepository.findByUserIdAndArticleId(userId, articleId);
+        if (favoriteOpt.isEmpty()) {
+            throw new RuntimeException("您还没有收藏这篇文章");
+        }
+        
+        // 删除收藏记录
+        userArticleFavoriteRepository.delete(favoriteOpt.get());
+    }
+    
+    /**
+     * 检查用户是否已点赞文章
+     * @param articleId 文章ID
+     * @param userId 用户ID
+     * @return 是否已点赞
+     */
+    public boolean isArticleLikedByUser(Long articleId, Long userId) {
+        return userArticleLikeRepository.existsByUserIdAndArticleId(userId, articleId);
+    }
+    
+    /**
+     * 检查用户是否已收藏文章
+     * @param articleId 文章ID
+     * @param userId 用户ID
+     * @return 是否已收藏
+     */
+    public boolean isArticleFavoritedByUser(Long articleId, Long userId) {
+        return userArticleFavoriteRepository.existsByUserIdAndArticleId(userId, articleId);
+    }
+    
+    /**
+     * 获取用户收藏的文章
+     * @param userId 用户ID
+     * @param pageable 分页参数
+     * @return 收藏的文章列表
+     */
+    public Page<ArticleDto> getFavoriteArticlesByUser(Long userId, Pageable pageable) {
+        Page<Long> articleIds = userArticleFavoriteRepository.findArticleIdsByUserId(userId, pageable);
+        
+        return articleIds.map(articleId -> {
+            Optional<Article> articleOpt = articleRepository.findById(articleId);
+            if (articleOpt.isPresent()) {
+                return convertToDto(articleOpt.get());
+            }
+            return null;
+        }).map(dto -> dto); // 过滤掉null值
+    }
+    
+    /**
+     * 获取用户点赞的文章
+     * @param userId 用户ID
+     * @param pageable 分页参数
+     * @return 点赞的文章列表
+     */
+    public Page<ArticleDto> getLikedArticlesByUser(Long userId, Pageable pageable) {
+        Page<Long> articleIds = userArticleLikeRepository.findArticleIdsByUserId(userId, pageable);
+        
+        return articleIds.map(articleId -> {
+            Optional<Article> articleOpt = articleRepository.findById(articleId);
+            if (articleOpt.isPresent()) {
+                return convertToDto(articleOpt.get());
+            }
+            return null;
+        }).map(dto -> dto); // 过滤掉null值
+    }
+    
+    /**
+     * 根据作者和状态统计文章数量
+     * @param author 作者用户名
+     * @param status 文章状态
+     * @return 文章数量
+     */
+    public long countArticlesByAuthor(String author, String status) {
+        if ("draft".equals(status)) {
+            // 草稿文章需要从草稿服务获取
+            // 这里先返回0，后续可以集成草稿服务
+            return 0;
+        } else {
+            return articleRepository.countByAuthor(author);
+        }
+    }
+    
+    /**
+     * 根据作者和状态获取文章
+     * @param author 作者用户名
+     * @param status 文章状态
+     * @param pageable 分页参数
+     * @return 文章列表
+     */
+    public Page<ArticleDto> getArticlesByAuthorAndStatus(String author, String status, Pageable pageable) {
+        Page<Article> articles;
+        
+        if ("draft".equals(status)) {
+            // 草稿文章需要从草稿服务获取
+            // 这里返回空页面，后续可以集成草稿服务
+            articles = Page.empty(pageable);
+        } else {
+            articles = articleRepository.findByAuthor(author, pageable);
+        }
+        
+        return articles.map(this::convertToDto);
     }
 }

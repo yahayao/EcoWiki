@@ -696,6 +696,86 @@ class ArticleApi {
   }
 
   /**
+   * 收藏文章
+   * 
+   * 为指定文章添加收藏，用户可以在个人中心查看收藏的文章列表。
+   * 需要用户登录才能执行该操作。
+   * 
+   * @param {number} id - 文章ID
+   * @returns {Promise<void>} 收藏操作无返回数据
+   * @throws {Error} 当收藏失败时抛出错误信息
+   * 
+   * @example
+   * ```typescript
+   * await articleApi.favoriteArticle(123);
+   * ```
+   */
+  async favoriteArticle(id: number): Promise<void> {
+    const response = await this.api.post<ApiResponse<void>>(`/articles/${id}/favorite`)
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message)
+    }
+  }
+
+  /**
+   * 取消收藏文章
+   * 
+   * 取消对指定文章的收藏，从用户的收藏列表中移除。
+   * 需要用户登录且之前已收藏才能执行该操作。
+   * 
+   * @param {number} id - 文章ID
+   * @returns {Promise<void>} 取消收藏操作无返回数据
+   * @throws {Error} 当取消收藏失败时抛出错误信息
+   * 
+   * @example
+   * ```typescript
+   * await articleApi.unfavoriteArticle(123);
+   * ```
+   */
+  async unfavoriteArticle(id: number): Promise<void> {
+    const response = await this.api.delete<ApiResponse<void>>(`/articles/${id}/favorite`)
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message)
+    }
+  }
+
+  /**
+   * 检查文章点赞状态
+   * 
+   * 检查当前用户是否已对指定文章点赞。
+   * 需要用户登录才能获取准确状态。
+   * 
+   * @param {number} id - 文章ID
+   * @returns {Promise<boolean>} 是否已点赞
+   * @throws {Error} 当检查失败时抛出错误信息
+   */
+  async checkLikeStatus(id: number): Promise<boolean> {
+    const response = await this.api.get<ApiResponse<{ liked: boolean }>>(`/articles/${id}/like-status`)
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message)
+    }
+    return response.data.data.liked
+  }
+
+  /**
+   * 检查文章收藏状态
+   * 
+   * 检查当前用户是否已收藏指定文章。
+   * 需要用户登录才能获取准确状态。
+   * 
+   * @param {number} id - 文章ID
+   * @returns {Promise<boolean>} 是否已收藏
+   * @throws {Error} 当检查失败时抛出错误信息
+   */
+  async checkFavoriteStatus(id: number): Promise<boolean> {
+    const response = await this.api.get<ApiResponse<{ favorited: boolean }>>(`/articles/${id}/favorite-status`)
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message)
+    }
+    return response.data.data.favorited
+  }
+
+  /**
    * 获取文章统计信息
    * 
    * 获取整个系统的文章统计数据，包括总文章数、总浏览量、总点赞数等。
@@ -712,6 +792,30 @@ class ArticleApi {
    */
   async getStatistics(): Promise<ArticleStatistics> {
     const response = await this.api.get<ApiResponse<ArticleStatistics>>('/articles/statistics')
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message)
+    }
+    return response.data.data
+  }
+
+  /**
+   * 发布文章
+   * 
+   * 将草稿状态的文章发布为正式文章。
+   * 发布后文章将对所有用户可见。
+   * 
+   * @param {number} id - 文章ID
+   * @returns {Promise<Article>} 发布后的文章信息
+   * @throws {Error} 当发布失败时抛出错误信息
+   * 
+   * @example
+   * ```typescript
+   * const publishedArticle = await articleApi.publishArticle(123);
+   * console.log(`文章 "${publishedArticle.title}" 已发布`);
+   * ```
+   */
+  async publishArticle(id: number): Promise<Article> {
+    const response = await this.api.put<ApiResponse<Article>>(`/articles/${id}/publish`)
     if (response.data.code !== 200) {
       throw new Error(response.data.message)
     }

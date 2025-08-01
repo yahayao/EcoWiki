@@ -72,7 +72,9 @@
       <ArticleContent 
         v-if="article" 
         :article="article" 
+        :is-favorited="isFavorited"
         class="article-section"
+        @bookmark="onBookmarkChange"
       />
       
       <!-- 加载状态指示器 -->
@@ -114,6 +116,7 @@
       v-if="article"
       :article-id="article.articleId"
       :article-title="article.title"
+      :is-favorited="isFavorited"
       @view="handleView"
       @edit="handleEdit"
       @history="handleHistory"
@@ -159,6 +162,8 @@ const article = ref<Article | null>(null)
 const loading = ref(true)
 // 错误状态
 const error = ref<string | null>(null)
+// 收藏状态
+const isFavorited = ref(false)
 
 /**
  * 加载文章数据
@@ -199,6 +204,9 @@ const loadArticle = async () => {
       // 将贡献者信息附加到文章对象上，供ArticleContent组件使用
       article.value.contributors = contributorsData.status === 'fulfilled' ? contributorsData.value : []
       article.value.contributorsError = contributorsData.status === 'rejected' ? contributorsData.reason?.message || '加载贡献者失败' : null
+      
+      // 加载完文章后检查收藏状态
+      await checkFavoriteStatus()
     } else {
       throw articleData.reason
     }
@@ -245,8 +253,50 @@ const handleHistory = () => {
   router.push({ name: 'ArticleHistory', params: { title: route.params.title } })
 }
 
-const handleFavorite = () => {
-  // 收藏文章
+/**
+ * 检查文章收藏状态
+ */
+const checkFavoriteStatus = async () => {
+  if (!article.value) return
+  
+  try {
+    const status = await articleApi.checkFavoriteStatus(article.value.articleId)
+    isFavorited.value = status
+  } catch (error) {
+    console.error('检查收藏状态失败:', error)
+    isFavorited.value = false
+  }
+}
+
+/**
+ * 处理收藏操作
+ */
+const handleFavorite = async (shouldFavorite: boolean) => {
+  if (!article.value) return
+  
+  try {
+    if (shouldFavorite) {
+      await articleApi.favoriteArticle(article.value.articleId)
+      isFavorited.value = true
+    } else {
+      await articleApi.unfavoriteArticle(article.value.articleId)
+      isFavorited.value = false
+    }
+  } catch (error: any) {
+    console.error('收藏操作失败:', error)
+    // 如果是未登录错误，可以显示登录提示
+    if (error.message?.includes('请先登录') || error.message?.includes('401')) {
+      emit('show-login')
+    }
+  }
+}
+
+/**
+ * 处理来自 ArticleContent 组件的收藏状态变化
+ */
+const onBookmarkChange = async () => {
+  // 重新检查收藏状态以保持同步
+  await checkFavoriteStatus()
 }
 
 const handleMore = () => {

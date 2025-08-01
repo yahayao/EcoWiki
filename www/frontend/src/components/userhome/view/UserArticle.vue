@@ -339,16 +339,6 @@ const loadArticleStats = async () => {
   } catch (error: any) {
     console.error('加载文章统计失败:', error)
     toast.error('加载文章统计失败', '错误')
-    // 使用模拟数据作为后备方案
-    articleStats.value = {
-      totalArticles: 5,
-      publishedArticles: 2,
-      draftArticles: 1,
-      favoriteArticles: 2,
-      likedArticles: 3,
-      totalViews: 2056,
-      totalLikes: 101
-    }
   }
 }
 
@@ -364,25 +354,8 @@ const loadFavoriteArticles = async () => {
     }))
   } catch (error: any) {
     console.error('加载收藏文章失败:', error)
-    // 使用模拟数据作为后备方案
-    favoriteArticles.value = [
-      {
-        id: 1,
-        title: '全球变暖的影响与对策',
-        excerpt: '气候变化是当今世界面临的最严峻挑战之一，需要全球共同努力应对...',
-        favoriteDate: '2025-07-10',
-        views: 1200,
-        author: '环保专家'
-      },
-      {
-        id: 2,
-        title: '可再生能源技术发展',
-        excerpt: '太阳能、风能等可再生能源技术的快速发展为解决能源危机提供了新的希望...',
-        favoriteDate: '2025-07-05',
-        views: 856,
-        author: '能源研究员'
-      }
-    ]
+    toast.error('加载收藏文章失败', '错误')
+    favoriteArticles.value = []
   } finally {
     loading.value = false
   }
@@ -400,17 +373,8 @@ const loadCreatedArticles = async () => {
     }))
   } catch (error: any) {
     console.error('加载创建文章失败:', error)
-    // 使用模拟数据作为后备方案
-    createdArticles.value = [
-      {
-        id: 3,
-        title: '垃圾分类指南',
-        excerpt: '正确的垃圾分类是环保的重要一步，本文详细介绍了各类垃圾的分类方法...',
-        publishDate: '2025-06-20',
-        views: 1200,
-        likes: 45
-      }
-    ]
+    toast.error('加载创建文章失败', '错误')
+    createdArticles.value = []
   } finally {
     loading.value = false
   }
@@ -428,15 +392,8 @@ const loadDraftArticles = async () => {
     }))
   } catch (error: any) {
     console.error('加载草稿文章失败:', error)
-    // 使用模拟数据作为后备方案
-    draftArticles.value = [
-      {
-        id: 4,
-        title: '环保生活小贴士',
-        excerpt: '在日常生活中，我们可以通过许多简单的方式来保护环境...',
-        lastSaved: '2025-07-15'
-      }
-    ]
+    toast.error('加载草稿文章失败', '错误')
+    draftArticles.value = []
   } finally {
     loading.value = false
   }
@@ -446,46 +403,15 @@ const loadDraftArticles = async () => {
 const loadLikedArticles = async () => {
   try {
     loading.value = true
-    // 这里需要实现获取用户点赞文章的API
-    // const result = await userApi.getLikedArticles(0, 20)
-    // likedArticles.value = result.content.map((article: any) => ({
-    //   ...article,
-    //   likedDate: formatDate(article.likedAt),
-    //   excerpt: article.content ? article.content.substring(0, 100) + '...' : '暂无摘要'
-    // }))
-    
-    // 使用模拟数据作为后备方案
-    likedArticles.value = [
-      {
-        id: 5,
-        title: '海洋保护的重要性',
-        excerpt: '海洋是地球生态系统的重要组成部分，保护海洋环境刻不容缓...',
-        likedDate: '2025-07-12',
-        views: 980,
-        author: '海洋学家',
-        likes: 156
-      },
-      {
-        id: 6,
-        title: '绿色出行倡议',
-        excerpt: '选择公共交通、骑自行车或步行，让我们的出行更加环保...',
-        likedDate: '2025-07-08',
-        views: 1340,
-        author: '交通规划师',
-        likes: 203
-      },
-      {
-        id: 7,
-        title: '节能减排从我做起',
-        excerpt: '节约用电、用水，减少不必要的消费，每个人都可以为环保贡献力量...',
-        likedDate: '2025-07-03',
-        views: 756,
-        author: '环保志愿者',
-        likes: 89
-      }
-    ]
+    const result = await userApi.getLikedArticles(0, 20)
+    likedArticles.value = result.content.map((article: any) => ({
+      ...article,
+      likedDate: formatDate(article.likedAt || article.createdAt),
+      excerpt: article.content ? article.content.substring(0, 100) + '...' : '暂无摘要'
+    }))
   } catch (error: any) {
     console.error('加载点赞文章失败:', error)
+    toast.error('加载点赞文章失败', '错误')
     // 使用空数组作为后备方案
     likedArticles.value = []
   } finally {
@@ -508,10 +434,12 @@ const editArticle = (articleId: number) => {
 
 const unfavoriteArticle = async (articleId: number) => {
   try {
-    // 这里需要实现取消收藏的API
+    await articleApi.unfavoriteArticle(articleId)
     toast.success('已取消收藏', '操作成功')
     // 重新加载收藏文章列表
     await loadFavoriteArticles()
+    // 更新统计数据
+    await loadArticleStats()
   } catch (error: any) {
     toast.error('取消收藏失败', '错误')
   }
@@ -519,10 +447,12 @@ const unfavoriteArticle = async (articleId: number) => {
 
 const unlikeArticle = async (articleId: number) => {
   try {
-    // 这里需要实现取消点赞的API
+    await articleApi.unlikeArticle(articleId)
     toast.success('已取消点赞', '操作成功')
     // 重新加载点赞文章列表
     await loadLikedArticles()
+    // 更新统计数据
+    await loadArticleStats()
   } catch (error: any) {
     toast.error('取消点赞失败', '错误')
   }
@@ -560,11 +490,12 @@ const deleteDraft = async (draftId: number) => {
 
 const publishDraft = async (draftId: number) => {
   try {
-    // 这里需要实现发布草稿的API
+    await articleApi.publishArticle(draftId)
     toast.success('草稿已发布', '操作成功')
     // 重新加载数据
     await loadDraftArticles()
     await loadCreatedArticles()
+    await loadArticleStats()
   } catch (error: any) {
     toast.error('发布草稿失败', '错误')
   }

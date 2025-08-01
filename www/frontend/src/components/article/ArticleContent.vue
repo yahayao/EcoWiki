@@ -189,7 +189,7 @@
         <span class="icon">🔗</span>
         <span>分享</span>
       </button>
-      <button class="action-btn bookmark-btn" :class="{ active: isBookmarked }" @click="toggleBookmark">
+      <button class="action-btn bookmark-btn" :class="{ active: props.isFavorited }" @click="toggleBookmark">
         <span class="icon">📚</span>
         <span>收藏</span>
       </button>
@@ -211,6 +211,7 @@ import UserAvatar from '@/components/common/UserAvatar.vue'
 
 const props = defineProps<{
   article: Article
+  isFavorited?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -223,7 +224,6 @@ const emit = defineEmits<{
 const router = useRouter()
 
 const isLiked = ref(false)
-const isBookmarked = ref(false)
 const currentLikes = ref(props.article.likes || 0)
 const articleBody = ref<HTMLElement>()
 const tableOfContents = ref<{ id: string; level: number; title: string }[]>([])
@@ -417,9 +417,29 @@ const toggleLike = async () => {
     console.error('点赞操作失败:', error)
   }
 }
-const toggleBookmark = () => {
-  isBookmarked.value = !isBookmarked.value
-  emit('bookmark', props.article.articleId)
+const toggleBookmark = async () => {
+  try {
+    if (props.isFavorited) {
+      await articleApi.unfavoriteArticle(props.article.articleId)
+    } else {
+      await articleApi.favoriteArticle(props.article.articleId)
+    }
+    emit('bookmark', props.article.articleId)
+  } catch (error) {
+    console.error('收藏操作失败:', error)
+  }
+}
+
+// 检查用户的点赞状态
+const checkInteractionStatus = async () => {
+  try {
+    // 检查点赞状态
+    const likeStatus = await articleApi.checkLikeStatus(props.article.articleId)
+    isLiked.value = likeStatus
+  } catch (error) {
+    console.error('检查交互状态失败:', error)
+    // 如果检查失败，保持默认状态
+  }
 }
 
 const shareArticle = () => {
@@ -499,15 +519,19 @@ const generateTableOfContents = () => {
 onMounted(() => {
   generateTableOfContents()
   loadContributors() // 加载贡献者数据（会优先使用预加载数据）
+  checkInteractionStatus() // 检查点赞状态
 })
 
-// 监听文章变化，重新加载贡献者
+// 监听文章变化，重新加载贡献者和交互状态
 watch(() => props.article.articleId, (newId, oldId) => {
   if (newId !== oldId && newId) {
     console.log('文章ID变化，重新加载贡献者:', oldId, '->', newId)
     contributors.value = [] // 先清空避免显示错误数据
     contributorsError.value = null
     loadContributors()
+    checkInteractionStatus() // 重新检查点赞状态
+    // 重置点赞数为文章本身的数据
+    currentLikes.value = props.article.likes || 0
   }
 }, { immediate: false })
 

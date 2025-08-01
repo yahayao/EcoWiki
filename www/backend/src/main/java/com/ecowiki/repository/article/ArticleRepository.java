@@ -205,4 +205,19 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
      */
     @Query("SELECT a.comments FROM Article a WHERE a.articleId = :articleId")
     Integer getCommentsCount(@Param("articleId") Long articleId);
+    
+    /**
+     * 根据作者统计文章数量
+     * @param author 作者用户名
+     * @return 文章数量
+     */
+    long countByAuthor(String author);
+    
+    /**
+     * 根据作者查找文章
+     * @param author 作者用户名
+     * @param pageable 分页参数
+     * @return 文章分页结果
+     */
+    Page<Article> findByAuthor(String author, Pageable pageable);
 }

@@ -477,15 +477,22 @@ public class ArticleController {
     /**
      * 点赞文章
      * @param id 文章ID
+     * @param request HTTP请求
      * @return 点赞结果
      */
     @PostMapping("/{id}/like")
-    public ResponseEntity<ApiResponse<Void>> likeArticle(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> likeArticle(@PathVariable Long id, HttpServletRequest request) {
         try {
-            articleService.likeArticle(id);
+            User currentUser = getCurrentUser(request);
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("请先登录"));
+            }
+            
+            articleService.likeArticle(id, currentUser.getUserId());
             return ResponseEntity.ok(ApiResponse.success(null, "点赞成功"));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -496,15 +503,22 @@ public class ArticleController {
     /**
      * 取消点赞
      * @param id 文章ID
+     * @param request HTTP请求
      * @return 取消点赞结果
      */
     @DeleteMapping("/{id}/like")
-    public ResponseEntity<ApiResponse<Void>> unlikeArticle(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> unlikeArticle(@PathVariable Long id, HttpServletRequest request) {
         try {
-            articleService.unlikeArticle(id);
+            User currentUser = getCurrentUser(request);
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("请先登录"));
+            }
+            
+            articleService.unlikeArticle(id, currentUser.getUserId());
             return ResponseEntity.ok(ApiResponse.success(null, "取消点赞成功"));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -586,6 +600,112 @@ public class ArticleController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("获取贡献者失败: " + e.getMessage()));
+        }
+    }
+    
+    // ========== 收藏相关API ==========
+    
+    /**
+     * 收藏文章
+     * @param id 文章ID
+     * @param request HTTP请求
+     * @return 收藏结果
+     */
+    @PostMapping("/{id}/favorite")
+    public ResponseEntity<ApiResponse<Void>> favoriteArticle(@PathVariable Long id, HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("请先登录"));
+            }
+            
+            articleService.favoriteArticle(id, currentUser.getUserId());
+            return ResponseEntity.ok(ApiResponse.success(null, "收藏成功"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("收藏失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 取消收藏文章
+     * @param id 文章ID
+     * @param request HTTP请求
+     * @return 取消收藏结果
+     */
+    @DeleteMapping("/{id}/favorite")
+    public ResponseEntity<ApiResponse<Void>> unfavoriteArticle(@PathVariable Long id, HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("请先登录"));
+            }
+            
+            articleService.unfavoriteArticle(id, currentUser.getUserId());
+            return ResponseEntity.ok(ApiResponse.success(null, "取消收藏成功"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("取消收藏失败: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * 检查文章点赞状态
+     * @param id 文章ID
+     * @param request HTTP请求
+     * @return 点赞状态
+     */
+    @GetMapping("/{id}/like-status")
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkLikeStatus(@PathVariable Long id, HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            boolean liked = false;
+            
+            if (currentUser != null) {
+                liked = articleService.isArticleLikedByUser(id, currentUser.getUserId());
+            }
+            
+            Map<String, Boolean> result = new HashMap<>();
+            result.put("liked", liked);
+            
+            return ResponseEntity.ok(ApiResponse.success(result, "获取点赞状态成功"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("获取点赞状态失败: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * 检查文章收藏状态
+     * @param id 文章ID
+     * @param request HTTP请求
+     * @return 收藏状态
+     */
+    @GetMapping("/{id}/favorite-status")
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkFavoriteStatus(@PathVariable Long id, HttpServletRequest request) {
+        try {
+            User currentUser = getCurrentUser(request);
+            boolean favorited = false;
+            
+            if (currentUser != null) {
+                favorited = articleService.isArticleFavoritedByUser(id, currentUser.getUserId());
+            }
+            
+            Map<String, Boolean> result = new HashMap<>();
+            result.put("favorited", favorited);
+            
+            return ResponseEntity.ok(ApiResponse.success(result, "获取收藏状态成功"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("获取收藏状态失败: " + e.getMessage()));
         }
     }
 }

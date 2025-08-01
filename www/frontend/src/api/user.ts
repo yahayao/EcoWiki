@@ -1025,7 +1025,7 @@ export const userApi = {
     totalLikes: number
   }> => {
     try {
-      const response = await api.get('/auth/article-stats')
+      const response = await apiClient.get('/api/user/article-stats')
 
       if (response.data.code === 200 && response.data.data) {
         return response.data.data
@@ -1052,7 +1052,7 @@ export const userApi = {
     number: number
   }> => {
     try {
-      const response = await api.get('/auth/favorite-articles', {
+      const response = await apiClient.get('/api/user/favorite-articles', {
         params: { page, size }
       })
 
@@ -1087,7 +1087,7 @@ export const userApi = {
         params.status = status
       }
 
-      const response = await api.get('/auth/my-articles', {
+      const response = await apiClient.get('/api/user/articles', {
         params
       })
 
@@ -1099,6 +1099,35 @@ export const userApi = {
     } catch (error: any) {
       console.error('获取用户文章失败:', error)
       throw new Error(error.response?.data?.message || error.message || '获取用户文章失败')
+    }
+  },
+
+  /**
+   * 获取用户点赞文章列表
+   * @param page 页码（从0开始）
+   * @param size 每页大小
+   * @returns 点赞文章列表
+   */
+  getLikedArticles: async (page: number = 0, size: number = 10): Promise<{
+    content: any[]
+    totalElements: number
+    totalPages: number
+    size: number
+    number: number
+  }> => {
+    try {
+      const response = await apiClient.get('/api/user/liked-articles', {
+        params: { page, size }
+      })
+
+      if (response.data.code === 200 && response.data.data) {
+        return response.data.data
+      }
+
+      throw new Error(response.data.message || '获取点赞文章失败')
+    } catch (error: any) {
+      console.error('获取点赞文章失败:', error)
+      throw new Error(error.response?.data?.message || error.message || '获取点赞文章失败')
     }
   },
 
