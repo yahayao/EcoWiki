@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { createCacheInterceptor } from '@/utils/api-cache'
 
 /**
  * API基础配置模块
@@ -23,10 +24,14 @@ import axios from 'axios'
  */
 const api = axios.create({
   baseURL: 'http://localhost:8080/api', // 后端API基础地址
-  timeout: 10000, // 请求超时时间：10秒
+  timeout: 15000, // 增加请求超时时间：15秒
   headers: {
     'Content-Type': 'application/json',
   },
+  // 性能优化配置
+  maxRedirects: 3, // 最大重定向次数
+  maxContentLength: 50000000, // 50MB 最大内容长度
+  maxBodyLength: 50000000,   // 50MB 最大请求体长度
 })
 
 /**
@@ -46,13 +51,29 @@ api.interceptors.request.use(
   }
 )
 
+// 添加缓存拦截器
+const cacheInterceptor = createCacheInterceptor({
+  ttl: 5 * 60 * 1000, // 5分钟缓存
+  storage: 'memory',
+  shouldCache: (response) => {
+    // 只缓存 GET 请求且状态码为 200-299 的响应
+    return response.status >= 200 && 
+           response.status < 300 && 
+           response.config.method?.toUpperCase() === 'GET'
+  },
+  invalidatePatterns: ['/api/articles', '/api/users', '/api/drafts']
+})
+
+api.interceptors.request.use(cacheInterceptor.request)
+
 /**
  * 响应拦截器
  * 统一处理响应错误，特别是认证失败的情况
  */
 api.interceptors.response.use(
   (response) => {
-    return response
+    // 应用缓存响应拦截器
+    return cacheInterceptor.response(response)
   },
   (error) => {
     console.error('API Error:', error)

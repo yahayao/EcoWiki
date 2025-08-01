@@ -33,31 +33,32 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 
-// 导入页面组件
+// 立即加载的核心组件（首屏必需）
 import DynamicHome from '../views/DynamicHome.vue'
-import ArticleDetail from '../views/ArticleDetail.vue'
-import ArticleEdit from '../views/ArticleEdit.vue'
-import ArticleHistory from '../views/ArticleHistory.vue'
-import CreatePage from '../views/CreatePage.vue'
-// import SearchResults from '../views/SearchResults.vue' // 已废弃：改用 HeaderSearch 下拉弹窗
 
-// 导入用户个人资料组件
-import UserProfile from '../components/userhome/UserProfile.vue'
-import UserPage from '../components/userhome/view/UserPage.vue'
-import UserInformation from '../components/userhome/view/UserInformation.vue'
-import UserContribute from '../components/userhome/view/UserContribute.vue'
-import UserSecure from '../components/userhome/view/UserSecure.vue'
-import UserArticle from '../components/userhome/view/UserArticle.vue'
+// 懒加载的页面组件（优化首屏加载速度）
+const ArticleDetail = () => import('../views/ArticleDetail.vue')
+const ArticleEdit = () => import('../views/ArticleEdit.vue')
+const ArticleHistory = () => import('../views/ArticleHistory.vue')
+const CreatePage = () => import('../views/CreatePage.vue')
 
-// 导入管理后台组件
-import AdminLayout from '../components/admin/AdminLayout.vue'
-import SystemSettings from '../components/admin/views/SystemSettings.vue'
-import UserList from '../components/admin/views/UserList.vue'
-import PermissionManagement from '../components/admin/views/PermissionManagement.vue'
-import RolePermissionAssignment from '../components/admin/views/RolePermissionAssignment.vue'
-import ArticleManagement from '../components/admin/views/ArticleManagement.vue'
-import ReviewManagement from '../components/admin/views/ReviewManagement.vue'
-import DraftReviewDashboard from '../components/admin/views/DraftReviewDashboard.vue'
+// 懒加载用户个人资料组件
+const UserProfile = () => import('../components/userhome/UserProfile.vue')
+const UserPage = () => import('../components/userhome/view/UserPage.vue')
+const UserInformation = () => import('../components/userhome/view/UserInformation.vue')
+const UserContribute = () => import('../components/userhome/view/UserContribute.vue')
+const UserSecure = () => import('../components/userhome/view/UserSecure.vue')
+const UserArticle = () => import('../components/userhome/view/UserArticle.vue')
+
+// 懒加载管理后台组件（按需加载，减少初始包大小）
+const AdminLayout = () => import('../components/admin/AdminLayout.vue')
+const SystemSettings = () => import('../components/admin/views/SystemSettings.vue')
+const UserList = () => import('../components/admin/views/UserList.vue')
+const PermissionManagement = () => import('../components/admin/views/PermissionManagement.vue')
+const RolePermissionAssignment = () => import('../components/admin/views/RolePermissionAssignment.vue')
+const ArticleManagement = () => import('../components/admin/views/ArticleManagement.vue')
+const ReviewManagement = () => import('../components/admin/views/ReviewManagement.vue')
+const DraftReviewDashboard = () => import('../components/admin/views/DraftReviewDashboard.vue')
 
 //import ForgotPassword from '../components/auth/Forgotpanel.vue'
 /**

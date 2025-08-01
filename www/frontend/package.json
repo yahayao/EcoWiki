@@ -4,12 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "run-p type-check \"build-only {@}\" --",
-    "preview": "vite preview",
+    "build:prod": "vite build --mode production",
+    "build:analyze": "vite build --mode production && npx vite-bundle-analyzer dist",
+    "preview": "vite preview --host",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "performance": "lighthouse http://localhost:5173 --output html --output-path ./performance-report.html"
   },
   "dependencies": {
     "@jamescoyle/vue-icon": "^0.1.2",

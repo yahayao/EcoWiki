@@ -58,6 +58,26 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         
+        <!-- Spring Boot Cache for performance optimization -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        
+        <!-- Hibernate JCache integration -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-jcache</artifactId>
+            <version>6.4.0.Final</version>
+        </dependency>
+        
+        <!-- EhCache for caching -->
+        <dependency>
+            <groupId>org.ehcache</groupId>
+            <artifactId>ehcache</artifactId>
+            <classifier>jakarta</classifier>
+        </dependency>
+        
         <!-- Jackson for JSON processing -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
