@@ -1,5 +1,7 @@
 import axios from 'axios'
 import { createCacheInterceptor } from '@/utils/api-cache'
+import { requestOptimizer } from '@/utils/request-optimizer'
+import { setupApiMonitoring } from '@/utils/api-monitor'
 
 /**
  * API基础配置模块
@@ -36,7 +38,7 @@ const api = axios.create({
 
 /**
  * 请求拦截器
- * 在每个请求发送前自动添加JWT认证头
+ * 在每个请求发送前自动添加JWT认证头和请求去重
  */
 api.interceptors.request.use(
   (config) => {
@@ -44,6 +46,13 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+    
+    // 添加请求时间戳以便去重分析
+    ;(config as any).metadata = {
+      startTime: Date.now(),
+      requestId: Math.random().toString(36).substr(2, 9)
+    }
+    
     return config
   },
   (error) => {
@@ -51,17 +60,42 @@ api.interceptors.request.use(
   }
 )
 
-// 添加缓存拦截器
+// 添加缓存拦截器 - 优化配置以减少API调用
 const cacheInterceptor = createCacheInterceptor({
-  ttl: 5 * 60 * 1000, // 5分钟缓存
+  ttl: 15 * 60 * 1000, // 增加到15分钟缓存
   storage: 'memory',
   shouldCache: (response) => {
+    const url = response.config.url || ''
+    const method = response.config.method?.toUpperCase()
+    
     // 只缓存 GET 请求且状态码为 200-299 的响应
-    return response.status >= 200 && 
-           response.status < 300 && 
-           response.config.method?.toUpperCase() === 'GET'
+    if (method !== 'GET' || response.status < 200 || response.status >= 300) {
+      return false
+    }
+    
+    // 特殊处理：不同类型的数据使用不同的缓存策略
+    if (url.includes('/articles/') && !url.includes('/comments')) {
+      return true // 文章内容缓存
+    }
+    if (url.includes('/categories') || url.includes('/tags')) {
+      return true // 分类和标签长期缓存
+    }
+    if (url.includes('/users/profile') || url.includes('/users/info')) {
+      return true // 用户信息缓存
+    }
+    
+    return response.status >= 200 && response.status < 300
   },
-  invalidatePatterns: ['/api/articles', '/api/users', '/api/drafts']
+  keyGenerator: (config) => {
+    // 自定义缓存键生成，忽略时间戳等动态参数
+    const { method = 'GET', url = '', params } = config
+    const filteredParams = params ? Object.keys(params)
+      .filter(key => !['_t', 'timestamp', 'cache', 'v'].includes(key))
+      .reduce((obj, key) => ({ ...obj, [key]: params[key] }), {}) : {}
+    
+    return `api_${method}_${url}_${JSON.stringify(filteredParams)}`
+  },
+  invalidatePatterns: ['/api/articles', '/api/users', '/api/drafts', '/api/comments']
 })
 
 api.interceptors.request.use(cacheInterceptor.request)
@@ -90,6 +124,9 @@ api.interceptors.response.use(
     return Promise.reject(error.response?.data || error)
   }
 )
+
+// 设置API监控
+setupApiMonitoring(api)
 
 export { api }
 

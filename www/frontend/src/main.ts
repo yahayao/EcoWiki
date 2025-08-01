@@ -35,6 +35,7 @@ import { createPinia } from 'pinia'
 
 // 导入 Service Worker 和缓存工具
 import { registerServiceWorker } from './utils/service-worker'
+import { dataPreloader, createDataPreloaderPlugin } from './utils/data-preloader'
 
 // 导入根组件和路由配置
 import App from './App.vue'
@@ -48,6 +49,9 @@ const app = createApp(App)
 const pinia = createPinia()
 
 app.use(CodeDiff)
+
+// 使用数据预加载插件
+app.use(createDataPreloaderPlugin())
 
 // 使用Pinia状态管理
 // Pinia是Vue3推荐的状态管理库，用于管理全局状态
