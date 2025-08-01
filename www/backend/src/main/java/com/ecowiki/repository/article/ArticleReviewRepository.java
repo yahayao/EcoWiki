@@ -26,7 +26,7 @@ import com.ecowiki.entity.article.ArticleReview;
 public interface ArticleReviewRepository extends JpaRepository<ArticleReview, Long> {
     
     /**
-     * 根据文章ID查找最新的审核记录
+     * 根据文章ID查找最新地审核记录
      */
     Optional<ArticleReview> findTopByArticleIdOrderBySubmitTimeDesc(Long articleId);
     

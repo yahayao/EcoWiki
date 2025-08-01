@@ -68,7 +68,7 @@ public class SecurityConfig {
                 .anyRequest().permitAll()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .headers(headers -> headers.disable());
+            .headers(AbstractHttpConfigurer::disable);
         
         return http.build();
     }

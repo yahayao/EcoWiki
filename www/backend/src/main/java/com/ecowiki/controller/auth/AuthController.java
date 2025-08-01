@@ -309,7 +309,7 @@ public class AuthController {
             // 根据用户名查找用户
             Optional<User> userOpt = userService.findByUsername(username);
             
-            if (!userOpt.isPresent()) {
+            if (userOpt.isEmpty()) {
                 return ResponseEntity.status(404)
                     .body(ApiResponse.error("用户不存在"));
             }

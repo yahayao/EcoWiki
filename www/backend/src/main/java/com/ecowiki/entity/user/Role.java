@@ -1,16 +1,16 @@
 package com.ecowiki.entity.user;
 
-/**
- * 角色实体类
- * <p>
- * 对应数据库中的role表，描述系统中的权限角色（如user、moderator、admin、superadmin等）。
- * 支持角色名称、描述、创建/更新时间等字段。
- * <p>
- * <b>设计说明：</b>
- * - 角色体系支持灵活扩展，便于权限分级和管理。
- * - 适用于用户权限分配、后台角色管理、权限校验等场景。
- *
- * @author EcoWiki
+/*
+  角色实体类
+  <p>
+  对应数据库中的role表，描述系统中的权限角色（如user、moderator、admin、superadmin等）。
+  支持角色名称、描述、创建/更新时间等字段。
+  <p>
+  <b>设计说明：</b>
+  - 角色体系支持灵活扩展，便于权限分级和管理。
+  - 适用于用户权限分配、后台角色管理、权限校验等场景。
+
+  @author EcoWiki
  * @version 1.0
  * @since 2024-04
  */

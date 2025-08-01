@@ -39,10 +39,9 @@ public class MessageService {
      * @param senderUserId 发送者用户ID
      * @param recipientUserId 接收者用户ID
      * @param content 消息内容
-     * @param content2 
      * @return 消息DTO
      */
-    public MessageDto sendMessage(Integer senderUserId, Integer recipientUserId, String content, String content2) {
+    public MessageDto sendMessage(Integer senderUserId, Integer recipientUserId, String content) {
         // 验证用户是否存在
         Optional<User> sender = userRepository.findByUserId(senderUserId.longValue());
         Optional<User> recipient = userRepository.findByUserId(recipientUserId.longValue());

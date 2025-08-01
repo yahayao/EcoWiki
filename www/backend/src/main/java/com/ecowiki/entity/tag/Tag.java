@@ -68,7 +68,7 @@ public class Tag {
      * 可选字段，用于详细描述标签的含义和用途
      */
     @Size(max = 255, message = "标签描述长度不能超过255个字符")
-    @Column(name = "description", length = 255)
+    @Column(name = "description")
     private String description;
     
     /**

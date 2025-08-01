@@ -201,11 +201,11 @@ public class AdminController {
             }
             
             // 防止用户修改自己的角色
-            if (currentUser.getUserId().equals(userId)) {
+            if (currentUser != null && currentUser.getUserId().equals(userId)) {
                 return ResponseEntity.status(403)
-                    .body(ApiResponse.error("不能修改自己的角色权限"));
+                        .body(ApiResponse.error("不能修改自己的角色权限"));
             }
-            
+
             // 防止修改超级管理员
             Optional<User> targetUserOpt = userService.findById(userId);
             if (targetUserOpt.isPresent()) {
@@ -756,11 +756,11 @@ public class AdminController {
             }
             
             // 防止删除自己
-            if (currentUser.getUserId().equals(userId)) {
+            if (currentUser != null && currentUser.getUserId().equals(userId)) {
                 return ResponseEntity.status(403)
-                    .body(ApiResponse.error("不能删除自己的账户"));
+                        .body(ApiResponse.error("不能删除自己的账户"));
             }
-            
+
             // 防止删除超级管理员
             Optional<User> targetUserOpt = userRepository.findByUserId(userId);
             if (targetUserOpt.isPresent()) {
@@ -891,8 +891,10 @@ public class AdminController {
             }
             
             // 设置文章的创建者为当前用户
-            request.setAuthor(currentUser.getUsername());
-            
+            if (currentUser != null) {
+                request.setAuthor(currentUser.getUsername());
+            }
+
             ArticleDto savedArticle = articleService.createArticle(request);
             return ResponseEntity.ok(ApiResponse.success(savedArticle, "文章创建成功"));
         } catch (Exception e) {
@@ -922,9 +924,6 @@ public class AdminController {
             
             ArticleDto updatedArticle = articleService.updateArticle(articleId, request);
             return ResponseEntity.ok(ApiResponse.success(updatedArticle, "文章更新成功"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.error("更新文章失败: " + e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("更新文章失败: " + e.getMessage()));

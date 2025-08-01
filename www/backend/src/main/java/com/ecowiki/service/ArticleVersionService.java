@@ -79,7 +79,7 @@ public class ArticleVersionService {
             
             ArticleVersion newVersion;
             
-            if (!latestVersion.isPresent() || !latestBaseVersion.isPresent()) {
+            if (latestVersion.isEmpty() || latestBaseVersion.isEmpty()) {
                 // 第一个版本，存储完整内容
                 newVersion = createFullVersion(articleId, nextVersionNumber, content, author, contentHash);
             } else {
@@ -112,7 +112,7 @@ public class ArticleVersionService {
      */
     public String getVersionContent(Long articleId, Integer versionNumber) {
         Optional<ArticleVersion> versionOpt = versionRepository.findByArticleIdAndVersionNumber(articleId, versionNumber);
-        if (!versionOpt.isPresent()) {
+        if (versionOpt.isEmpty()) {
             throw new RuntimeException("Version not found");
         }
         
@@ -129,7 +129,7 @@ public class ArticleVersionService {
      */
     public String getLatestVersionContent(Long articleId) {
         Optional<ArticleVersion> latestVersion = versionRepository.findLatestByArticleId(articleId);
-        if (!latestVersion.isPresent()) {
+        if (latestVersion.isEmpty()) {
             throw new RuntimeException("No versions found for article");
         }
         
@@ -506,7 +506,7 @@ public class ArticleVersionService {
             
             ArticleVersion newVersion;
             
-            if (!latestVersion.isPresent() || !latestBaseVersion.isPresent()) {
+            if (latestVersion.isEmpty() || latestBaseVersion.isEmpty()) {
                 // 第一个版本，存储完整内容
                 newVersion = createFullVersion(articleId, nextVersionNumber, content, author, contentHash);
             } else {

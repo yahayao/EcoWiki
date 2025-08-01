@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.ecowiki.entity.user.Role;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -189,7 +190,7 @@ public class ArticleReviewService {
                 return;
             }
             
-            // 选择最合适的审核员
+            // 选择最合适地审核员
             Long selectedReviewerId = selectBestReviewer(eligibleReviewers);
             
             // 创建自动分配记录
@@ -250,7 +251,7 @@ public class ArticleReviewService {
         review = articleReviewRepository.save(review);
         
         // 更新分配状态
-        updateAssignmentStatus(reviewId, reviewerId, ReviewerAssignment.AssignmentStatus.COMPLETED);
+        updateAssignmentStatus(reviewId, reviewerId);
         
         // 记录历史
         recordHistory(reviewId, reviewerId, 
@@ -467,7 +468,7 @@ public class ArticleReviewService {
         Set<Integer> roleIds = eligibleRoles.stream()
             .map(roleName -> roleRepository.findByRoleName(roleName))
             .filter(Objects::nonNull)
-            .map(role -> role.getRoleId())
+            .map(Role::getRoleId)
             .collect(Collectors.toSet());
         
         // 查找具有指定角色的用户
@@ -507,15 +508,14 @@ public class ArticleReviewService {
     /**
      * 更新分配状态
      */
-    private void updateAssignmentStatus(Long reviewId, Long reviewerId, 
-                                       ReviewerAssignment.AssignmentStatus status) {
+    private void updateAssignmentStatus(Long reviewId, Long reviewerId) {
         List<ReviewerAssignment> assignments = assignmentRepository
             .findByReviewIdAndStatus(reviewId, ReviewerAssignment.AssignmentStatus.ACTIVE);
         
         assignments.stream()
             .filter(assignment -> Objects.equals(assignment.getReviewerId(), reviewerId))
             .forEach(assignment -> {
-                assignment.setStatus(status);
+                assignment.setStatus(ReviewerAssignment.AssignmentStatus.COMPLETED);
                 assignmentRepository.save(assignment);
             });
     }
@@ -529,7 +529,7 @@ public class ArticleReviewService {
             String content = String.format("您有一个新的%s审核任务，文章ID: %d，请及时处理。",
                 review.getReviewType().getDescription(), review.getArticleId());
             
-            messageService.sendMessage(null, reviewerId.intValue(), title, content);
+            messageService.sendMessage(null, reviewerId.intValue(), title);
         } catch (Exception e) {
             logger.error("发送审核分配通知失败", e);
         }
@@ -546,7 +546,7 @@ public class ArticleReviewService {
                 approved ? "已通过" : "被拒绝",
                 review.getReviewReason() != null ? "原因: " + review.getReviewReason() : "");
             
-            messageService.sendMessage(null, review.getSubmitterId().intValue(), title, content);
+            messageService.sendMessage(null, review.getSubmitterId().intValue(), title);
         } catch (Exception e) {
             logger.error("发送审核结果通知失败", e);
         }
@@ -562,7 +562,7 @@ public class ArticleReviewService {
             String content = String.format("审核ID: %d 无法自动分配审核员，请手动处理。", review.getReviewId());
             
             for (User admin : adminUsers) {
-                messageService.sendMessage(null, admin.getUserId().intValue(), title, content);
+                messageService.sendMessage(null, admin.getUserId().intValue(), title);
             }
         } catch (Exception e) {
             logger.error("发送无审核员通知失败", e);
@@ -579,7 +579,7 @@ public class ArticleReviewService {
         Set<Integer> adminRoleIds = adminGroupNames.stream()
             .map(roleName -> roleRepository.findByRoleName(roleName))
             .filter(Objects::nonNull)
-            .map(role -> role.getRoleId())
+            .map(Role::getRoleId)
             .collect(Collectors.toSet());
         
         return userRepository.findByRoleIdsIn(adminRoleIds);

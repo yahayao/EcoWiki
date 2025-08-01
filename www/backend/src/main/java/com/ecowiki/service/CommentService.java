@@ -61,22 +61,14 @@ public class CommentService {
      */
     public Page<CommentDTO> getCommentsByArticleId(Long articleId, int page, int size, String sort, String currentUser) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Comment> commentPage;
+        Page<Comment> commentPage = switch (sort.toLowerCase()) {
+            case "hot" -> commentRepository.findHotCommentsByArticleId(articleId, pageable);
+            case "oldest" -> commentRepository.findOldestCommentsByArticleId(articleId, pageable);
+            default -> commentRepository.findNewestCommentsByArticleId(articleId, pageable);
+        };
         
         // 根据排序方式获取评论
-        switch (sort.toLowerCase()) {
-            case "hot":
-                commentPage = commentRepository.findHotCommentsByArticleId(articleId, pageable);
-                break;
-            case "oldest":
-                commentPage = commentRepository.findOldestCommentsByArticleId(articleId, pageable);
-                break;
-            case "newest":
-            default:
-                commentPage = commentRepository.findNewestCommentsByArticleId(articleId, pageable);
-                break;
-        }
-        
+
         return commentPage.map(comment -> convertToDTO(comment, currentUser));
     }
     
@@ -242,7 +234,7 @@ public class CommentService {
      */
     @Transactional
     public void deleteReply(Long replyId, String username) {
-        deleteComment(replyId, username); // 回复也是评论，使用相同的删除逻辑
+        deleteComment(replyId, username); // 回复也是评论，使用相同地删除逻辑
     }
     
     /**
@@ -343,46 +335,16 @@ public class CommentService {
         // 调用ArticleService更新文章表中的评论数
         articleService.updateCommentsCount(articleId, (int) commentCount);
     }
-    
+
     /**
-     * 点赞结果内部类
-     */
-    public static class LikeResult {
-        private final Boolean liked;
-        private final Integer likeCount;
-        
-        public LikeResult(Boolean liked, Integer likeCount) {
-            this.liked = liked;
-            this.likeCount = likeCount;
-        }
-        
-        public Boolean isLiked() {
-            return liked;
-        }
-        
-        public Integer getLikeCount() {
-            return likeCount;
-        }
+         * 点赞结果内部类
+         */
+        public record LikeResult(Boolean liked, Integer likeCount) {
     }
-    
+
     /**
-     * 评论统计内部类
-     */
-    public static class CommentStats {
-        private final long totalComments;
-        private final long topLevelComments;
-        
-        public CommentStats(long totalComments, long topLevelComments) {
-            this.totalComments = totalComments;
-            this.topLevelComments = topLevelComments;
-        }
-        
-        public long getTotalComments() {
-            return totalComments;
-        }
-        
-        public long getTopLevelComments() {
-            return topLevelComments;
-        }
+         * 评论统计内部类
+         */
+        public record CommentStats(long totalComments, long topLevelComments) {
     }
 }

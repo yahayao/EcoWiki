@@ -86,9 +86,9 @@ public class ArticleDraftController {
      * 检查用户是否为管理员
      */
     private boolean isUserAdmin(User user) {
-        if (user == null) return false;
+        if (user == null) return true;
         List<String> roles = userService.getUserRoleNames(user.getUserId().intValue());
-        return roles.contains("admin") || roles.contains("superadmin");
+        return !roles.contains("admin") && !roles.contains("superadmin");
     }
 
     /**
@@ -176,7 +176,7 @@ public class ArticleDraftController {
         }
         
         // 检查是否为管理员
-        if (!isUserAdmin(currentUser)) {
+        if (isUserAdmin(currentUser)) {
             return ResponseEntity.ok(ApiResponse.error(403, "只有管理员可以审核草稿"));
         }
         
@@ -211,7 +211,7 @@ public class ArticleDraftController {
         }
         
         // 检查是否为管理员
-        if (!isUserAdmin(currentUser)) {
+        if (isUserAdmin(currentUser)) {
             return ResponseEntity.ok(ApiResponse.error(403, "只有管理员可以查看待审核草稿"));
         }
         
@@ -273,7 +273,7 @@ public class ArticleDraftController {
         }
         
         // 检查是否为管理员
-        if (!isUserAdmin(currentUser)) {
+        if (isUserAdmin(currentUser)) {
             return ResponseEntity.ok(ApiResponse.error(403, "只有管理员可以按状态查看草稿"));
         }
         
@@ -314,8 +314,8 @@ public class ArticleDraftController {
             ArticleDraft draft = draftOpt.get();
             
             // 检查权限：只有草稿作者或管理员可以查看
-            if (!draft.getEditorUserId().equals(currentUser.getUserId()) && 
-                !isUserAdmin(currentUser)) {
+            if (!draft.getEditorUserId().equals(currentUser.getUserId()) &&
+                    isUserAdmin(currentUser)) {
                 return ResponseEntity.ok(ApiResponse.error(403, "无权限查看此草稿"));
             }
             
@@ -371,7 +371,7 @@ public class ArticleDraftController {
         }
         
         // 检查是否为管理员
-        if (!isUserAdmin(currentUser)) {
+        if (isUserAdmin(currentUser)) {
             return ResponseEntity.ok(ApiResponse.error(403, "只有管理员可以查看所有草稿"));
         }
         

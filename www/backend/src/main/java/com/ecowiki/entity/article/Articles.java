@@ -375,7 +375,6 @@ public class Articles {
      * 
      * @return 包含所有属性信息的字符串表示形式
      * @author EcoWiki开发团队
-     * @version 1.0.0
      * @since 2024-01-01
      */
     @Override

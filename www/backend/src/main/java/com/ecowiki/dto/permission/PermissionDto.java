@@ -1,5 +1,7 @@
 package com.ecowiki.dto.permission;
 
+import com.ecowiki.entity.user.Permission;
+
 import java.time.LocalDateTime;
 
 /**

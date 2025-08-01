@@ -1,5 +1,6 @@
 package com.ecowiki.entity.user;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -39,6 +40,7 @@ public class UserRoleId implements Serializable {
      * 序列化版本号
      * 用于序列化兼容性检查
      */
+    @Serial
     private static final long serialVersionUID = 1L;
     
     /**

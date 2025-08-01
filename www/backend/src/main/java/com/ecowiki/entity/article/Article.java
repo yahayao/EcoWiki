@@ -53,7 +53,7 @@ public class Article {
     /** 文章标题 */
     @NotBlank(message = "标题不能为空")
     @Size(max = 255, message = "标题长度不能超过255个字符")
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String title;
     
     /** 文章作者 */

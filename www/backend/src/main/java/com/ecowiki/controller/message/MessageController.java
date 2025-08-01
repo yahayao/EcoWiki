@@ -69,7 +69,7 @@ public class MessageController {
             MessageDto message = messageService.sendMessage(
                 currentUser.getUserId().intValue(),
                 request.getRecipientUserId(),
-                request.getContent(), null
+                request.getContent()
             );
             
             return ResponseEntity.ok(ApiResponse.success(message, "消息发送成功"));

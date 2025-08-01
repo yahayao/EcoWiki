@@ -120,8 +120,7 @@ public class RolePermissionId implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof RolePermissionId)) return false;
-        RolePermissionId that = (RolePermissionId) o;
+        if (!(o instanceof RolePermissionId that)) return false;
         return Objects.equals(roleId, that.roleId) && Objects.equals(permissionId, that.permissionId);
     }
     

@@ -154,10 +154,8 @@ public class DiffUtil {
                 }
             }
         }
-        
-        String result = String.join("\n", resultLines);
-        
-        return result;
+
+        return String.join("\n", resultLines);
     }
     
     /**

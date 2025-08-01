@@ -232,13 +232,16 @@ public class ArticleDraftService {
         
         User superAdmin = superAdminOpt.get();
         String messageContent = String.format(
-            "📝 %s\n\n" +
-            "文章标题：%s\n" +
-            "编辑者：%s\n" +
-            "提交时间：%s\n" +
-            "文章分类：%s\n\n" +
-            "请及时前往管理后台进行审核。\n" +
-            "草稿ID：%d",
+                """
+                        📝 %s
+                        
+                        文章标题：%s
+                        编辑者：%s
+                        提交时间：%s
+                        文章分类：%s
+                        
+                        请及时前往管理后台进行审核。
+                        草稿ID：%d""",
             notificationType,
             draft.getTitle(),
             editorName,
@@ -248,7 +251,7 @@ public class ArticleDraftService {
         );
         
         try {
-            messageService.sendMessage(draft.getEditorUserId().intValue(), superAdmin.getUserId().intValue(), messageContent, "");
+            messageService.sendMessage(draft.getEditorUserId().intValue(), superAdmin.getUserId().intValue(), messageContent);
         } catch (Exception e) {
             System.err.println("发送审核通知失败: " + e.getMessage());
         }
@@ -265,12 +268,16 @@ public class ArticleDraftService {
         String reviewerName = reviewerOpt.map(User::getUsername).orElse("管理员");
         
         String messageContent = String.format(
-            "✅ 文章审核通过\n\n" +
-            "您提交的文章《%s》已通过审核并成功发布！\n\n" +
-            "审核者：%s\n" +
-            "审核时间：%s\n" +
-            "%s\n\n" +
-            "感谢您为EcoWiki的贡献！",
+                """
+                        ✅ 文章审核通过
+                        
+                        您提交的文章《%s》已通过审核并成功发布！
+                        
+                        审核者：%s
+                        审核时间：%s
+                        %s
+                        
+                        感谢您为EcoWiki的贡献！""",
             draft.getTitle(),
             reviewerName,
             draft.getReviewedAt().toString(),
@@ -278,7 +285,7 @@ public class ArticleDraftService {
         );
         
         try {
-            messageService.sendMessage(reviewerUserId.intValue(), draft.getEditorUserId().intValue(), messageContent, "");
+            messageService.sendMessage(reviewerUserId.intValue(), draft.getEditorUserId().intValue(), messageContent);
         } catch (Exception e) {
             System.err.println("发送审核通过通知失败: " + e.getMessage());
         }
@@ -295,12 +302,16 @@ public class ArticleDraftService {
         String reviewerName = reviewerOpt.map(User::getUsername).orElse("管理员");
         
         String messageContent = String.format(
-            "❌ 文章审核未通过\n\n" +
-            "很抱歉，您提交的文章《%s》未能通过审核。\n\n" +
-            "审核者：%s\n" +
-            "审核时间：%s\n" +
-            "%s\n\n" +
-            "您可以根据反馈意见修改后重新提交。草稿已保留在系统中。",
+                """
+                        ❌ 文章审核未通过
+                        
+                        很抱歉，您提交的文章《%s》未能通过审核。
+                        
+                        审核者：%s
+                        审核时间：%s
+                        %s
+                        
+                        您可以根据反馈意见修改后重新提交。草稿已保留在系统中。""",
             draft.getTitle(),
             reviewerName,
             draft.getReviewedAt().toString(),
@@ -308,7 +319,7 @@ public class ArticleDraftService {
         );
         
         try {
-            messageService.sendMessage(reviewerUserId.intValue(), draft.getEditorUserId().intValue(), messageContent, "");
+            messageService.sendMessage(reviewerUserId.intValue(), draft.getEditorUserId().intValue(), messageContent);
         } catch (Exception e) {
             System.err.println("发送审核拒绝通知失败: " + e.getMessage());
         }

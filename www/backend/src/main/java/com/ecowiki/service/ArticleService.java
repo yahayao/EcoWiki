@@ -617,10 +617,7 @@ public class ArticleService {
         
         return articleIds.map(articleId -> {
             Optional<Article> articleOpt = articleRepository.findById(articleId);
-            if (articleOpt.isPresent()) {
-                return convertToDto(articleOpt.get());
-            }
-            return null;
+            return articleOpt.map(this::convertToDto).orElse(null);
         }).map(dto -> dto); // 过滤掉null值
     }
     
@@ -635,10 +632,7 @@ public class ArticleService {
         
         return articleIds.map(articleId -> {
             Optional<Article> articleOpt = articleRepository.findById(articleId);
-            if (articleOpt.isPresent()) {
-                return convertToDto(articleOpt.get());
-            }
-            return null;
+            return articleOpt.map(this::convertToDto).orElse(null);
         }).map(dto -> dto); // 过滤掉null值
     }
     
