@@ -12,13 +12,40 @@ import { setupApiMonitoring } from '@/utils/api-monitor'
  * <b>功能特性：</b>
  * - 统一的baseURL和超时配置
  * - 自动添加JWT认证头
+ * - 自动token刷新机制
  * - 全局错误处理和401状态码处理
  * - 自动清理过期token并重定向
  * 
  * @author EcoWiki
- * @version 1.0
+ * @version 1.1 - 添加token自动刷新
  * @since 2024-04
  */
+
+// token刷新相关状态
+let isRefreshing = false
+let failedQueue: Array<{
+  resolve: (value: any) => void
+  reject: (reason: any) => void
+  config: any
+}> = []
+
+/**
+ * 处理失败队列
+ * @param error 错误信息
+ * @param token 新token（如果刷新成功）
+ */
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(({ resolve, reject, config }) => {
+    if (error) {
+      reject(error)
+    } else {
+      config.headers.Authorization = `Bearer ${token}`
+      resolve(api(config))
+    }
+  })
+  
+  failedQueue = []
+}
 
 /**
  * 创建axios实例
@@ -102,23 +129,82 @@ api.interceptors.request.use(cacheInterceptor.request)
 
 /**
  * 响应拦截器
- * 统一处理响应错误，特别是认证失败的情况
+ * 统一处理响应错误，包括token自动刷新和认证失败处理
  */
 api.interceptors.response.use(
   (response) => {
     // 应用缓存响应拦截器
     return cacheInterceptor.response(response)
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config
+    
     console.error('API Error:', error)
     
     // 处理401未授权错误：token过期或无效
-    if (error.response?.status === 401) {
-      // 清除本地存储的认证信息
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      // 刷新页面以重定向到登录状态
-      window.location.reload()
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // 如果正在刷新token，将请求加入队列
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject, config: originalRequest })
+        })
+      }
+
+      originalRequest._retry = true
+      isRefreshing = true
+
+      try {
+        const refreshToken = localStorage.getItem('refreshToken')
+        
+        if (!refreshToken) {
+          throw new Error('No refresh token available')
+        }
+
+        // 使用单独的axios实例来避免拦截器循环
+        const refreshResponse = await axios.post('http://localhost:8080/api/auth/refresh', {
+          refreshToken
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        })
+
+        if (refreshResponse.data.code === 200 && refreshResponse.data.data) {
+          const { token: newToken, refreshToken: newRefreshToken } = refreshResponse.data.data
+          
+          // 更新本地存储
+          localStorage.setItem('token', newToken)
+          localStorage.setItem('refreshToken', newRefreshToken)
+          
+          // 更新请求头
+          originalRequest.headers.Authorization = `Bearer ${newToken}`
+          
+          // 处理队列中的请求
+          processQueue(null, newToken)
+          
+          // 重试原始请求
+          return api(originalRequest)
+        } else {
+          throw new Error('Token refresh failed')
+        }
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError)
+        
+        // 处理队列中的请求（失败）
+        processQueue(refreshError, null)
+        
+        // 清除本地存储的认证信息
+        localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('user')
+        
+        // 刷新页面以重定向到登录状态
+        window.location.reload()
+        
+        return Promise.reject(refreshError)
+      } finally {
+        isRefreshing = false
+      }
     }
     
     return Promise.reject(error.response?.data || error)

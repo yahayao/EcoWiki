@@ -214,6 +214,47 @@ public class AuthController {
         }
     }
     
+    /**
+     * 刷新访问令牌
+     * 
+     * 使用有效的refresh token获取新的access token和refresh token。
+     * 用于在access token过期时无缝续期用户会话。
+     * 
+     * @param request 包含refresh token的请求体
+     * @return 新的token对
+     */
+    @PostMapping("/auth/refresh")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> refreshToken(@RequestBody Map<String, String> request) {
+        try {
+            String refreshToken = request.get("refreshToken");
+            if (refreshToken == null || refreshToken.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("缺少refresh token"));
+            }
+            
+            // 验证refresh token
+            if (!jwtUtil.isRefreshToken(refreshToken) || !jwtUtil.isTokenValid(refreshToken)) {
+                return ResponseEntity.status(401)
+                    .body(ApiResponse.error("Refresh token无效或已过期"));
+            }
+            
+            // 生成新的access token和refresh token
+            String username = jwtUtil.extractUsername(refreshToken);
+            String newAccessToken = jwtUtil.generateToken(username);
+            String newRefreshToken = jwtUtil.generateRefreshToken(username);
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("token", newAccessToken);
+            result.put("refreshToken", newRefreshToken);
+            
+            return ResponseEntity.ok(ApiResponse.success(result, "Token刷新成功"));
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(401)
+                .body(ApiResponse.error("Token刷新失败: " + e.getMessage()));
+        }
+    }
+    
     @GetMapping("/auth/health")
     public ResponseEntity<ApiResponse<Map<String, String>>> health() {
         Map<String, String> result = new HashMap<>();

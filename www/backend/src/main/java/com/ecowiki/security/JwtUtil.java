@@ -146,4 +146,23 @@ public class JwtUtil {
             return false;
         }
     }
+    
+    // 检查是否为refresh token
+    public Boolean isRefreshToken(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            return "refresh".equals(claims.get("type"));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    // 从refresh token生成新的access token
+    public String refreshAccessToken(String refreshToken) {
+        if (!isRefreshToken(refreshToken) || !isTokenValid(refreshToken)) {
+            throw new RuntimeException("Invalid refresh token");
+        }
+        String username = extractUsername(refreshToken);
+        return generateToken(username);
+    }
 }
