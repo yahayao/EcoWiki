@@ -119,7 +119,7 @@ const { user, isAuthenticated, userAvatar, refreshUserInfo } = useAuth()设置�
  * 集成全局认证状态，提供动态的用户界面。
  */
 
-import { computed, ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../../composables/useAuth'
 import { userApi, USER_GROUPS } from '../../api/user'
@@ -194,14 +194,31 @@ const hasAdminPermission = computed(() => {
  */
 const loadUnreadCount = async () => {
   if (!user.value) {
+    console.log('⏹️ 用户未登录，跳过未读消息数量检查')
     unreadCount.value = 0
     return
   }
   
+  // 检查认证状态
+  const hasRefreshToken = !!localStorage.getItem('refreshToken')
+  if (!hasRefreshToken) {
+    console.warn('⚠️ 警告：用户已登录但没有refresh token，这可能导致API调用失败')
+  }
+  
   try {
+    console.log('🔄 开始获取未读消息数量...')
     unreadCount.value = await messageApi.getUnreadCount()
+    console.log('✅ 未读消息数量:', unreadCount.value)
   } catch (error) {
-    console.error('获取未读消息数量失败:', error)
+    console.error('❌ 获取未读消息数量失败:', error)
+    
+    // 如果是认证错误，不要继续尝试
+    if ((error as any)?.response?.status === 401) {
+      console.warn('🚫 认证失败，停止获取未读消息数量')
+      unreadCount.value = 0
+      return
+    }
+    
     unreadCount.value = 0
   }
 }
@@ -226,11 +243,21 @@ onMounted(() => {
   }
   
   // 定期更新未读消息数量（每30秒）
-  setInterval(() => {
-    if (isAuthenticated.value) {
+  const unreadCountInterval = setInterval(() => {
+    if (isAuthenticated.value && user.value) {
+      console.log('定时检查未读消息数量...')
       loadUnreadCount()
+    } else {
+      console.log('用户未登录，跳过未读消息数量检查')
     }
   }, 30000)
+  
+  // 组件卸载时清理定时器
+  onBeforeUnmount(() => {
+    if (unreadCountInterval) {
+      clearInterval(unreadCountInterval)
+    }
+  })
 })
 </script>
 

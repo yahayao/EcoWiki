@@ -146,18 +146,32 @@ class CacheManager {
   cleanup(): void {
     const now = Date.now()
     
+    console.log('🧹 开始缓存清理...')
+    
     // 清理内存缓存
+    const memoryItemsBefore = this.memoryCache.size
     for (const [key, item] of this.memoryCache.entries()) {
       if (item.ttl && now - item.timestamp > item.ttl) {
         this.memoryCache.delete(key)
       }
     }
-
+    const memoryItemsAfter = this.memoryCache.size
+    
     // 清理 localStorage 过期项
+    const localStorageItemsBefore = localStorage.length
     this.cleanupStorage(localStorage)
+    const localStorageItemsAfter = localStorage.length
     
     // 清理 sessionStorage 过期项
+    const sessionStorageItemsBefore = sessionStorage.length
     this.cleanupStorage(sessionStorage)
+    const sessionStorageItemsAfter = sessionStorage.length
+    
+    console.log('🧹 缓存清理完成:', {
+      memory: `${memoryItemsBefore} -> ${memoryItemsAfter}`,
+      localStorage: `${localStorageItemsBefore} -> ${localStorageItemsAfter}`,
+      sessionStorage: `${sessionStorageItemsBefore} -> ${sessionStorageItemsAfter}`
+    })
   }
 
   /**
@@ -200,22 +214,41 @@ class CacheManager {
     const now = Date.now()
     const keysToRemove: string[] = []
 
+    // 认证相关的键，不应该被缓存清理删除
+    const protectedKeys = ['token', 'refreshToken', 'user', 'rememberMe', 'savedLoginField', 'savedPassword']
+
     for (let i = 0; i < storage.length; i++) {
       const key = storage.key(i)
       if (!key) continue
 
+      // 跳过受保护的认证键
+      if (protectedKeys.includes(key)) {
+        console.log(`🛡️ 保护认证键: ${key}`)
+        continue
+      }
+
       try {
         const item = JSON.parse(storage.getItem(key) || '{}')
         if (item.ttl && now - item.timestamp > item.ttl) {
+          console.log(`🗑️ 过期缓存项: ${key}`)
           keysToRemove.push(key)
         }
       } catch (error) {
-        // 如果解析失败，删除该项
-        keysToRemove.push(key)
+        // 只删除看起来像是缓存格式的项（以cache_开头或包含timestamp的）
+        if (key.startsWith('cache_') || key.includes('_cache_')) {
+          console.log(`🗑️ 无效缓存项: ${key}`)
+          keysToRemove.push(key)
+        } else {
+          console.log(`⚠️ 跳过非缓存项: ${key}`)
+        }
+        // 其他解析失败的项目保留，可能是其他应用数据
       }
     }
 
-    keysToRemove.forEach(key => storage.removeItem(key))
+    keysToRemove.forEach(key => {
+      console.log(`❌ 删除过期项: ${key}`)
+      storage.removeItem(key)
+    })
   }
 }
 

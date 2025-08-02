@@ -56,16 +56,34 @@ const token = ref<string | null>(null)
 const initializeAuth = () => {
   const savedToken = localStorage.getItem('token')
   const savedUser = localStorage.getItem('user')
+  const savedRefreshToken = localStorage.getItem('refreshToken')
+  
+  console.log('🔄 初始化认证状态...')
+  console.log('localStorage中的token:', !!savedToken)
+  console.log('localStorage中的user:', !!savedUser) 
+  console.log('localStorage中的refreshToken:', !!savedRefreshToken)
   
   if (savedToken && savedUser) {
     try {
       token.value = savedToken
       user.value = JSON.parse(savedUser)
-      console.log('恢复用户认证状态:', user.value?.username, user.value?.userGroup)
+      console.log('✅ 恢复用户认证状态:', user.value?.username, user.value?.userGroup)
+      
+      // 检查refresh token状态
+      if (savedRefreshToken) {
+        console.log('✅ 发现已保存的refresh token')
+      } else {
+        console.warn('⚠️ 警告：用户已登录但没有refresh token，可能导致自动续期失败')
+      }
     } catch (error) {
-      console.error('恢复用户状态失败:', error)
-      clearInvalidAuthData()
+      console.error('❌ 恢复用户状态失败:', error)
+      // 只清除损坏的用户数据，保留token以便尝试refresh
+      localStorage.removeItem('user')
+      user.value = null
+      // 不要清除token和refreshToken，让API拦截器处理
     }
+  } else {
+    console.log('ℹ️ 没有找到已保存的认证信息')
   }
 }
 
@@ -84,6 +102,32 @@ const clearInvalidAuthData = () => {
   localStorage.removeItem('savedPassword')
   user.value = null
   token.value = null
+}
+
+/**
+ * 调试函数：检查当前认证状态
+ */
+const debugAuthState = () => {
+  const currentToken = localStorage.getItem('token')
+  const currentRefreshToken = localStorage.getItem('refreshToken')
+  const currentUser = localStorage.getItem('user')
+  
+  console.log('🔍 当前认证状态检查:')
+  console.log('  - token存在:', !!currentToken)
+  console.log('  - refreshToken存在:', !!currentRefreshToken)
+  console.log('  - user存在:', !!currentUser)
+  console.log('  - 内存中的user:', !!user.value)
+  console.log('  - 内存中的token:', !!token.value)
+  console.log('  - isAuthenticated:', isAuthenticated.value)
+  
+  return {
+    hasToken: !!currentToken,
+    hasRefreshToken: !!currentRefreshToken,
+    hasUser: !!currentUser,
+    memoryUser: !!user.value,
+    memoryToken: !!token.value,
+    isAuth: isAuthenticated.value
+  }
 }
 
 // ======================== 状态管理方法 ========================
@@ -106,9 +150,14 @@ const setUser = (userData: UserResponse, authToken: string, refreshToken?: strin
   
   if (refreshToken) {
     localStorage.setItem('refreshToken', refreshToken)
+    console.log('✅ 保存refresh token成功')
+  } else {
+    console.warn('⚠️ 登录时未提供refresh token')
   }
   
   console.log('设置用户认证状态:', userData.username, userData.userGroup)
+  console.log('Token已保存:', !!authToken)
+  console.log('RefreshToken已保存:', !!refreshToken)
 }
 
 /**
@@ -265,8 +314,42 @@ export function useAuth() {
     clearUser,
     hasPermission,
     refreshUserInfo,
+    debugAuthState,
     
     // 常量
     USER_GROUPS
   }
+}
+
+// 在开发环境下，添加全局调试函数
+if (import.meta.env.DEV) {
+  ;(window as any).debugAuth = () => {
+    const { debugAuthState } = useAuth()
+    return debugAuthState()
+  }
+  
+  // 监控localStorage变化
+  ;(window as any).monitorLocalStorage = () => {
+    const originalRemoveItem = localStorage.removeItem
+    localStorage.removeItem = function(key: string) {
+      if (['token', 'refreshToken', 'user'].includes(key)) {
+        console.error(`� 警告: ${key} 被删除！调用栈:`)
+        console.trace()
+      }
+      return originalRemoveItem.call(this, key)
+    }
+    
+    const originalClear = localStorage.clear
+    localStorage.clear = function() {
+      console.error('🚨 警告: localStorage被完全清除！调用栈:')
+      console.trace()
+      return originalClear.call(this)
+    }
+    
+    console.log('📱 localStorage监控已启用')
+  }
+  
+  console.log('�🔧 调试函数已添加:')
+  console.log('  - window.debugAuth() - 检查认证状态')
+  console.log('  - window.monitorLocalStorage() - 监控localStorage变化')
 }

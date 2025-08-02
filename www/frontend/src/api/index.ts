@@ -157,9 +157,11 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem('refreshToken')
         
         if (!refreshToken) {
+          console.warn('尝试刷新token但未找到refresh token')
           throw new Error('No refresh token available')
         }
 
+        console.log('开始刷新token...')
         // 使用单独的axios实例来避免拦截器循环
         const refreshResponse = await axios.post('http://localhost:8080/api/auth/refresh', {
           refreshToken
@@ -172,6 +174,7 @@ api.interceptors.response.use(
         if (refreshResponse.data.code === 200 && refreshResponse.data.data) {
           const { token: newToken, refreshToken: newRefreshToken } = refreshResponse.data.data
           
+          console.log('Token刷新成功')
           // 更新本地存储
           localStorage.setItem('token', newToken)
           localStorage.setItem('refreshToken', newRefreshToken)
@@ -189,17 +192,26 @@ api.interceptors.response.use(
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError)
+        console.error('原始错误URL:', originalRequest.url)
         
         // 处理队列中的请求（失败）
         processQueue(refreshError, null)
         
-        // 清除本地存储的认证信息
-        localStorage.removeItem('token')
-        localStorage.removeItem('refreshToken')
-        localStorage.removeItem('user')
-        
-        // 刷新页面以重定向到登录状态
-        window.location.reload()
+        // 只有在确实是认证失败时才清除数据和刷新页面
+        if ((refreshError as any)?.message?.includes('No refresh token available') || 
+            (refreshError as any)?.response?.status === 401) {
+          
+          console.warn('清除认证数据并准备重新登录')
+          // 清除本地存储的认证信息
+          localStorage.removeItem('token')
+          localStorage.removeItem('refreshToken')
+          localStorage.removeItem('user')
+          
+          // 延迟刷新页面，给用户看到错误信息的机会
+          setTimeout(() => {
+            window.location.reload()
+          }, 100000)
+        }
         
         return Promise.reject(refreshError)
       } finally {
