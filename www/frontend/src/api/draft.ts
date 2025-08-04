@@ -17,6 +17,10 @@ export interface ArticleDraft {
   articleId?: number
   /** 编辑者用户ID */
   editorUserId: number
+  /** 编辑者用户名 */
+  editorUserName?: string
+  /** 编辑者头像URL */
+  editorUserAvatar?: string
   /** 文章标题 */
   title: string
   /** 文章内容 */
@@ -33,6 +37,8 @@ export interface ArticleDraft {
   reviewedAt?: string
   /** 审核者用户ID */
   reviewerUserId?: number
+  /** 审核者用户名 */
+  reviewerUserName?: string
   /** 审核备注 */
   reviewNotes?: string
 }
@@ -235,6 +241,3 @@ export const draftApi = {
     return response.data.data
   }
 }
-
-// 导出类型和API
-export type { ArticleDraft, ReviewDraftRequest, PageResponse, DraftSubmissionResult }
