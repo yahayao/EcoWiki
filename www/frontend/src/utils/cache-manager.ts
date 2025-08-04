@@ -141,37 +141,21 @@ class CacheManager {
   }
 
   /**
-   * 清理过期缓存
+   * 清理过期缓存（按需调用）
    */
   cleanup(): void {
     const now = Date.now()
     
-    console.log('🧹 开始缓存清理...')
-    
     // 清理内存缓存
-    const memoryItemsBefore = this.memoryCache.size
     for (const [key, item] of this.memoryCache.entries()) {
       if (item.ttl && now - item.timestamp > item.ttl) {
         this.memoryCache.delete(key)
       }
     }
-    const memoryItemsAfter = this.memoryCache.size
     
-    // 清理 localStorage 过期项
-    const localStorageItemsBefore = localStorage.length
+    // 清理存储缓存
     this.cleanupStorage(localStorage)
-    const localStorageItemsAfter = localStorage.length
-    
-    // 清理 sessionStorage 过期项
-    const sessionStorageItemsBefore = sessionStorage.length
     this.cleanupStorage(sessionStorage)
-    const sessionStorageItemsAfter = sessionStorage.length
-    
-    console.log('🧹 缓存清理完成:', {
-      memory: `${memoryItemsBefore} -> ${memoryItemsAfter}`,
-      localStorage: `${localStorageItemsBefore} -> ${localStorageItemsAfter}`,
-      sessionStorage: `${sessionStorageItemsBefore} -> ${sessionStorageItemsAfter}`
-    })
   }
 
   /**
@@ -223,30 +207,24 @@ class CacheManager {
 
       // 跳过受保护的认证键
       if (protectedKeys.includes(key)) {
-        console.log(`🛡️ 保护认证键: ${key}`)
         continue
       }
 
       try {
         const item = JSON.parse(storage.getItem(key) || '{}')
         if (item.ttl && now - item.timestamp > item.ttl) {
-          console.log(`🗑️ 过期缓存项: ${key}`)
           keysToRemove.push(key)
         }
       } catch (error) {
-        // 只删除看起来像是缓存格式的项（以cache_开头或包含timestamp的）
+        // 只删除看起来像是缓存格式的项
         if (key.startsWith('cache_') || key.includes('_cache_')) {
-          console.log(`🗑️ 无效缓存项: ${key}`)
           keysToRemove.push(key)
-        } else {
-          console.log(`⚠️ 跳过非缓存项: ${key}`)
         }
         // 其他解析失败的项目保留，可能是其他应用数据
       }
     }
 
     keysToRemove.forEach(key => {
-      console.log(`❌ 删除过期项: ${key}`)
       storage.removeItem(key)
     })
   }
@@ -255,9 +233,11 @@ class CacheManager {
 // 创建单例实例
 export const cacheManager = new CacheManager()
 
-// 定期清理过期缓存
-setInterval(() => {
-  cacheManager.cleanup()
-}, 60000) // 每分钟清理一次
+// 在页面卸载时清理一次缓存
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    cacheManager.cleanup()
+  })
+}
 
 export default cacheManager
