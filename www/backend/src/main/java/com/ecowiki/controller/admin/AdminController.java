@@ -109,15 +109,15 @@ public class AdminController {
      */
     private User getCurrentUser(HttpServletRequest request) {
         String token = extractTokenFromRequest(request);
-        System.out.println("=== getCurrentUser 调试 ===");
-        System.out.println("Token: " + (token != null ? "存在" : "null"));
+        // System.out.println("=== getCurrentUser 调试 ===");
+        // System.out.println("Token: " + (token != null ? "存在" : "null"));
         if (token != null) {
             try {
                 String username = jwtUtil.extractUsername(token);
-                System.out.println("从Token提取的用户名: " + username);
+                // System.out.println("从Token提取的用户名: " + username);
                 Optional<User> userOpt = userService.findByUsername(username);
                 if (userOpt.isPresent()) {
-                    System.out.println("找到用户: " + userOpt.get().getUsername());
+                    // System.out.println("找到用户: " + userOpt.get().getUsername());
                     return userOpt.get();
                 } else {
                     System.out.println("未找到用户: " + username);
