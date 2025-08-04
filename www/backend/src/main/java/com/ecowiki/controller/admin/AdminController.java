@@ -999,6 +999,8 @@ public class AdminController {
                         dto.setRoleName(roleName);
                     }
                     
+                    // 设置用户头像URL - 这是关键的缺失部分！
+                    dto.setAvatarUrl(user.getAvatarUrl());
                     return dto;
                 })
                 .collect(Collectors.toList());
