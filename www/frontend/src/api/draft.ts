@@ -235,6 +235,3 @@ export const draftApi = {
     return response.data.data
   }
 }
-
-// 导出类型和API
-export type { ArticleDraft, ReviewDraftRequest, PageResponse, DraftSubmissionResult }
