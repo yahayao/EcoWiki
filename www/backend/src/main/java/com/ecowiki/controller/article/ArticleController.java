@@ -96,7 +96,7 @@ public class ArticleController {
         if (token != null) {
             try {
                 String username = jwtUtil.extractUsername(token);
-                System.out.println("从Token提取的用户名: " + username);
+                // System.out.println("从Token提取的用户名: " + username);
                 
                 Optional<User> userOpt = userService.findByUsername(username);
                 System.out.println("数据库查询结果: " + (userOpt.isPresent() ? "找到用户" : "未找到用户"));

@@ -109,8 +109,8 @@ public class AdminController {
      */
     private User getCurrentUser(HttpServletRequest request) {
         String token = extractTokenFromRequest(request);
-        System.out.println("=== getCurrentUser 调试 ===");
-        System.out.println("Token: " + (token != null ? "存在" : "null"));
+        // System.out.println("=== getCurrentUser 调试 ===");
+        // System.out.println("Token: " + (token != null ? "存在" : "null"));
         if (token != null) {
             try {
                 String username = jwtUtil.extractUsername(token);
