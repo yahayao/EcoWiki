@@ -7,22 +7,26 @@
 ## 核心特性
 
 ### 1. 混合存储策略
+
 - **第一个版本**：存储完整内容作为基础版本
 - **小更改**：只存储差异数据，大幅节省存储空间
 - **大更改**：当差异大小超过原文的70%时，直接存储完整版本
 - **版本链优化**：超过10个差异版本时，自动合并并重新计算基础版本
 
 ### 2. 冷热数据分离
+
 - **热数据**：频繁访问的版本保持快速访问
 - **冷数据**：超过30天未访问的版本进行额外压缩
 - **归档策略**：超过90天的版本移动到归档存储
 
 ### 3. 智能压缩
+
 - **自动算法选择**：在brotli、GZIP和Deflate之间自动选择最佳压缩算法
 - **多层压缩**：归档数据使用更强的压缩算法
 - **压缩率监控**：实时监控和统计压缩效果
 
 ### 4. 版本去重
+
 - **内容哈希**：使用SHA-256计算内容哈希值
 - **重复检测**：创建版本时检测是否有相同内容的版本
 - **智能链接**：重复内容自动链接到已存在的版本
@@ -50,6 +54,7 @@ public enum StorageType {
 ### 数据表结构
 
 #### article_versions
+
 - `version_id` - 版本ID（主键）
 - `article_id` - 文章ID
 - `version_number` - 版本号
@@ -60,6 +65,7 @@ public enum StorageType {
 - `is_archived` - 是否已归档
 
 #### article_version_stats
+
 - `article_id` - 文章ID
 - `total_versions` - 总版本数
 - `base_versions_count` - 基础版本数
@@ -70,6 +76,7 @@ public enum StorageType {
 ## API接口
 
 ### 创建版本
+
 ```http
 POST /api/articles/{articleId}/versions
 Content-Type: application/json
@@ -82,21 +89,25 @@ Content-Type: application/json
 ```
 
 ### 获取版本内容
+
 ```http
 GET /api/articles/{articleId}/versions/{versionNumber}
 ```
 
 ### 获取最新版本
+
 ```http
 GET /api/articles/{articleId}/versions/latest
 ```
 
 ### 获取版本历史
+
 ```http
 GET /api/articles/{articleId}/versions?page=0&size=20
 ```
 
 ### 获取统计信息
+
 ```http
 GET /api/articles/{articleId}/versions/stats
 ```
@@ -104,6 +115,7 @@ GET /api/articles/{articleId}/versions/stats
 ## 性能优化
 
 ### 自动优化任务
+
 - **执行时间**：每天凌晨2点
 - **优化条件**：
   - 差异版本超过10个
@@ -111,12 +123,14 @@ GET /api/articles/{articleId}/versions/stats
   - 手动标记需要优化
 
 ### 冷数据归档任务
+
 - **执行时间**：每天凌晨3点
 - **归档条件**：
   - 版本创建超过90天
   - 超过30天未访问
 
 ### 压缩策略
+
 ```java
 // 自动选择最佳压缩算法
 CompressionResult result = compressionUtil.compressBest(content);
@@ -128,6 +142,7 @@ double ratio = (double) compressedSize / originalSize;
 ## 使用示例
 
 ### 创建文章版本
+
 ```java
 @Autowired
 private ArticleVersionService versionService;
@@ -141,6 +156,7 @@ ArticleVersion version = versionService.createVersion(
 ```
 
 ### 获取版本内容
+
 ```java
 // 获取指定版本
 String content = versionService.getVersionContent(articleId, versionNumber);
@@ -150,6 +166,7 @@ String latestContent = versionService.getLatestVersionContent(articleId);
 ```
 
 ### 版本统计
+
 ```java
 ArticleVersionStats stats = versionService.getVersionStats(articleId);
 System.out.println("总版本数: " + stats.getTotalVersions());
@@ -180,14 +197,17 @@ WHERE config_key = 'cold_data_days';
 ## 监控和维护
 
 ### 数据库视图
+
 - `v_article_version_summary` - 版本统计概览
 - `v_storage_efficiency` - 存储效率分析
 
 ### 存储过程
+
 - `GetArticlesNeedingOptimization()` - 查找需要优化的文章
 - `GetColdVersions()` - 查找冷数据版本
 
 ### 性能指标
+
 - 存储空间节省率
 - 压缩效率
 - 版本重构速度

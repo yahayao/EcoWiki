@@ -3,6 +3,7 @@
 ## 📋 升级前准备
 
 ### 1. 数据库备份
+
 ```sql
 -- 备份整个permission表
 CREATE TABLE permission_backup AS SELECT * FROM permission;
@@ -12,6 +13,7 @@ CREATE TABLE role_permission_backup AS SELECT * FROM role_permission;
 ```
 
 ### 2. 确认当前权限数据
+
 ```sql
 -- 查看当前权限列表
 SELECT permission_id, permission_name, description FROM permission ORDER BY permission_id;
@@ -22,7 +24,9 @@ SELECT permission_id, permission_name, description FROM permission ORDER BY perm
 我为您准备了两个升级方案：
 
 ### 方案一：完整升级（推荐）
+
 文件：`UPGRADE_PERMISSION_HIERARCHY.sql`
+
 - ✅ 添加parent_permission_id字段
 - ✅ 创建完整的权限分类体系
 - ✅ 为现有权限分配父权限
@@ -30,7 +34,9 @@ SELECT permission_id, permission_name, description FROM permission ORDER BY perm
 - ✅ 数据完整性验证
 
 ### 方案二：简化升级（保守）
+
 文件：`SIMPLE_PERMISSION_UPGRADE.sql`
+
 - ✅ 仅添加必要的字段和约束
 - ✅ 创建基本的分类
 - ✅ 最小化变更
@@ -38,11 +44,14 @@ SELECT permission_id, permission_name, description FROM permission ORDER BY perm
 ## 📝 执行步骤
 
 ### 1. 选择升级方案
+
 根据您的需求选择：
+
 - **初次升级或希望完整功能**：使用 `UPGRADE_PERMISSION_HIERARCHY.sql`
 - **谨慎升级或生产环境**：使用 `SIMPLE_PERMISSION_UPGRADE.sql`
 
 ### 2. 在MySQL中执行脚本
+
 ```bash
 # 方式1：通过MySQL命令行
 mysql -h sh-cynosdbmysql-grp-2yvr1y3c.sql.tencentcdb.com -P 26809 -u root -p Ecosql < UPGRADE_PERMISSION_HIERARCHY.sql
@@ -52,6 +61,7 @@ mysql -h sh-cynosdbmysql-grp-2yvr1y3c.sql.tencentcdb.com -P 26809 -u root -p Eco
 ```
 
 ### 3. 验证升级结果
+
 ```sql
 -- 检查表结构
 DESCRIBE permission;
@@ -84,6 +94,7 @@ WHERE TABLE_NAME = 'permission'
 升级数据库后，需要确保后端代码支持新的字段：
 
 ### 1. 检查Permission实体
+
 ```java
 // 确保Permission.java包含parent_permission_id字段
 @Entity
@@ -102,6 +113,7 @@ public class Permission {
 ```
 
 ### 2. 更新PermissionDto
+
 ```java
 // 确保PermissionDto包含parentPermissionId和subPermissions
 public class PermissionDto {
@@ -112,6 +124,7 @@ public class PermissionDto {
 ```
 
 ### 3. 重启Spring Boot应用
+
 ```bash
 # 在backend目录下
 mvn spring-boot:run
@@ -144,6 +157,7 @@ RENAME TABLE role_permission_backup TO role_permission;
 ## 📞 技术支持
 
 如果在升级过程中遇到问题：
+
 1. 检查MySQL错误日志
 2. 确认数据库连接权限
 3. 验证SQL语法兼容性
@@ -151,7 +165,8 @@ RENAME TABLE role_permission_backup TO role_permission;
 
 ---
 
-**重要提示：** 
+**重要提示：**
+
 - 在生产环境执行前，请先在测试环境验证
 - 确保有完整的数据备份
 - 建议在业务低峰期进行升级

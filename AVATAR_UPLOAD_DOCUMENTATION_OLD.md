@@ -7,12 +7,14 @@ EcoWiki 头像上传系统提供了完整的用户头像管理功能，包括文
 ## 🏗️ 系统架构
 
 ### 后端架构
+
 - **Controller**: `AvatarUploadController` - 处理头像上传API
 - **Configuration**: `WebConfig` - 配置静态资源访问
 - **Entity**: `User` - 用户实体，包含avatarUrl字段
 - **Service**: `UserService` - 用户业务逻辑
 
 ### 前端架构
+
 - **Component**: `AvatarUpload.vue` - 头像上传组件
 - **Integration**: 集成到`UserInformation.vue`中
 - **Composable**: 使用`useAuth`管理用户状态
@@ -27,6 +29,7 @@ ADD COLUMN `avatar_url` VARCHAR(255) COMMENT '头像URL';
 ```
 
 **字段说明**：
+
 - 类型：VARCHAR(255)
 - 可空：是
 - 存储内容：相对路径，如 `/avatars/username_20250725_143000_abc12345.jpg`
@@ -52,6 +55,7 @@ spring.servlet.multipart.file-size-threshold=1MB
 ### 前端配置
 
 在 `.env` 文件中配置：
+
 ```env
 VITE_API_BASE_URL=http://localhost:8080
 ```
@@ -63,22 +67,26 @@ VITE_API_BASE_URL=http://localhost:8080
 **接口地址**: `POST /api/avatar/upload`
 
 **请求头**:
+
 ```
 Authorization: Bearer {jwt_token}
 Content-Type: multipart/form-data
 ```
 
 **请求参数**:
+
 | 参数名 | 类型 | 必填 | 说明 |
 |--------|------|------|------|
 | file | File | 是 | 头像图片文件 |
 
 **文件限制**:
+
 - 支持格式：JPG, JPEG, PNG, GIF, WEBP
 - 文件大小：最大5MB
 - MIME类型：image/jpeg, image/png, image/gif, image/webp
 
 **成功响应** (200):
+
 ```json
 {
   "code": 200,
@@ -93,6 +101,7 @@ Content-Type: multipart/form-data
 ```
 
 **错误响应**:
+
 ```json
 {
   "code": 400,
@@ -102,6 +111,7 @@ Content-Type: multipart/form-data
 ```
 
 **常见错误代码**:
+
 - 401: 未认证或令牌无效
 - 404: 用户不存在
 - 400: 文件验证失败
@@ -112,6 +122,7 @@ Content-Type: multipart/form-data
 ### AvatarUpload 组件
 
 **基本用法**:
+
 ```vue
 <template>
   <AvatarUpload 
@@ -138,6 +149,7 @@ const handleUploadError = (error) => {
 ```
 
 **Props**:
+
 | 属性名 | 类型 | 默认值 | 说明 |
 |--------|------|--------|------|
 | username | string | '' | 用户名 |
@@ -145,6 +157,7 @@ const handleUploadError = (error) => {
 | size | 'small' \| 'medium' \| 'large' | 'medium' | 头像大小 |
 
 **Events**:
+
 | 事件名 | 参数 | 说明 |
 |--------|------|------|
 | upload-success | result: AvatarUploadResult | 上传成功时触发 |
@@ -153,6 +166,7 @@ const handleUploadError = (error) => {
 ## 🔄 文件处理流程
 
 ### 上传流程
+
 1. 用户选择图片文件
 2. 前端验证文件类型和大小
 3. 显示上传进度
@@ -165,12 +179,14 @@ const handleUploadError = (error) => {
 10. 返回新头像URL
 
 ### 文件命名规则
+
 ```
 格式: {username}_{timestamp}_{uniqueId}.{extension}
 示例: johndoe_20250725_143000_abc12345.jpg
 ```
 
 ### 文件存储结构
+
 ```
 uploads/
 └── avatars/
@@ -182,11 +198,13 @@ uploads/
 ## 🌐 静态资源访问
 
 ### URL映射
+
 - **存储路径**: `uploads/avatars/filename.jpg`
 - **访问URL**: `http://localhost:8080/avatars/filename.jpg`
 - **数据库存储**: `/avatars/filename.jpg`
 
 ### WebConfig配置
+
 ```java
 registry.addResourceHandler("/avatars/**")
         .addResourceLocations("file:" + getAbsolutePath(avatarUploadPath))
@@ -197,6 +215,7 @@ registry.addResourceHandler("/avatars/**")
 ## 🔒 安全考虑
 
 ### 文件安全
+
 - 文件类型白名单验证
 - 文件大小限制（5MB）
 - MIME类型检查
@@ -204,11 +223,13 @@ registry.addResourceHandler("/avatars/**")
 - 唯一文件名生成（防止覆盖）
 
 ### 访问控制
+
 - JWT令牌验证
 - 用户身份验证
 - 只允许用户修改自己的头像
 
 ### 防护措施
+
 - 自动删除旧头像文件
 - 错误处理和日志记录
 - 路径遍历攻击防护
@@ -216,18 +237,21 @@ registry.addResourceHandler("/avatars/**")
 ## 🚀 部署说明
 
 ### 开发环境部署
+
 1. 确保后端Spring Boot应用运行在8080端口
 2. 确保前端Vue应用配置正确的API地址
 3. 创建头像存储目录：`uploads/avatars/`
 4. 配置文件上传权限
 
 ### 生产环境部署
+
 1. 配置Nginx代理静态文件访问
 2. 设置文件存储目录权限
 3. 配置HTTPS和安全头
 4. 监控磁盘空间使用
 
 ### Nginx配置示例
+
 ```nginx
 location /avatars/ {
     alias /path/to/uploads/avatars/;
@@ -241,21 +265,25 @@ location /avatars/ {
 ### 常见问题
 
 **1. 头像上传失败，提示"系统数据信息重试"**
+
 - 检查JWT令牌是否有效
 - 确认用户是否存在
 - 检查文件格式和大小
 
 **2. 头像无法显示**
+
 - 检查静态资源配置
 - 确认文件路径正确性
 - 检查服务器端口和地址
 
 **3. 文件保存失败**
+
 - 检查目录权限
 - 确认磁盘空间充足
 - 查看后端日志
 
 ### 调试技巧
+
 1. 检查浏览器开发者工具网络面板
 2. 查看后端控制台日志
 3. 验证文件系统权限
@@ -264,6 +292,7 @@ location /avatars/ {
 ## 📝 更新日志
 
 ### 版本 1.0.0 (2025-07-25)
+
 - 实现完整的头像上传功能
 - 支持多种图片格式
 - 添加文件安全验证
