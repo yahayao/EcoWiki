@@ -17,7 +17,7 @@ import jakarta.validation.constraints.Size;
  *
  * @author EcoWiki
  * @version 1.0
- * @since 2024-04
+ * @since 2025-06-24
  */
 public class LoginRequest {
     /** 用户名（可选，与邮箱二选一） */

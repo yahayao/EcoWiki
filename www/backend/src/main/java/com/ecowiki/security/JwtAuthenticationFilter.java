@@ -62,7 +62,7 @@ import jakarta.servlet.http.HttpServletResponse;
  * 
  * @author EcoWiki团队
  * @version 2.0
- * @since 2024-01-01
+ * @since 2025-06-30
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {

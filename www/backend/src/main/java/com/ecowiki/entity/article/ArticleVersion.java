@@ -25,6 +25,7 @@ import jakarta.validation.constraints.Size;
  * 
  * @author EcoWiki
  * @version 1.0
+ * @since 2025-06-30
  */
 @Entity
 @Table(name = "article_versions", indexes = {

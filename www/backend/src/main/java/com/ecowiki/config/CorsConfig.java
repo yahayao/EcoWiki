@@ -19,7 +19,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  *
  * @author EcoWiki
  * @version 1.0
- * @since 2024-04
+ * @since 2025-07-01
  */
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {

@@ -18,7 +18,7 @@ import com.ecowiki.entity.user.User;
  *
  * @author EcoWiki
  * @version 1.0
- * @since 2024-04
+ * @since 2025-07-01
  */
 @Service
 public class PermissionService {

@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author EcoWiki团队
  * @version 1.0
- * @since 2024-01-01
+ * @since 2025-06-11
  */
 public class LoggerUtil {
     

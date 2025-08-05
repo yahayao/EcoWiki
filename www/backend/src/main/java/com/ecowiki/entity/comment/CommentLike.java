@@ -18,7 +18,7 @@ import jakarta.persistence.UniqueConstraint;
  * 
  * @author EcoWiki Team
  * @version 1.0.0
- * @since 2025-01-21
+ * @since 2025-07-21
  */
 @Entity
 @Table(name = "comment_likes", 

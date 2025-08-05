@@ -43,7 +43,7 @@ import java.time.LocalDateTime;
  * 
  * @author EcoWiki开发团队
  * @version 1.0.0
- * @since 2024-01-01
+ * @since 2025-07-01
  * @see Permission 权限实体类
  */
 public class PermissionDto {

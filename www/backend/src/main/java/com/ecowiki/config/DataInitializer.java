@@ -63,7 +63,7 @@ import com.ecowiki.service.UserService;
  * 
  * @author EcoWiki开发团队
  * @version 1.0.0
- * @since 2024-01-01
+ * @since 2025-07-11
  * @see CommandLineRunner Spring Boot启动时执行接口
  * @see Role 角色实体类
  * @see User 用户实体类

@@ -34,7 +34,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * 
  * @author EcoWiki Development Team
  * @version 2.0 (新增文章互动功能)
- * @since 2025-01-01
+ * @since 2025-07-01
  */
 @SpringBootApplication
 public class EcoWikiApplication {

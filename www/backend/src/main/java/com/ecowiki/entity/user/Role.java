@@ -12,7 +12,7 @@ package com.ecowiki.entity.user;
 
   @author EcoWiki
  * @version 1.0
- * @since 2024-04
+ * @since 2025-06-30
  */
 import java.time.LocalDateTime;
 

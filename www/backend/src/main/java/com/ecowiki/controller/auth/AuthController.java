@@ -79,7 +79,7 @@ import jakarta.validation.Valid;
  * 
  * @author EcoWiki团队
  * @version 2.0
- * @since 2024-01-01
+ * @since 2025-07-01
  */
 @RestController
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")  // 允许任意前端跨域访问

@@ -18,7 +18,7 @@ import jakarta.validation.constraints.Size;
  *
  * @author EcoWiki
  * @version 1.0
- * @since 2024-04
+ * @since 2025-07-07
  */
 public class ArticleDto {
     /** 文章ID */

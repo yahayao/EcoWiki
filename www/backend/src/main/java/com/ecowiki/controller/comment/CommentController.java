@@ -32,7 +32,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * 
  * @author EcoWiki Team
  * @version 1.0.0
- * @since 2025-01-21
+ * @since 2025-07-21
  */
 @RestController
 @RequestMapping("/api/comments")

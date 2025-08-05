@@ -5,7 +5,7 @@ package com.ecowiki.dto.comment;
  * 
  * @author EcoWiki Team
  * @version 1.0.0
- * @since 2025-01-21
+ * @since 2025-07-21
  */
 public class CreateCommentRequest {
     private Long articleId;

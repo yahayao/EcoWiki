@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
  * 
  * @author EcoWiki
  * @version 1.0
+ * @since 2025-07-01
  */
 @Component
 public class CompressionUtil {

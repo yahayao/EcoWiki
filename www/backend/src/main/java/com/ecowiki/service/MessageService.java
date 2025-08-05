@@ -23,6 +23,10 @@ import com.ecowiki.repository.user.UserRepository;
  * 消息服务类
  * 
  * 提供消息的发送、接收、查询和管理功能
+ * 
+ * @author EcoWiki Team
+ * @version 1.0.0
+ * @since 2025-07-21
  */
 @Service
 @Transactional

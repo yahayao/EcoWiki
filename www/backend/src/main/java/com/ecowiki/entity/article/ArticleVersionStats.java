@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
  * 
  * @author EcoWiki
  * @version 1.0
+ * @since 2025-06-30
  */
 @Entity
 @Table(name = "article_version_stats", indexes = {

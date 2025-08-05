@@ -56,7 +56,7 @@ import jakarta.servlet.http.HttpServletRequest;
  *
  * @author EcoWiki
  * @version 1.0
- * @since 2024-04
+ * @since 2025-07-01
  */
 @RestController
 @RequestMapping("/admin")

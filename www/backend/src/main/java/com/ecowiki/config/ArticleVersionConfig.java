@@ -11,8 +11,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
  * 文章版本系统配置类
  * 配置定时任务和异步处理
  * 
- * @author EcoWiki
+ * @author EcoWiki Team
  * @version 1.0
+ * @since 2025-07-01
  */
 @Configuration
 @EnableScheduling

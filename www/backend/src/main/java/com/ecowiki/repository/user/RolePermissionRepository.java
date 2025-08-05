@@ -69,7 +69,7 @@ import com.ecowiki.entity.user.RolePermissionId;
  * 
  * @author EcoWiki团队
  * @version 1.0
- * @since 2024-01-01
+ * @since 2025-07-01
  */
 @Repository
 public interface RolePermissionRepository extends JpaRepository<RolePermission, RolePermissionId> {

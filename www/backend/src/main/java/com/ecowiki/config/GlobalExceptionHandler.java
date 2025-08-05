@@ -52,7 +52,7 @@ import com.ecowiki.util.LoggerUtil;
  * 
  * @author EcoWiki开发团队
  * @version 1.0.0
- * @since 2024-01-01
+ * @since 2025-07-01
  * @see ApiResponse 统一API响应格式
  * @see RestControllerAdvice Spring全局异常处理注解
  */

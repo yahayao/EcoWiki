@@ -41,7 +41,7 @@ import java.util.Objects;
  * 
  * @author EcoWiki团队
  * @version 1.0
- * @since 2024-01-01
+ * @since 2025-06-30
  */
 public class RolePermissionId implements Serializable {
     /**

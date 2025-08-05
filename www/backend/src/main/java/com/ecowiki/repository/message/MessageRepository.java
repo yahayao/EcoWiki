@@ -17,6 +17,10 @@ import com.ecowiki.entity.message.Message;
  * 消息数据访问接口
  * 
  * 提供消息的CRUD操作和查询功能
+ * 
+ * @author EcoWiki团队
+ * @version 1.0
+ * @since 2025-07-01
  */
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Integer> {

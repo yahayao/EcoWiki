@@ -26,7 +26,7 @@ import com.ecowiki.entity.user.UserRoleId;
  *
  * @author EcoWiki
  * @version 1.0
- * @since 2024-04
+ * @since 2025-07-01
  */
 @Repository
 public interface UserRoleRepository extends JpaRepository<UserRole, UserRoleId> {

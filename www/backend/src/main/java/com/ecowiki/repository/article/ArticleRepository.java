@@ -27,7 +27,7 @@ import com.ecowiki.entity.article.Article;
  *
  * @author EcoWiki
  * @version 1.0
- * @since 2024-04
+ * @since 2025-07-01
  */
 @Repository
 public interface ArticleRepository extends JpaRepository<Article, Long> {

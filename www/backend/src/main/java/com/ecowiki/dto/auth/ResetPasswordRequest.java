@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Size;
  *
  * @author EcoWiki开发团队
  * @version 1.0.0
- * @since 2024-01-01
+ * @since 2025-07-01
  */
 public class ResetPasswordRequest {
     /** 用户名（可选，与邮箱二选一） */

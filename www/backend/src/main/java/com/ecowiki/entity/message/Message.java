@@ -15,6 +15,10 @@ import jakarta.persistence.Table;
  * 
  * 对应数据库中的messages表，用于存储用户之间的消息通知。
  * 支持消息发送、接收、状态管理等功能。
+ * 
+ * @author EcoWiki Team
+ * @version 1.0.0
+ * @since 2025-07-21
  */
 @Entity
 @Table(name = "messages")

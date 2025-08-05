@@ -51,7 +51,7 @@ import jakarta.persistence.Table;
  * 
  * @author EcoWiki开发团队
  * @version 1.0.0
- * @since 2024-01-01
+ * @since 2025-06-30
  * @see RolePermissionId 复合主键类
  * @see Role 角色实体类
  * @see Permission 权限实体类
