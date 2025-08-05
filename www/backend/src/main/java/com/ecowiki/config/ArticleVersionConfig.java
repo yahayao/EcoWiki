@@ -1,3 +1,17 @@
+/**
+ * 文章版本系统配置类
+ * 
+ * 功能包括：
+ * - 文章版本管理配置
+ * - 定时任务调度器配置
+ * - 异步处理任务配置
+ * - 版本清理和维护任务
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.config;
 
 import org.springframework.context.annotation.Bean;
@@ -7,14 +21,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
-/**
- * 文章版本系统配置类
- * 配置定时任务和异步处理
- * 
- * @author EcoWiki Team
- * @version 1.0
- * @since 2025-07-01
- */
 @Configuration
 @EnableScheduling
 @EnableAsync

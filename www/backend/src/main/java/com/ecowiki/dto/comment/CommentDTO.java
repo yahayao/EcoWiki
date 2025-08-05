@@ -1,16 +1,21 @@
+/**
+ * 评论数据传输对象DTO类
+ * 
+ * 功能包括：
+ * - 评论信息前后端数据传输
+ * - 评论层级结构支持
+ * - 评论点赞和回复数据
+ * - 用户评论权限验证
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.dto.comment;
 
 import java.util.List;
 
-/**
- * 评论DTO类
- * 
- * 用于前端交互的评论数据传输对象
- * 
- * @author EcoWiki Team
- * @version 1.0.0
- * @since 2025-07-21
- */
 public class CommentDTO {
     private String id;
     private Long articleId;

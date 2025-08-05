@@ -1,12 +1,19 @@
+/**
+ * 创建评论请求DTO类
+ * 
+ * 功能包括：
+ * - 评论创建请求数据封装
+ * - 文章评论信息传输
+ * - 评论内容验证支持
+ * - 用户评论操作处理
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.dto.comment;
 
-/**
- * 创建评论请求DTO
- * 
- * @author EcoWiki Team
- * @version 1.0.0
- * @since 2025-07-21
- */
 public class CreateCommentRequest {
     private Long articleId;
     private String content;

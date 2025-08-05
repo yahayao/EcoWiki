@@ -1,8 +1,19 @@
-<!-- 
-  用户管理组件
-  功能：展示用户列表，支持用户角色管理、状态切换等操作
-  作者：EcoWiki开发团队
-  文件路径：c:\Users\Z9495\Desktop\EcoWiki_project\EcoWiki-3\www\frontend\src\components\admin\views\UserList.vue
+<!--
+/**
+ * 用户管理组件
+ * 
+ * 功能包括：
+ * - 用户列表展示和管理
+ * - 用户角色分配和权限管理
+ * - 用户状态切换和操作
+ * - 批量用户操作处理
+ * - 用户信息编辑和更新
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 -->
 <template>
   <div class="user-management">

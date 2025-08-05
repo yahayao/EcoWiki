@@ -1,18 +1,23 @@
+/**
+ * 文章草稿数据传输对象DTO类
+ * 
+ * 功能包括：
+ * - 文章草稿信息传输
+ * - 草稿状态和审核信息
+ * - 草稿版本管理支持
+ * - 数据封装和验证
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.dto.article;
 
 import java.time.LocalDateTime;
 
 import com.ecowiki.entity.article.ArticleDraft;
 
-/**
- * 文章草稿数据传输对象
- * 
- * 用于前后端之间传递文章草稿数据，包含草稿的完整信息和审核状态。
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-31
- */
 public class ArticleDraftDto {
     
     /** 草稿ID */

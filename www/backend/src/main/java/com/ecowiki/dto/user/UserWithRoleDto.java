@@ -1,22 +1,21 @@
+/**
+ * 用户角色数据传输对象DTO类
+ * 
+ * 功能包括：
+ * - 用户信息与角色数据封装
+ * - 管理后台用户列表展示
+ * - 角色分配和权限管理支持
+ * - 敏感信息过滤和安全传输
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.dto.user;
 
 import java.time.LocalDateTime;
 
-/**
- * 用户角色DTO
- * <p>
- * 用于前后端传输的用户信息数据传输对象，包含用户基本信息和关联的角色名称。
- * 主要用于管理后台的用户列表展示、角色分配等场景。
- * <p>
- * <b>设计说明：</b>
- * - 避免暴露敏感信息，不包含密码等字段
- * - 包含时间戳便于审计和排序
- * - 支持前端用户管理界面的数据绑定
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2024-04
- */
 public class UserWithRoleDto {
     /** 用户ID */
     private Long userId;

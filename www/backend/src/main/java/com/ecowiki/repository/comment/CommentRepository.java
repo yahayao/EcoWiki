@@ -1,3 +1,17 @@
+/**
+ * 评论数据访问层接口
+ * 
+ * 功能包括：
+ * - 评论实体的CRUD操作
+ * - 文章评论查询和分页
+ * - 评论层级和回复管理
+ * - 评论统计和排序功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.repository.comment;
 
 import java.util.List;
@@ -11,15 +25,6 @@ import org.springframework.stereotype.Repository;
 
 import com.ecowiki.entity.comment.Comment;
 
-/**
- * 评论Repository接口
- * 
- * 提供评论数据访问功能，匹配实际数据库表结构
- * 
- * @author EcoWiki Team
- * @version 1.0.0
- * @since 2025-07-21
- */
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     

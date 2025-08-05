@@ -1,27 +1,17 @@
 /**
- * 权限管理系统类型定义文件
+ * 权限管理系统类型定义模块
  * 
- * 这个文件定义了EcoWiki权限管理系统中使用的所有TypeScript类型接口。
- * 类型定义严格对应后端数据库表结构，确保前后端数据一致性。
- * 
- * 主要类型分类：
- * 1. 核心实体类型 - Permission, Role, RolePermission
- * 2. 业务组合类型 - RolePermissionAssignment, PermissionGroup
- * 3. 表单数据类型 - RoleForm, PermissionForm, PermissionGroupForm
- * 4. API响应类型 - 统一的接口响应格式
- * 
- * 设计原则：
- * - 与数据库表结构一致
- * - 支持可选字段和扩展
- * - 类型安全和可维护性
+ * 功能包括：
+ * - 权限和角色相关接口定义
+ * - 权限管理数据结构
+ * - 用户权限验证类型支持
+ * - TypeScript类型安全保障
  * 
  * @author EcoWiki开发团队
- * @version 2.0.0 - 完善权限系统类型定义
- * @since 2024-04-01
- * @lastModified 2025-07-03
+ * @version 2.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
  */
-
-// === 核心实体类型定义 ===
 
 /**
  * 权限实体类型

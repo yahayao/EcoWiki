@@ -1,3 +1,17 @@
+/**
+ * 文章数据传输对象DTO类
+ * 
+ * 功能包括：
+ * - 文章信息前后端传输
+ * - 文章数据封装和验证
+ * - 文章统计信息传递
+ * - 序列化和反序列化支持
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.dto.article;
 
 import java.time.LocalDateTime;
@@ -5,21 +19,6 @@ import java.time.LocalDateTime;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * 文章数据传输对象
- * <p>
- * 用于文章信息的前后端传输，包含文章的完整信息和统计数据。
- * 支持数据验证、序列化传输等功能。
- * <p>
- * <b>设计说明：</b>
- * - 包含完整的文章信息（标题、内容、分类、标签等）
- * - 包含统计信息（浏览量、点赞数、评论数）
- * - 支持Bean Validation进行数据验证
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-07
- */
 public class ArticleDto {
     /** 文章ID */
     private Long articleId;

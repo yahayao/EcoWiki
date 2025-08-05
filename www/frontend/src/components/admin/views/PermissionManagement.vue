@@ -1,8 +1,19 @@
-<!-- 
-  权限管理组件
-  功能：管理系统权限，支持权限的增删改查操作
-  作者：EcoWiki开发团队
-  文件路径：c:\Users\Z9495\Desktop\EcoWiki_project\EcoWiki-3\www\frontend\src\components\admin\views\PermissionManagement.vue
+<!--
+/**
+ * 权限管理组件
+ * 
+ * 功能包括：
+ * - 系统权限管理和配置
+ * - 权限的增删改查操作
+ * - 权限分组和层级管理
+ * - 权限分配和授权控制
+ * - 权限统计和监控
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 -->
 <template>
   <div class="permission-management">

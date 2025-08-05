@@ -1,3 +1,17 @@
+/**
+ * 角色数据访问层接口
+ * 
+ * 功能包括：
+ * - 角色实体的CRUD操作
+ * - 角色名称查询和验证
+ * - 角色权限关联查询
+ * - 角色列表获取和统计
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.repository.user;
 
 import java.util.List;
@@ -8,21 +22,6 @@ import org.springframework.stereotype.Repository;
 
 import com.ecowiki.entity.user.Role;
 
-/**
- * 角色数据访问接口
- * <p>
- * 继承JpaRepository，提供角色实体的基础CRUD操作和自定义查询方法。
- * 支持角色名称查询、角色列表获取等功能。
- * <p>
- * <b>设计说明：</b>
- * - 基于Spring Data JPA，自动生成基础CRUD方法
- * - 支持角色管理、权限分配等业务场景
- * - 提供有序的角色查询，便于前端展示
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-01
- */
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Integer> {
     /**

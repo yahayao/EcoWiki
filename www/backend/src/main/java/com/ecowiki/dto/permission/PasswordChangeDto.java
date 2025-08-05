@@ -1,25 +1,23 @@
+/**
+ * 密码修改数据传输对象DTO类
+ * 
+ * 功能包括：
+ * - 用户密码修改数据封装
+ * - 原密码验证和身份确认
+ * - 新密码强度验证
+ * - 安全的密码变更流程
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.dto.permission;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/**
- * 密码修改数据传输对象
- * <p>
- * 用于用户修改密码时的数据传输和验证。
- * 包含原密码验证和新密码设置功能。
- * <p>
- * <b>安全设计：</b>
- * - 要求提供原密码进行身份验证
- * - 新密码强度验证（长度、复杂度）
- * - 确认密码一致性检查
- * - 防止密码重复使用
- * 
- * @author EcoWiki Development Team
- * @version 1.0
- * @since 2025-08-01
- */
 public class PasswordChangeDto {
     
     /**

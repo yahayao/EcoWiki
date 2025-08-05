@@ -1,24 +1,22 @@
+/**
+ * 用户登录请求DTO类
+ * 
+ * 功能包括：
+ * - 用户登录信息数据封装
+ * - 用户名或邮箱登录支持
+ * - 登录数据验证和校验
+ * - "记住我"功能支持
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.dto.auth;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * 用户登录请求DTO
- * <p>
- * 用于接收前端用户登录的请求数据，支持用户名或邮箱登录。
- * 支持数据验证和"记住我"功能。
- * <p>
- * <b>设计说明：</b>
- * - 支持用户名或邮箱两种登录方式
- * - 包含密码验证规则
- * - 支持"记住我"功能（可生成长期有效token）
- * - 使用Bean Validation进行数据验证
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-06-24
- */
 public class LoginRequest {
     /** 用户名（可选，与邮箱二选一） */
     private String username;
