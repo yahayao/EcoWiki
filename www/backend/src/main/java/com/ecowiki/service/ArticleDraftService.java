@@ -66,8 +66,23 @@ public class ArticleDraftService {
             throw new IllegalArgumentException("标题为 '" + request.getTitle() + "' 的文章已存在");
         }
         
+        // 为新文章先创建一个草稿状态的 Article 记录
+        Article draftArticle = new Article();
+        draftArticle.setTitle(request.getTitle());
+        draftArticle.setAuthor(request.getAuthor());
+        draftArticle.setContent(request.getContent());
+        draftArticle.setCategory(request.getCategory());
+        draftArticle.setPublishDate(LocalDateTime.now());
+        draftArticle.setViews(0);
+        draftArticle.setLikes(0);
+        draftArticle.setComments(0);
+        
+        // 保存草稿文章，获取分配的 ID
+        Article savedArticle = articleRepository.save(draftArticle);
+        
+        // 创建对应的草稿记录
         ArticleDraft draft = new ArticleDraft();
-        draft.setArticleId(null); // 新文章，articleId为null
+        draft.setArticleId(savedArticle.getArticleId()); // 关联刚创建的文章ID
         draft.setEditorUserId(editorUserId);
         draft.setTitle(request.getTitle());
         draft.setContent(request.getContent());
@@ -150,7 +165,8 @@ public class ArticleDraftService {
             // 发送通过通知给编辑者
             sendApprovalNotificationToEditor(savedDraft, reviewerUserId);
         } else {
-            // 审核拒绝，发送拒绝通知给编辑者
+            // 审核拒绝，保留 article 记录和草稿记录作为历史记录
+            // 发送拒绝通知给编辑者
             sendRejectionNotificationToEditor(savedDraft, reviewerUserId);
         }
         
@@ -162,16 +178,15 @@ public class ArticleDraftService {
      * @param draft 已通过审核的草稿
      */
     private void publishApprovedDraft(ArticleDraft draft) {
-        if (draft.getArticleId() == null) {
-            // 新文章，创建新的Article记录
-            createNewArticleFromDraft(draft);
-        } else {
-            // 编辑现有文章，更新Article记录
+        // 现在所有草稿都应该有 articleId，直接更新对应的文章记录
+        if (draft.getArticleId() != null) {
             updateExistingArticleFromDraft(draft);
+        } else {
+            // 这种情况不应该发生，但保留兼容性
+            createNewArticleFromDraft(draft);
         }
         
-        // 发布成功后，可以选择删除草稿或保留作为历史记录
-        // 这里选择保留，但状态已经是APPROVED
+        // 发布成功后，草稿保留作为历史记录，状态已经是APPROVED
     }
 
     /**
