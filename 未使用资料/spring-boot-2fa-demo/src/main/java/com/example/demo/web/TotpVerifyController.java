@@ -1,6 +1,5 @@
 package com.example.demo.web;
 
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,7 +19,6 @@ public class TotpVerifyController {
 
     @GetMapping("/totp-verify")
     public String verifyTotp(@RequestParam int totp) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         // 从存储中获取与用户名关联的密钥，这里假设已获取  
         String secret = "OZSNQGV44RGY63BL";
 

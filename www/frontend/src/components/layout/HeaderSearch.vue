@@ -1,55 +1,20 @@
 <!--
-  头部搜索组件
-  
-  该组件提供网站头部的搜索功能，允许用户快速搜索站内的知识内容。
-  采用现代化的UI设计，支持键盘操作和鼠标点击两种搜索方式。
-  
-  主要功能：
-  - 关键词搜索：支持输入搜索关键        <div class="dropdown-footer" v-if="hasMoreResults">
-          <button class="view-more-btn" @click="loadMoreResults">
-            加载更多结果 (还有 {{ totalResults - searchResults.value.length }} 个)
-          </button>
-        </div>检索
-  - 多种触发方式：支持回车键和点击按钮两种搜索触发方式
-  - 实时验证：自动过滤空白搜索词，确保搜索有效性
-  - 事件传递：通过emit向父组件传递搜索事件
-  - 响应式设计：适配不同屏幕尺寸的显示效果
-  
-  交互设计：
-  - 占位符提示：清晰的搜索提示文本
-  - 图标按钮：直观的搜索图标视觉引导
-  - 键盘操作：回车键快捷搜索支持
-  - 输入验证：自动过滤空白和无效输入
-  
-  视觉特点：
-  - 现代化设计：圆角边框和阴影效果
-  - 图标集成：使用SVG图标保证清晰度
-  - 悬浮反馈：按钮悬浮状态的颜色变化
-  - 响应式布局：自适应容器宽度
-  
-  技术实现：
-  - Vue 3 Composition API
-  - TypeScript 类型安全
-  - 事件发射机制（defineEmits）
-  - 双向数据绑定（v-model）
-  - 键盘事件监听（@keyup.enter）
-  
-  使用场景：
-  - 网站头部导航栏
-  - 全站内容搜索入口
-  - 快速查找功能
-  - 用户内容发现
-  
-  扩展性：
-  - 支持搜索建议和自动完成
-  - 可添加搜索历史记录
-  - 支持高级搜索选项
-  - 可集成搜索结果预览
-  
-  @author EcoWiki Team
-  @version 1.0.0
-  @since 2024-01-01
+/**
+ * 头部搜索组件
+ * 
+ * 功能：
+ * - 提供网站头部的全局搜索功能
+ * - 支持关键词检索和实时搜索建议
+ * - 实现搜索结果预览和快速跳转
+ * - 提供响应式设计和键盘操作支持
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 -->
+
 <template>
   <!-- 搜索栏容器 -->
   <div class="search-container" ref="searchContainer">
@@ -95,7 +60,7 @@
         <div class="results-list">
           <div 
             v-for="(article, index) in searchResults" 
-            :key="article.id"
+            :key="article.articleId"
             class="result-item"
             :class="{ active: selectedIndex === index }"
             @click.stop="goToArticle(article.title)"
@@ -142,8 +107,7 @@
 
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { articleApi } from '../../api/article'
-import type { Article } from '../../types/article'
+import { articleApi, type Article } from '../../api/article'
 
 // 定义组件事件类型
 const emit = defineEmits<{

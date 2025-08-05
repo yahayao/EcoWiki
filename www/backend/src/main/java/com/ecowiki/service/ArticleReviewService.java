@@ -531,9 +531,6 @@ public class ArticleReviewService {
     private void sendReviewAssignmentNotification(Long reviewerId, ArticleReview review) {
         try {
             String title = "新的审核任务";
-            String content = String.format("您有一个新的%s审核任务，文章ID: %d，请及时处理。",
-                review.getReviewType().getDescription(), review.getArticleId());
-            
             messageService.sendMessage(null, reviewerId.intValue(), title);
         } catch (Exception e) {
             logger.error("发送审核分配通知失败", e);
@@ -546,11 +543,6 @@ public class ArticleReviewService {
     private void sendReviewResultNotification(ArticleReview review, boolean approved) {
         try {
             String title = approved ? "审核通过通知" : "审核拒绝通知";
-            String content = String.format("您的文章(ID: %d)审核%s。%s",
-                review.getArticleId(),
-                approved ? "已通过" : "被拒绝",
-                review.getReviewReason() != null ? "原因: " + review.getReviewReason() : "");
-            
             messageService.sendMessage(null, review.getSubmitterId().intValue(), title);
         } catch (Exception e) {
             logger.error("发送审核结果通知失败", e);
@@ -564,8 +556,6 @@ public class ArticleReviewService {
         try {
             List<User> adminUsers = getAdminUsers();
             String title = "审核分配失败";
-            String content = String.format("审核ID: %d 无法自动分配审核员，请手动处理。", review.getReviewId());
-            
             for (User admin : adminUsers) {
                 messageService.sendMessage(null, admin.getUserId().intValue(), title);
             }

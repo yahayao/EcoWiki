@@ -1,46 +1,20 @@
 <!--
-  应用程序头部导航组件
-  
-  该组件是整个应用的顶部导航栏，包含Logo、搜索功能和用户操作区域。
-  采用响应式设计，支持不同屏幕尺寸的自适应布局。
-  
-  功能特性：
-  - Logo展示和品牌识别
-  - 全局搜索功能
-  - 用户登录/注册/管理入口
-  - 粘性定位，始终显示在顶部
-  - 渐变背景和阴影效果
-  
-  组件组成：
-  - HeaderLogo: Logo组件
-  - HeaderSearch: 搜索组件
-  - HeaderUserArea: 用户操作区域组件
-  
-  事件传递：
-  - showLogin: 显示登录模态框
-  - showRegister: 显示注册模态框
-  - showAdminSettings: 显示管理后台
-  - logout: 用户登出
-  
-  响应式设计：
-  - 桌面端：水平布局，三个区域并排显示
-  - 移动端：垂直布局，组件堆叠显示
-  
-  技术栈：
-  - Vue 3 Composition API
-  - TypeScript 类型支持
-  - CSS Grid/Flexbox 布局
-  - CSS 自定义属性和渐变效果
-  
-  使用场景：
-  - 应用主布局的头部区域
-  - 全局导航和用户操作入口
-  - 品牌展示和搜索功能载体
-  
-  @author EcoWiki Team
-  @version 1.0.0
-  @since 2024-01-01
+/**
+ * 应用程序头部导航组件
+ * 
+ * 功能：
+ * - 提供应用顶部导航栏布局
+ * - 支持Logo展示和品牌识别
+ * - 集成全局搜索功能
+ * - 管理用户登录和操作入口
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 -->
+
 <template>
   <!-- 顶部导航栏容器 -->
   <header class="header">

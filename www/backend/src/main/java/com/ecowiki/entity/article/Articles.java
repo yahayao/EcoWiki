@@ -16,8 +16,6 @@ package com.ecowiki.entity.article;
 
 import java.time.LocalDateTime;
 
-import com.ecowiki.entity.user.User;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
