@@ -1,4 +1,19 @@
-<!-- UserArticle.vue -->
+<!--
+/**
+ * 用户文章管理组件
+ * 
+ * 功能：
+ * - 提供用户文章创作和收藏管理界面
+ * - 展示用户发布的文章列表
+ * - 支持文章编辑、删除和状态管理
+ * - 提供文章统计和分析功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
+-->
 <template>
   <div class="article-container">
     <!-- 页面标题区域 -->

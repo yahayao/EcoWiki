@@ -1,30 +1,19 @@
-package com.ecowiki.service;
-/*
-  管理员服务类
-
-  负责处理管理后台相关的业务逻辑，包括用户管理、权限分配、系统统计等。
-  该服务为管理员提供批量操作和系统级功能的支持。
-
-  主要功能：
-  - 分页获取所有用户及其角色信息
-  - 更新用户角色（权限组）
-  - 启用/禁用用户账号
-  - 获取系统统计数据（用户数、活跃数、各角色分布）
-  - 软删除用户（将用户设为不可用）
-
-  依赖组件：
-  - UserRepository：用户数据访问层
-  - UserService：用户业务逻辑层
-
-  设计说明：
-  - 角色分配和统计均通过UserService统一处理
-  - 支持系统级统计和批量管理操作
-  - 采用事务管理，保证批量操作的原子性
-
-  @author EcoWiki Team
- * @version 2.0
- * @since 2025-06-30
+/**
+ * 管理员服务类
+ * 
+ * 功能：
+ * - 处理管理后台相关的业务逻辑
+ * - 提供用户管理、权限分配和系统统计
+ * - 支持批量操作和系统级功能
+ * - 实现用户角色管理和账号控制
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
  */
+package com.ecowiki.service;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;

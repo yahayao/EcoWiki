@@ -1,3 +1,17 @@
+/**
+ * 审核权限配置实体类
+ * 
+ * 功能：
+ * - 定义审核权限配置的数据模型
+ * - 支持角色与审核权限的映射管理
+ * - 实现审核流程的权限控制
+ * - 提供权限配置的时间戳记录
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.review;
 
 import java.time.LocalDateTime;
@@ -15,15 +29,6 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
-/**
- * 审核权限配置实体类
- * 
- * 管理基于角色的审核权限配置
- * 
- * @author EcoWiki Team
- * @version 1.0
- * @since 2025-07-25
- */
 @Entity
 @Table(name = "review_permission_config")
 public class ReviewPermissionConfig {

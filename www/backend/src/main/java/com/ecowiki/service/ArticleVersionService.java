@@ -1,3 +1,17 @@
+/**
+ * 文章版本服务类
+ * 
+ * 功能：
+ * - 提供文章版本控制和历史记录管理
+ * - 支持版本创建、查询和对比功能
+ * - 实现版本压缩和存储优化
+ * - 提供版本回滚和恢复功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.service;
 
 import java.io.IOException;
@@ -24,14 +38,6 @@ import com.ecowiki.repository.article.ArticleVersionStatsRepository;
 import com.ecowiki.util.CompressionUtil;
 import com.ecowiki.util.DiffUtil;
 
-/**
- * 文章版本服务类
- * 实现混合存储策略的文章历史系统
- * 
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-01
- */
 @Service
 @Transactional
 public class ArticleVersionService {

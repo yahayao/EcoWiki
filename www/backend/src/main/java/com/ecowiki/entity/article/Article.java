@@ -1,3 +1,17 @@
+/**
+ * 文章实体类
+ * 
+ * 功能：
+ * - 定义文章基本信息的数据模型
+ * - 包含文章标题、内容、分类和标签管理
+ * - 支持文章状态和版本控制
+ * - 提供文章统计数据和时间戳记录
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.article;
 
 import java.time.LocalDateTime;
@@ -24,23 +38,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-/**
- * 文章实体类
- * <p>
- * 对应数据库中的articles表，存储Wiki文章的完整信息。
- * 包含文章内容、元数据、统计信息等字段，支持文章的完整生命周期管理。
- * <p>
- * <b>设计说明：</b>
- * - 支持大文本内容存储（使用@Lob注解）
- * - 包含完整的验证约束
- * - 提供便利方法进行统计数据操作
- * - 自动更新时间戳管理
- * - 适用于Wiki内容管理、文章展示、统计分析等场景
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-06-30
- */
 @Entity
 @Table(name = "articles")
 public class Article {

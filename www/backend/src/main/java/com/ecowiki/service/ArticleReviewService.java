@@ -1,3 +1,17 @@
+/**
+ * 文章审核服务类
+ * 
+ * 功能：
+ * - 提供文章审核流程的完整管理
+ * - 支持多级审核权限和角色管理
+ * - 实现审核状态跟踪和通知功能
+ * - 提供审核历史记录和统计分析
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.service;
 
 import java.time.LocalDateTime;
@@ -32,15 +46,6 @@ import com.ecowiki.repository.review.ReviewerAssignmentRepository;
 import com.ecowiki.repository.user.RoleRepository;
 import com.ecowiki.repository.user.UserRepository;
 
-/**
- * 文章审核服务类
- * 
- * 提供文章审核的核心业务逻辑，包括审核申请、分配、处理等功能
- * 
- * @author EcoWiki Team
- * @version 1.0
- * @since 2025-07-25
- */
 @Service
 @Transactional
 public class ArticleReviewService {

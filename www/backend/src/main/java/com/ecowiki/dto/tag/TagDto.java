@@ -1,17 +1,21 @@
+/**
+ * 标签数据传输对象DTO类
+ * 
+ * 功能包括：
+ * - 标签信息数据封装
+ * - 控制器和服务层数据传输
+ * - 标签属性安全传递
+ * - 避免实体类直接暴露
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.dto.tag;
 
 import java.time.LocalDateTime;
 
-/**
- * 标签数据传输对象
- * 
- * 用于在控制器层和服务层之间传递标签数据，
- * 避免直接暴露实体类的内部结构。
- * 
- * @author EcoWiki开发团队
- * @version 1.0.0
- * @since 2025-06-30
- */
 public class TagDto {
     private Long tagId;
     private String tagName;

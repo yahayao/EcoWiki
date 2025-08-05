@@ -1,3 +1,17 @@
+/**
+ * 标签数据访问层接口
+ * 
+ * 功能：
+ * - 提供标签的数据库操作接口
+ * - 支持标签的搜索、统计和查询功能
+ * - 实现热门标签查询和排序
+ * - 提供标签与文章关联的数据访问
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.repository.tag;
 
 import java.util.List;
@@ -11,17 +25,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.ecowiki.entity.tag.Tag;
-
-/**
- * 标签数据访问接口
- * 
- * 提供标签实体的数据库操作方法，包括基本的CRUD操作和自定义查询。
- * 支持标签的搜索、统计、热门标签查询等功能。
- * 
- * @author EcoWiki开发团队
- * @version 1.0.0
- * @since 2025-07-01
- */
 @Repository
 public interface TagRepository extends JpaRepository<Tag, Long> {
     

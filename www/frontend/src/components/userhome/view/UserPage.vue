@@ -1,4 +1,21 @@
-<!-- UserPage.vue -->
+<!--
+/**
+ * 用户主页组件
+ * 
+ * 功能包括：
+ * - 用户个人信息展示
+ * - 用户资料编辑功能
+ * - 用户活动统计显示
+ * - 用户权限信息管理
+ * - 响应式布局和交互
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
+-->
+
 <template>
   <div class="user-page-container">
     <!-- 加载状态 -->

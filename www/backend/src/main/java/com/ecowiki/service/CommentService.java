@@ -1,3 +1,17 @@
+/**
+ * 评论服务类
+ * 
+ * 功能：
+ * - 提供评论的创建、查询和管理功能
+ * - 支持多层级评论和回复系统
+ * - 实现评论审核和状态管理
+ * - 提供评论统计和分页查询功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.service;
 
 import java.time.LocalDateTime;
@@ -21,15 +35,6 @@ import com.ecowiki.repository.comment.CommentLikeRepository;
 import com.ecowiki.repository.comment.CommentRepository;
 import com.ecowiki.repository.user.UserRepository;
 
-/**
- * 评论服务类
- * 
- * 提供评论相关的业务逻辑，匹配实际数据库结构
- * 
- * @author EcoWiki Team
- * @version 1.0.0
- * @since 2025-07-21
- */
 @Service
 @Transactional
 public class CommentService {

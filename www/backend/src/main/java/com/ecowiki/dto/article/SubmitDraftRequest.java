@@ -1,17 +1,21 @@
+/**
+ * 提交文章草稿请求DTO类
+ * 
+ * 功能：
+ * - 封装用户提交文章草稿时的请求数据
+ * - 支持新建文章和编辑现有文章的草稿提交
+ * - 提供数据验证和类型转换功能
+ * - 包含文章标题、内容、分类、标签等核心信息
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.dto.article;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
-/**
- * 提交文章草稿请求DTO
- * 
- * 用于用户提交文章草稿时的数据传输。
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-31
- */
 public class SubmitDraftRequest {
     
     /** 关联的文章ID（编辑现有文章时提供，新建文章时为null） */

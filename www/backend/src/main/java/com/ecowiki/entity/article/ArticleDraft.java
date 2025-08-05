@@ -1,3 +1,17 @@
+/**
+ * 文章草稿实体类
+ * 
+ * 功能：
+ * - 定义文章草稿的数据模型
+ * - 支持文章审核流程和状态管理
+ * - 包含草稿内容和审核信息记录
+ * - 提供审核时间戳和状态跟踪功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.article;
 
 import java.time.LocalDateTime;
@@ -17,22 +31,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-/**
- * 文章草稿实体类
- * <p>
- * 对应数据库中的article_drafts表，存储待审核的文章草稿。
- * 用户编辑文章后会先保存到草稿表，等待管理员审核通过后才会发布到正式的articles表。
- * <p>
- * <b>审核流程：</b>
- * 1. 用户编辑文章 -> 保存到草稿表（状态：PENDING）
- * 2. 自动发送消息给superadmin
- * 3. superadmin审核 -> 通过（APPROVED）或拒绝（REJECTED）
- * 4. 通过：移动到articles表并删除草稿；拒绝：保留草稿并发送拒绝消息
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-31
- */
 @Entity
 @Table(name = "article_drafts")
 public class ArticleDraft {

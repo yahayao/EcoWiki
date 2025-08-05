@@ -1,25 +1,23 @@
+/**
+ * 用户注册请求DTO类
+ * 
+ * 功能包括：
+ * - 用户注册信息数据封装
+ * - 注册表单数据验证
+ * - 用户基本信息收集
+ * - Bean Validation数据校验
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.dto.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * 用户注册请求DTO
- * <p>
- * 用于接收前端用户注册的请求数据，包含用户的基本信息和验证规则。
- * 支持完整的数据验证，确保注册信息的完整性和有效性。
- * <p>
- * <b>设计说明：</b>
- * - 包含用户注册所需的核心字段
- * - 使用Bean Validation进行全面的数据验证
- * - 支持邮箱格式验证和长度限制
- * - 适用于用户注册、信息收集等场景
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2024-04
- */
 public class UserRegistrationDto {
     /** 用户名 */
     @NotBlank(message = "用户名不能为空")

@@ -1,17 +1,20 @@
+/**
+ * 消息传输对象DTO类
+ * 
+ * 功能：
+ * - 封装消息的完整信息用于前后端数据传输
+ * - 包含发送者和接收者的用户信息
+ * - 支持消息状态管理（已读/未读）
+ * - 提供消息时间戳和内容记录功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.dto.message;
 
 import java.time.LocalDateTime;
-
-/**
- * 消息传输对象DTO
- * 
- * 用于前后端传输消息数据，包含发送者和接收者的用户信息。
- * 支持消息状态管理（已读/未读）和时间戳记录。
- * 
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-31
- */
 public class MessageDto {
     
     /** 消息唯一标识ID */

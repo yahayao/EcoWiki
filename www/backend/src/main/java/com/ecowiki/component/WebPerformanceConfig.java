@@ -1,18 +1,22 @@
+/**
+ * Web性能配置组件类
+ * 
+ * 功能：
+ * - 配置静态资源缓存和压缩设置
+ * - 优化Web性能和响应速度
+ * - 提供资源处理和路径映射配置
+ * - 实现静态资源的性能优化策略
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.component;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-/**
- * Web性能配置组件
- * 
- * 配置静态资源缓存、压缩等性能优化设置
- * 
- * @author EcoWiki Team
- * @version 1.0
- * @since 2025-08-01
- */
 @Component
 public class WebPerformanceConfig implements WebMvcConfigurer {
     

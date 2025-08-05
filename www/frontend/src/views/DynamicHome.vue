@@ -1,44 +1,20 @@
 <!--
-  动态首页组件
-  
-  这是一个智能的首页容器组件，根据用户设置动态切换不同的首页风格。
-  支持经典风格和简洁风格之间的实时切换，提供个性化的用户体验。
-  
-  主要功能：
-  - 动态组件加载：根据用户偏好加载不同的首页组件
-  - 实时风格切换：监听设置变更事件，立即更新首页风格
-  - 事件透传：将子组件事件透传给父组件
-  - 本地存储集成：读取用户的首页风格偏好设置
-  
-  支持的首页风格：
-  - Classic（经典风格）：传统的Wiki首页布局，功能丰富
-  - Simple（简洁风格）：极简的首页设计，快速访问
-  
-  设计特点：
-  - 零延迟切换：使用Vue动态组件实现即时切换
-  - 事件一致性：保持不同风格组件的事件接口一致
-  - 状态同步：监听全局事件确保设置变更及时生效
-  - 向下兼容：默认使用经典风格，确保用户体验连续性
-  
-  技术实现：
-  - Vue 3 动态组件（component :is）
-  - 全局事件监听（window.addEventListener）
-  - LocalStorage状态持久化
-  - 组件事件透传机制
-  
-  @author EcoWiki Team
-  @version 1.0.0
-  @since 2024-01-01
-  
-  @example
-  <!-- 在路由中使用 --
-  <DynamicHome 
-    @show-login="handleShowLogin"
-    @show-register="handleShowRegister"
-    @show-admin="handleShowAdmin"
-    @logout="handleLogout"
-  />
+/**
+ * 动态首页组件
+ * 
+ * 功能：
+ * - 智能切换不同风格的首页布局
+ * - 根据用户偏好动态加载组件
+ * - 支持经典风格和简洁风格实时切换
+ * - 提供个性化的用户体验
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 -->
+  
 <template>
   <!-- 动态组件容器：根据用户设置渲染不同的首页组件 -->
   <component

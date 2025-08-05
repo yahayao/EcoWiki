@@ -1,18 +1,12 @@
 /**
- * Vue Router路由配置文件
+ * Vue Router路由配置模块
  * 
- * 定义了EcoWiki应用程序的所有路由规则和导航守卫。
- * 使用Vue Router 4.x，支持现代的路由功能和组合式API。
- * 
- * 主要功能：
- * - 定义页面路由映射
- * - 配置嵌套路由（管理后台）
- * - 设置路由守卫和拦截器
- * - 处理404页面重定向
- * - 管理后台访问控制
- * 
- * 路由结构：
- * - / : 动态首页（根据用户偏好显示不同风格）
+ * 功能包括：
+ * - 应用程序路由规则定义
+ * - 页面组件导航映射
+ * - 路由守卫和访问控制
+ * - 嵌套路由和动态路由
+ * - 404页面处理和重定向
  * - /wiki/:title : 文章详情页（通过标题访问）
  * - /edit/:title : 文章编辑页（编辑现有文章或新建）
  * - /admin : 管理后台布局
@@ -20,15 +14,12 @@
  *   - /admin/users : 用户管理
  *   - /admin/roles : 角色权限管理
  * 
- * 特殊功能：
- * - 路由守卫保存进入管理后台前的路由
- * - 离开管理后台时触发关闭事件
- * - 404页面自动重定向到首页
- * 
- * @author EcoWiki Team
- * @version 2.0 (增加管理后台嵌套路由)
- * @since 2025-06-30
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
  */
+ 
 
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '../composables/useAuth'

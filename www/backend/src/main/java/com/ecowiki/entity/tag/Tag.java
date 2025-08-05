@@ -1,3 +1,17 @@
+/**
+ * 标签实体类
+ * 
+ * 功能：
+ * - 定义文章标签的数据模型
+ * - 支持标签与文章的多对多关联
+ * - 提供标签统计和使用频率记录
+ * - 实现标签分类和管理功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.tag;
 
 import java.time.LocalDateTime;
@@ -16,31 +30,6 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * 标签实体类
- * 
- * 用于存储文章标签信息的独立实体。
- * 通过多对多关系与文章实体建立关联，支持标签的统一管理和重用。
- * 
- * 主要功能：
- * - 标签名称管理：存储唯一的标签名称
- * - 标签创建时间：记录标签首次创建的时间
- * - 标签使用统计：通过关联文章数量统计标签使用频率
- * - 标签描述：可选的标签描述信息
- * 
- * 数据库表结构：
- * - tag_id: 标签唯一标识符（主键，自增）
- * - tag_name: 标签名称（唯一，必填）
- * - description: 标签描述（可选）
- * - created_time: 创建时间（自动设置）
- * 
- * 关联关系：
- * - 与Article实体建立多对多关系（一个标签可以关联多篇文章，一篇文章可以有多个标签）
- * 
- * @author EcoWiki开发团队
- * @version 1.0.0
- * @since 2025-06-30
- */
 @Entity
 @Table(name = "tags")
 public class Tag {

@@ -1,3 +1,17 @@
+/**
+ * 文章服务类
+ * 
+ * 功能：
+ * - 文章的创建、编辑、删除和查询管理
+ * - 文章搜索和分类筛选功能
+ * - 文章统计数据和热门推荐
+ * - 文章版本控制和历史记录管理
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.service;
 
 import java.time.LocalDateTime;
@@ -32,22 +46,6 @@ import com.ecowiki.repository.user.UserArticleFavoriteRepository;
 import com.ecowiki.repository.user.UserArticleLikeRepository;
 import com.ecowiki.repository.user.UserRepository;
 
-/**
- * 文章服务类
- * <p>
- * 提供文章相关的业务逻辑处理，包括文章的增删改查、搜索、分类、标签、统计、互动等功能。
- * 依赖ArticleRepository进行数据访问，负责Entity与DTO之间的转换。
- * <p>
- * <b>设计说明：</b>
- * - 采用事务管理确保数据一致性
- * - 支持分页、排序、条件查询等功能
- * - 提供丰富的搜索和推荐功能
- * - 适用于Wiki内容管理、文章展示、社区互动等场景
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-01
- */
 @Service
 @Transactional
 public class ArticleService {

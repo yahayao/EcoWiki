@@ -1,3 +1,17 @@
+/**
+ * 文本差异计算工具类
+ * 
+ * 功能：
+ * - 基于Myers算法实现文本差异比较
+ * - 计算两个文本版本之间的变更内容
+ * - 支持文章版本管理和变更追踪
+ * - 提供高效的文本对比和差异分析功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.util;
 
 import java.util.ArrayList;
@@ -8,32 +22,6 @@ import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Component;
 
-/**
- * 文本差异计算工具类
- * <p>
- * 实现了基于Myers算法的文本差异比较功能，用于计算两个文本版本之间的变更内容。
- * 主要用于文章版本管理和变更追踪功能。
- * <p>
- * <b>核心功能：</b>
- * - 逐行文本差异计算
- * - 支持添加、删除、无变化三种类型
- * - 差异比例和统计信息计算
- * - 详细的差异行信息输出
- * <p>
- * <b>算法特点：</b>
- * - 基于Myers差分算法的简化实现
- * - 时间复杂度为O(N*M)，适用于中等规模文本
- * - 准确识别文本的增删改变化
- * <p>
- * <b>使用场景：</b>
- * - Wiki文章版本对比
- * - 内容变更历史记录
- * - 编辑审核和回退功能
- * 
- * @author EcoWiki Development Team
- * @version 1.0
- * @since 2025-08-01
- */
 @Component
 public class DiffUtil {
     

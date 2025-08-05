@@ -1,3 +1,17 @@
+/**
+ * 权限实体类
+ * 
+ * 功能包括：
+ * - 系统权限定义和管理
+ * - 权限名称和资源标识
+ * - 权限分组和层级管理
+ * - 角色权限关联支持
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.user;
 
 import java.time.LocalDateTime;
@@ -9,55 +23,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-/**
- * 权限实体类
- * 
- * 该实体类映射数据库中的permission表，用于管理系统的权限信息。
- * 权限是访问控制系统的核心组件，定义了用户可以执行的操作和访问的资源。
- * 
- * 主要功能：
- * - 权限定义：存储系统中所有可用的权限信息
- * - 权限标识：通过唯一的权限名称标识不同的操作权限
- * - 权限描述：提供人性化的权限功能说明
- * - 时间追踪：记录权限的创建和更新时间
- * 
- * 数据库表结构：
- * - permission_id: 权限唯一标识符（主键，自增）
- * - permission_name: 权限名称/标识符（唯一，如'user:read', 'admin:write'）
- * - description: 权限功能描述
- * - created_at: 权限创建时间
- * - updated_at: 权限最后更新时间
- * 
- * 权限命名规范：
- * - 资源:操作 格式，如：user:read, article:write, system:admin
- * - 分层权限：支持细粒度的权限控制
- * - 通配符权限：支持*通配符表示全部权限
- * 
- * 设计特点：
- * - 细粒度控制：支持精确到具体操作的权限定义
- * - 可扩展性：便于添加新的权限类型和操作
- * - 层次化管理：支持权限的分类和层次结构
- * - 审计支持：完整的时间戳记录权限变更历史
- * 
- * 使用场景：
- * - 基于角色的访问控制(RBAC)：与角色关联实现权限管理
- * - API接口保护：控制对特定接口的访问权限
- * - 功能模块控制：控制用户对不同功能模块的访问
- * - 数据权限管理：控制用户对特定数据的访问权限
- * 
- * 权限示例：
- * - system:admin - 系统管理权限
- * - user:read - 用户信息查看权限
- * - user:write - 用户信息修改权限
- * - article:publish - 文章发布权限
- * - comment:moderate - 评论审核权限
- * 
- * @author EcoWiki开发团队
- * @version 1.0.0
- * @since 2025-06-30
- * @see Role 角色实体类
- * @see RolePermission 角色权限关联类
- */
 @Entity
 @Table(name = "permission")
 public class Permission {

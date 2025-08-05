@@ -1,3 +1,17 @@
+/**
+ * 跨域配置类
+ * 
+ * 功能包括：
+ * - 跨域资源共享(CORS)策略配置
+ * - 前后端分离架构支持
+ * - 开发和生产环境跨域设置
+ * - HTTP请求方法和头部允许配置
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.config;
 
 import org.springframework.context.annotation.Configuration;
@@ -5,22 +19,6 @@ import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-/**
- * 跨域配置类
- * <p>
- * 配置EcoWiki项目的跨域资源共享(CORS)策略，允许前端应用访问后端API。
- * 适用于前后端分离架构的开发和部署环境。
- * <p>
- * <b>设计说明：</b>
- * - 允许前端开发服务器(localhost:5173)的跨域访问
- * - 支持常用HTTP方法(GET、POST、PUT、DELETE、OPTIONS)
- * - 允许所有请求头，支持凭据传递
- * - 设置预检请求缓存时间为1小时
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-01
- */
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
     /**

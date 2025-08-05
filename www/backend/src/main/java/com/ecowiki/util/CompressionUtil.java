@@ -1,3 +1,17 @@
+/**
+ * 数据压缩工具类
+ * 
+ * 功能：
+ * - 提供多种压缩算法支持（GZIP、Deflate、Brotli）
+ * - 实现文本数据的压缩和解压缩
+ * - 支持数据完整性校验和哈希计算
+ * - 优化存储空间和传输效率
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.util;
 
 import java.io.ByteArrayInputStream;
@@ -15,14 +29,6 @@ import java.util.zip.Inflater;
 import org.brotli.dec.BrotliInputStream;
 import org.springframework.stereotype.Component;
 
-/**
- * 压缩工具类
- * 支持GZIP、Deflate和Brotli压缩算法
- * 
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-01
- */
 @Component
 public class CompressionUtil {
     

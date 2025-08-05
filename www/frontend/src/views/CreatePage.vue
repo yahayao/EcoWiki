@@ -1,17 +1,18 @@
 <!--
-  Wiki页面创建界面
-  
-  提供一个简化的表单界面来创建新的Wiki页面，而不是通过URL直接访问。
-  只包含必要的标题输入功能。
-  
-  主要功能：
-  - 页面标题输入和验证
-  - URL预览和验证
-  - 创建后行为选择
-  
-  @author EcoWiki Team
-  @version 2.0.0 (简化版本)
-  @since 2025-07-22
+/**
+ * Wiki页面创建组件
+ * 
+ * 功能：
+ * - 提供简化的表单界面创建新的Wiki页面
+ * - 页面标题输入和实时验证
+ * - URL预览和可用性检查
+ * - 创建后行为选择（编辑/查看）
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 -->
 <template>
   <div class="create-page">

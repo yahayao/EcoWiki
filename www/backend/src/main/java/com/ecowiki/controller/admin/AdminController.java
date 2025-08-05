@@ -1,3 +1,17 @@
+/**
+ * 管理员控制器类
+ * 
+ * 功能：
+ * - 提供后台管理相关的RESTful API接口
+ * - 实现用户管理、角色管理和权限分配功能
+ * - 提供系统统计和数据监控接口
+ * - 支持文章管理和审核功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.controller.admin;
 
 import java.util.List;
@@ -43,21 +57,6 @@ import com.ecowiki.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-/**
- * 管理员控制器
- * <p>
- * 提供后台管理相关的RESTful API，包括用户管理、角色管理、系统统计等。
- * 依赖权限服务、用户服务、角色仓库等，所有接口均需管理员或超级管理员权限。
- * <p>
- * <b>设计说明：</b>
- * - 采用Spring Boot REST风格，接口安全性依赖JWT认证与权限校验。
- * - 支持分页、排序、权限分级、角色动态管理。
- * - 适用于后台管理系统、权限分配、用户状态维护等场景。
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-01
- */
 @RestController
 @RequestMapping("/admin")
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")

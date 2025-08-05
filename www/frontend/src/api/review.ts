@@ -1,3 +1,21 @@
+<!--
+/**
+ * 文章审核API模块
+ * 
+ * 功能包括：
+ * - 创建审核请求
+ * - 分配审核员
+ * - 处理审核结果
+ * - 获取审核统计信息
+ * - 查询审核历史记录
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
+-->
+
 import axios from 'axios';
 import type {
   ArticleReview,
@@ -12,9 +30,6 @@ import type {
 
 const API_BASE_URL = '/api/review';
 
-/**
- * 文章审核 API 服务
- */
 export class ReviewApiService {
   
   /**

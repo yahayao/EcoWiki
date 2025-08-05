@@ -1,3 +1,17 @@
+/**
+ * 用户角色关联实体类
+ * 
+ * 功能包括：
+ * - 用户与角色的多对多关系管理
+ * - 角色分配和权限授予
+ * - 用户权限体系支持
+ * - 角色分配时间记录
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.user;
 
 import java.time.LocalDateTime;
@@ -8,33 +22,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
 
-/**
- * 用户角色关联实体类
- * 
- * 用于管理用户与角色之间的多对多关系。该表是用户权限系统的核心，
- * 支持一个用户拥有多个角色，以及一个角色分配给多个用户。
- * 
- * 数据库表：user_roles
- * 
- * 设计特点：
- * - 使用复合主键（user_id, role_id）确保唯一性
- * - 记录角色分配的时间，便于审计
- * - 支持动态角色分配和撤销
- * 
- * 主要字段：
- * - userId: 用户ID（复合主键之一）
- * - roleId: 角色ID（复合主键之一）
- * - createdAt: 角色分配时间
- * 
- * 使用场景：
- * - 权限检查时查询用户的所有角色
- * - 管理后台中分配/撤销用户角色
- * - 角色管理中查看角色的用户列表
- * 
- * @author EcoWiki Team
- * @version 2.0 (重构后新增，替代User表中的userGroup字段)
- * @since 2025-06-30
- */
 @Entity
 @Table(name = "user_roles")
 @IdClass(UserRoleId.class)

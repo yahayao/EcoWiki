@@ -1,3 +1,17 @@
+/**
+ * 文章草稿服务类
+ * 
+ * 功能：
+ * - 提供文章草稿的创建、提交和管理功能
+ * - 实现完整的文章审核流程和状态管理
+ * - 处理草稿审批、发布和拒绝逻辑
+ * - 支持文章版本控制和内容质量控制
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.service;
 
 import java.time.LocalDateTime;
@@ -18,23 +32,6 @@ import com.ecowiki.entity.user.User;
 import com.ecowiki.repository.article.ArticleDraftRepository;
 import com.ecowiki.repository.article.ArticleRepository;
 import com.ecowiki.repository.user.UserRepository;
-
-/**
- * 文章草稿服务类
- * <p>
- * 提供文章草稿相关的业务逻辑处理，包括草稿的创建、审核、发布等功能。
- * 实现完整的文章审核流程，确保内容质量控制。
- * <p>
- * <b>审核流程：</b>
- * 1. 用户提交文章编辑 -> 创建草稿（状态：PENDING）
- * 2. 自动发送审核通知给superadmin
- * 3. superadmin审核 -> 通过（APPROVED）或拒绝（REJECTED）
- * 4. 通过：发布到articles表；拒绝：发送拒绝通知给用户
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-31
- */
 @Service
 @Transactional
 public class ArticleDraftService {

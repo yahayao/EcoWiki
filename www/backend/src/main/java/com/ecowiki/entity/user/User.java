@@ -1,3 +1,17 @@
+/**
+ * 用户实体类
+ * 
+ * 功能：
+ * - 定义用户基本信息的数据模型
+ * - 包含用户认证和权限管理字段
+ * - 支持用户状态管理和时间戳记录
+ * - 提供用户头像和个人资料存储
+ * 
+ * @author EcoWiki开发团队
+ * @version 2.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.user;
 
 import java.time.LocalDateTime;
@@ -14,34 +28,6 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
-/**
- * 用户实体类
- * 
- * 代表系统中的用户信息，包含用户的基本信息和认证相关数据。
- * 该实体类已经过重构，移除了原有的userGroup字段，改用独立的user_roles表
- * 来管理用户与角色的多对多关系。
- * 
- * 数据库表：user
- * 
- * 主要字段：
- * - userId: 用户唯一标识
- * - username: 用户名（唯一）
- * - email: 邮箱地址（唯一，用于登录）
- * - password: 加密后的密码
- * - fullName: 用户全名
- * - active: 账户是否激活
- * - gender: 性别（0=未设置，1=男，2=女）
- * - emailVerified: 邮箱验证状态
- * - loginToken: 登录令牌
- * - roleId: 角色ID（与user_roles表配合使用）
- * 
- * 关系：
- * - 通过user_roles表与Role实体建立多对多关系
- * 
- * @author EcoWiki Team
- * @version 2.0 (重构后，移除userGroup字段)
- * @since 2025-06-30
- */
 @Entity
 @Table(name = "user")
 public class User {

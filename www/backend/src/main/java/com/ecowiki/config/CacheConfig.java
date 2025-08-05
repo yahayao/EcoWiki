@@ -1,17 +1,22 @@
+/**
+ * 缓存配置类
+ * 
+ * 功能包括：
+ * - Spring缓存功能启用
+ * - 缓存策略配置管理
+ * - 系统性能优化支持
+ * - 缓存注解支持启用
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.config;
 
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * 缓存配置类
- * 
- * 启用Spring缓存功能，提升系统性能
- * 
- * @author EcoWiki Team
- * @version 1.0
- * @since 2025-08-01
- */
 @Configuration
 @EnableCaching
 public class CacheConfig {

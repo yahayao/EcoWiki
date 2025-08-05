@@ -1,3 +1,17 @@
+/**
+ * Web配置类
+ * 
+ * 功能包括：
+ * - 跨域请求配置管理
+ * - 静态资源访问路径配置
+ * - 文件上传目录映射设置
+ * - Web MVC功能扩展配置
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.config;
 
 import java.io.File;
@@ -11,23 +25,6 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-/**
- * Web配置类
- * 
- * 配置静态资源访问、文件上传、跨域等Web相关功能
- * 提供完整的文件上传和访问解决方案
- * 
- * 主要功能：
- * - 静态资源映射：让上传的文件可以通过HTTP访问
- * - 目录自动创建：确保上传目录存在
- * - 缓存控制：优化文件访问性能
- * - 跨域配置：支持前后端分离开发
- * - 安全配置：限制文件访问范围
- * 
- * @author EcoWiki Team
- * @version 2.0.0
- * @since 2025-07-25
- */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     

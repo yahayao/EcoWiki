@@ -1,15 +1,18 @@
-package com.ecowiki.dto.message;
-
 /**
- * 发送消息请求DTO
+ * 发送消息请求DTO类
  * 
- * 用于用户向指定用户发送单条消息的数据传输对象。
- * 包含接收者信息和消息内容。
+ * 功能：
+ * - 封装单条消息发送的请求数据
+ * - 包含接收者用户ID和消息内容
+ * - 用于用户间点对点消息发送
+ * - 提供消息发送的数据验证和传输功能
  * 
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-31
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
  */
+package com.ecowiki.dto.message;
 public class SendMessageRequest {
     
     /** 接收者用户ID */

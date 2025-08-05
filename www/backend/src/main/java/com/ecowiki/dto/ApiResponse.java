@@ -1,21 +1,19 @@
+/**
+ * 统一API响应格式类
+ * 
+ * 功能包括：
+ * - 封装RESTful API统一响应结构
+ * - 提供成功和失败响应的工厂方法
+ * - 支持泛型数据类型封装
+ * - 包含状态码、消息和时间戳信息
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.dto;
 
-/**
- * 统一API响应格式
- * <p>
- * 用于封装所有RESTful API的响应数据，提供统一的响应结构。
- * 包含状态码、消息、数据和时间戳等字段，便于前端统一处理。
- * <p>
- * <b>设计说明：</b>
- * - 泛型T支持任意类型的数据响应
- * - 提供静态工厂方法便于创建成功/失败响应
- * - 时间戳用于调试和日志追踪
- *
- * @param <T> 响应数据类型
- * @author EcoWiki
- * @version 1.0
- * @since 2025-06-30
- */
 public class ApiResponse<T> {
     /** HTTP状态码 */
     private int code;

@@ -1,3 +1,17 @@
+/**
+ * 标签服务类
+ * 
+ * 功能：
+ * - 提供标签的创建、查询和管理功能
+ * - 支持标签与文章的关联管理
+ * - 实现标签统计和热门标签功能
+ * - 提供标签搜索和分页查询功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.service;
 
 import java.util.HashSet;
@@ -18,16 +32,6 @@ import com.ecowiki.dto.tag.TagStatisticsDto;
 import com.ecowiki.entity.tag.Tag;
 import com.ecowiki.repository.tag.TagRepository;
 
-/**
- * 标签服务类
- * 
- * 提供标签相关的业务逻辑处理，包括标签的增删改查、搜索、统计等功能。
- * 负责标签实体与DTO之间的转换，以及标签与文章关联的管理。
- * 
- * @author EcoWiki开发团队
- * @version 1.0.0
- * @since 2025-07-01
- */
 @Service
 @Transactional
 public class TagService {

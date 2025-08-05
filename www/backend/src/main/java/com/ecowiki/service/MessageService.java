@@ -1,3 +1,17 @@
+/**
+ * 消息服务类
+ * 
+ * 功能：
+ * - 消息的发送、接收和查询管理
+ * - 支持单点消息和群发消息功能
+ * - 消息状态管理（已读/未读标记）
+ * - 用户间对话历史和消息统计
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.service;
 
 import java.time.LocalDateTime;
@@ -19,15 +33,6 @@ import com.ecowiki.entity.user.User;
 import com.ecowiki.repository.message.MessageRepository;
 import com.ecowiki.repository.user.UserRepository;
 
-/**
- * 消息服务类
- * 
- * 提供消息的发送、接收、查询和管理功能
- * 
- * @author EcoWiki Team
- * @version 1.0.0
- * @since 2025-07-21
- */
 @Service
 @Transactional
 public class MessageService {

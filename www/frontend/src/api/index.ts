@@ -1,25 +1,22 @@
+/**
+ * API基础配置模块
+ * 
+ * 功能：
+ * - 提供全局HTTP客户端配置和统一的API实例
+ * - 实现请求/响应拦截器和认证处理
+ * - 支持自动token刷新和错误处理机制
+ * - 集成API缓存、监控和请求优化功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 import axios from 'axios'
 import { createCacheInterceptor } from '@/utils/api-cache'
 import { requestOptimizer } from '@/utils/request-optimizer'
 import { setupApiMonitoring } from '@/utils/api-monitor'
 
-/**
- * API基础配置模块
- * <p>
- * 提供全局的HTTP客户端配置，包括请求/响应拦截器、认证处理、错误处理等。
- * 基于axios创建统一的API实例，确保前后端通信的一致性和安全性。
- * <p>
- * <b>功能特性：</b>
- * - 统一的baseURL和超时配置
- * - 自动添加JWT认证头
- * - 自动token刷新机制
- * - 全局错误处理和401状态码处理
- * - 自动清理过期token并重定向
- * 
- * @author EcoWiki
- * @version 1.1 - 添加token自动刷新
- * @since 2024-04
- */
 
 // token刷新相关状态
 let isRefreshing = false

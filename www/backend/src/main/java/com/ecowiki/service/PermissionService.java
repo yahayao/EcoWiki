@@ -1,3 +1,17 @@
+/**
+ * 权限服务类
+ * 
+ * 功能：
+ * - 提供用户权限相关的业务逻辑处理
+ * - 支持多级角色体系和权限校验
+ * - 实现用户操作权限判定功能
+ * - 提供角色管理和权限分配服务
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -5,21 +19,6 @@ import org.springframework.stereotype.Service;
 
 import com.ecowiki.entity.user.User;
 
-/**
- * 权限服务类
- * <p>
- * 提供用户权限相关的业务逻辑，包括角色判断、权限校验、用户操作权限判定等。
- * 依赖UserService获取用户角色信息，支持多级角色体系（普通用户、版主、管理员、超级管理员）。
- * <p>
- * <b>设计说明：</b>
- * - 角色体系采用字符串区分，支持灵活扩展。
- * - 所有权限判断均通过本服务集中处理，便于维护和统一管理。
- * - 适用于需要进行权限控制的业务场景，如后台管理、用户操作授权等。
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-01
- */
 @Service
 public class PermissionService {
     /**

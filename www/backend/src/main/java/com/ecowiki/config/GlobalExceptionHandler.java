@@ -1,3 +1,17 @@
+/**
+ * 全局异常处理器
+ * 
+ * 功能包括：
+ * - 统一异常捕获和处理
+ * - 标准化API错误响应格式
+ * - 系统异常日志记录
+ * - 用户友好的错误信息返回
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.config;
 
 import org.springframework.http.HttpStatus;
@@ -8,54 +22,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.ecowiki.dto.ApiResponse;
 import com.ecowiki.util.LoggerUtil;
 
-/**
- * 全局异常处理器
- * 
- * 该类使用@RestControllerAdvice注解，提供全局统一的异常处理机制。
- * 捕获应用程序中抛出的各种异常，并将其转换为标准化的API响应格式。
- * 
- * 主要功能：
- * - 全局异常捕获：统一处理应用程序中的所有异常
- * - 安全信息过滤：防止敏感系统信息泄露给客户端
- * - 标准化响应：将异常转换为统一的API响应格式
- * - 错误日志记录：记录系统错误信息便于问题排查
- * - 用户友好提示：提供清晰的错误信息给前端用户
- * 
- * 异常处理策略：
- * - RuntimeException：业务逻辑异常，返回400状态码
- * - Exception：系统级异常，返回500状态码并隐藏详细信息
- * - 敏感信息过滤：过滤数据库、SQL等技术细节信息
- * - 错误信息安全化：将技术异常转换为用户友好的提示
- * 
- * 安全特性：
- * - 信息泄露防护：避免向客户端暴露系统内部信息
- * - 敏感关键词过滤：识别并过滤包含敏感信息的错误消息
- * - 通用错误响应：对于系统级错误返回通用提示信息
- * - 错误日志记录：在服务端记录完整错误信息用于排查
- * 
- * 响应格式：
- * - 统一使用ApiResponse格式
- * - 包含错误码、错误信息和时间戳
- * - 保持与正常业务响应的格式一致性
- * 
- * 使用场景：
- * - Web API异常处理：处理RESTful接口中的异常
- * - 业务逻辑异常：处理业务层抛出的业务异常
- * - 系统运行异常：处理系统运行时的技术异常
- * - 安全异常处理：处理认证、授权相关的异常
- * 
- * 扩展建议：
- * - 异常分类处理：根据异常类型进行更细粒度的处理
- * - 国际化支持：支持多语言的错误信息提示
- * - 监控集成：集成监控系统进行异常统计和告警
- * - 自定义异常：支持业务自定义异常的特殊处理
- * 
- * @author EcoWiki开发团队
- * @version 1.0.0
- * @since 2025-07-01
- * @see ApiResponse 统一API响应格式
- * @see RestControllerAdvice Spring全局异常处理注解
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

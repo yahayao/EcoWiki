@@ -1,3 +1,17 @@
+/**
+ * 用户数据访问层接口
+ * 
+ * 功能：
+ * - 提供用户实体的数据库操作接口
+ * - 支持用户的CRUD操作和身份验证查询
+ * - 实现用户名、邮箱的唯一性检查
+ * - 提供用户状态管理和分页查询功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.repository.user;
 
 import java.util.Optional;
@@ -10,21 +24,6 @@ import org.springframework.stereotype.Repository;
 
 import com.ecowiki.entity.user.User;
 
-/**
- * 用户数据访问接口
- * <p>
- * 继承JpaRepository，提供用户实体的基础CRUD操作和自定义查询方法。
- * 支持用户名、邮箱查询、存在性检查、活跃用户统计等功能。
- * <p>
- * <b>设计说明：</b>
- * - 基于Spring Data JPA，自动生成基础CRUD方法
- * - 支持方法名称查询和@Query自定义查询
- * - 适用于用户认证、权限管理、数据统计等场景
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-01
- */
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     /**

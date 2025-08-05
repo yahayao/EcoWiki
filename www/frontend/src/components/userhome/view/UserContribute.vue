@@ -1,4 +1,19 @@
-<!-- UserContribute.vue -->
+<!--
+/**
+ * 用户贡献统计组件
+ * 
+ * 功能：
+ * - 展示用户在EcoWiki的贡献记录和成就
+ * - 提供详细的贡献数据和统计图表
+ * - 显示用户活跃度和参与度指标
+ * - 支持贡献历史和趋势分析
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
+-->
 <template>
   <div class="contribute-container">
     <!-- 页面标题区域 -->

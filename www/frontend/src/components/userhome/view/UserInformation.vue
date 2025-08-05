@@ -1,4 +1,21 @@
-<!-- UserInformation.vue -->
+<!--
+/**
+ * 用户信息管理组件
+ * 
+ * 功能包括：
+ * - 用户个人信息展示和编辑
+ * - 头像上传和更换功能
+ * - 个人资料字段管理
+ * - 信息保存和验证
+ * - 用户设置界面
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
+-->
+
 <template>
   <div class="user-info-container">
     <!-- 页面标题区域 -->

@@ -1,3 +1,17 @@
+/**
+ * API信息控制器类
+ * 
+ * 功能：
+ * - 提供EcoWiki后端API的基本信息和接口文档
+ * - 支持API自描述和接口调试功能
+ * - 便于前端或第三方系统集成使用
+ * - 采用REST风格和统一响应结构
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.controller;
 
 import java.util.HashMap;
@@ -10,20 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ecowiki.dto.ApiResponse;
 
-/**
- * API信息控制器
- * <p>
- * 提供EcoWiki后端API的基本信息和接口文档说明，便于前端或第三方系统自动发现和集成。
- * <p>
- * <b>设计说明：</b>
- * - 采用REST风格，返回统一的ApiResponse结构。
- * - 支持跨域访问，便于前后端分离开发。
- * - 适用于API自描述、接口调试、前端自动生成文档等场景。
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-01
- */
 @RestController
 @RequestMapping("")
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")

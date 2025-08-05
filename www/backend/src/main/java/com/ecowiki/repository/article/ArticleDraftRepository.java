@@ -1,3 +1,17 @@
+/**
+ * 文章草稿数据访问层接口
+ * 
+ * 功能：
+ * - 提供文章草稿的数据库操作接口
+ * - 支持草稿的查询、创建和状态管理
+ * - 实现草稿审核流程的数据访问
+ * - 提供分页查询和条件筛选功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.repository.article;
 
 import java.util.List;
@@ -12,16 +26,6 @@ import org.springframework.stereotype.Repository;
 
 import com.ecowiki.entity.article.ArticleDraft;
 
-/**
- * 文章草稿数据访问接口
- * 
- * 提供文章草稿的数据库操作方法，包括CRUD操作、按状态查询、按用户查询等。
- * 支持审核流程相关的查询操作。
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-31
- */
 @Repository
 public interface ArticleDraftRepository extends JpaRepository<ArticleDraft, Long> {
     

@@ -1,28 +1,18 @@
 /**
- * EcoWiki前端应用程序入口文件
+ * EcoWiki前端应用程序入口模块
  * 
- * 这是Vue3应用程序的主入口点，负责创建Vue应用实例并配置全局设置。
- * 该文件初始化了应用程序的核心组件和插件。
+ * 功能包括：
+ * - Vue3应用实例创建和配置
+ * - Pinia状态管理初始化
+ * - Vue Router路由系统配置
+ * - 全局样式和插件加载
+ * - 应用程序DOM挂载
  * 
- * 主要功能：
- * - 创建Vue3应用实例
- * - 配置Pinia状态管理
- * - 配置Vue Router路由
- * - 导入全局样式
- * - 挂载应用到DOM
- * 
- * 技术栈：
- * - Vue3 (Composition API)
- * - TypeScript
- * - Pinia (状态管理)
- * - Vue Router (路由管理)
- * - Vite (构建工具)
- * 
- * @author EcoWiki Team
- * @version 2.0
- * @since 2025-06-30
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
  */
-
 // 导入全局样式文件
 import './assets/main.css'
 

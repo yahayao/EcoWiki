@@ -1,19 +1,19 @@
+/**
+ * 角色实体类
+ * 
+ * 功能包括：
+ * - 系统权限角色定义
+ * - 角色名称和描述管理
+ * - 角色层级和权限关联
+ * - 用户角色分配支持
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.user;
 
-/*
-  角色实体类
-  <p>
-  对应数据库中的role表，描述系统中的权限角色（如user、moderator、admin、superadmin等）。
-  支持角色名称、描述、创建/更新时间等字段。
-  <p>
-  <b>设计说明：</b>
-  - 角色体系支持灵活扩展，便于权限分级和管理。
-  - 适用于用户权限分配、后台角色管理、权限校验等场景。
-
-  @author EcoWiki
- * @version 1.0
- * @since 2025-06-30
- */
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;

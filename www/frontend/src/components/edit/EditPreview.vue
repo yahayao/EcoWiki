@@ -1,8 +1,19 @@
 <!--
-  编辑预览组件
-  
-  在编辑器上方显示文章预览，使用 ArticleContent 组件进行渲染。
-  类似于 MediaWiki 的预览方式。
+/**
+ * 编辑预览组件
+ * 
+ * 功能包括：
+ * - 文章编辑实时预览
+ * - Wiki格式渲染显示
+ * - 预览界面展示控制
+ * - 预览内容动态更新
+ * - 预览窗口开关管理
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 -->
 <template>
   <div class="edit-preview" v-if="showPreview">

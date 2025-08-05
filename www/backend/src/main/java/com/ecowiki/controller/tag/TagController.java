@@ -1,3 +1,17 @@
+/**
+ * 标签控制器类
+ * 
+ * 功能：
+ * - 提供标签管理相关的API接口
+ * - 支持标签的创建、查询、更新和删除
+ * - 实现标签搜索和热门标签功能
+ * - 提供标签统计和分页查询服务
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.controller.tag;
 
 import java.util.List;
@@ -19,16 +33,6 @@ import com.ecowiki.dto.tag.TagDto;
 import com.ecowiki.dto.tag.TagStatisticsDto;
 import com.ecowiki.service.TagService;
 
-/**
- * 标签控制器
- * 
- * 提供标签相关的REST API接口，包括标签的增删改查、搜索、统计等功能。
- * 支持标签管理、热门标签查询、推荐标签等业务场景。
- * 
- * @author EcoWiki开发团队
- * @version 1.0.0
- * @since 2025-07-01
- */
 @RestController
 @RequestMapping("/tags")
 public class TagController {

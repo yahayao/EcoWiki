@@ -1,3 +1,17 @@
+/**
+ * 文章数据访问层接口
+ * 
+ * 功能：
+ * - 提供文章实体的数据库操作接口
+ * - 支持文章的CRUD操作和复杂查询
+ * - 实现文章搜索、分类筛选和统计功能
+ * - 提供分页查询和排序功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.repository.article;
 
 import java.util.List;
@@ -13,22 +27,6 @@ import org.springframework.stereotype.Repository;
 
 import com.ecowiki.entity.article.Article;
 
-/**
- * 文章数据访问接口
- * <p>
- * 继承JpaRepository，提供文章实体的基础CRUD操作和自定义查询方法。
- * 支持文章检索、分页查询、统计分析、互动操作等功能。
- * <p>
- * <b>设计说明：</b>
- * - 支持多维度查询（标题、作者、分类、标签、内容）
- * - 提供分页和排序功能
- * - 支持统计分析和数据修改操作
- * - 适用于Wiki内容管理、搜索、推荐等场景
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-01
- */
 @Repository
 public interface ArticleRepository extends JpaRepository<Article, Long> {
     /**

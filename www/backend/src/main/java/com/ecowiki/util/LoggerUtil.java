@@ -1,31 +1,22 @@
+/**
+ * 统一日志工具类
+ * 
+ * 功能：
+ * - 提供统一的日志记录方法和接口
+ * - 支持不同级别的日志记录（DEBUG、INFO、WARN、ERROR）
+ * - 实现参数化日志消息提高性能
+ * - 统一异常日志记录和处理
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * 统一日志工具类
- * 
- * 提供统一的日志记录方法，替换项目中的System.out.println和System.err.println。
- * 基于SLF4J接口，使用Logback作为实际的日志实现。
- * 
- * 主要功能：
- * - 提供不同级别的日志记录方法（DEBUG、INFO、WARN、ERROR）
- * - 支持参数化日志消息，提高性能
- * - 统一的异常日志记录
- * - 便于日志级别控制和输出格式管理
- * 
- * 使用示例：
- * <pre>
- * LoggerUtil.info("用户登录成功，用户名: {}", username);
- * LoggerUtil.error("文件处理失败", exception);
- * LoggerUtil.debug("处理请求: {}, 参数: {}", requestPath, params);
- * </pre>
- * 
- * @author EcoWiki团队
- * @version 1.0
- * @since 2025-06-11
- */
 public class LoggerUtil {
     
     /**

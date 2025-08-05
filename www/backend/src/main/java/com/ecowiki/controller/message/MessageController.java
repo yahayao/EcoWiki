@@ -1,3 +1,17 @@
+/**
+ * 消息API控制器类
+ * 
+ * 功能：
+ * - 提供消息发送和接收的REST API接口
+ * - 支持单点消息发送和群发消息功能
+ * - 处理消息状态管理（已读/未读标记）
+ * - 提供消息历史查询和对话管理功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.controller.message;
 
 import java.util.List;
@@ -29,12 +43,6 @@ import com.ecowiki.service.MessageService;
 import com.ecowiki.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
-
-/**
- * 消息API控制器
- * 
- * 提供消息相关的REST API接口
- */
 @RestController
 @RequestMapping("/api/messages")
 @CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173"}, allowCredentials = "true")

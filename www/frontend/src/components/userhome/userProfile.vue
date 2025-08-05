@@ -1,4 +1,19 @@
-<!-- UserProfile.vue -->
+<!--
+/**
+ * 用户个人资料组件
+ * 
+ * 功能：
+ * - 提供用户个人信息管理界面
+ * - 支持头像上传和个人资料编辑
+ * - 显示用户统计数据和活动记录
+ * - 提供个人设置和偏好配置
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
+-->
 <template>
   <div class="user-profile-layout">
     <!-- 顶部标题栏 -->

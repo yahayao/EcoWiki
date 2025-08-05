@@ -1,3 +1,17 @@
+/**
+ * 用户文章管理控制器
+ * 
+ * 功能包括：
+ * - 用户文章列表查询和管理
+ * - 用户文章统计和分析
+ * - 文章收藏和点赞管理
+ * - 用户文章历史记录
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.controller.user;
 
 import java.util.HashMap;
@@ -26,27 +40,6 @@ import com.ecowiki.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-/**
- * 用户文章交互管理控制器
- * <p>
- * 提供用户个人文章管理相关的RESTful API，包括获取用户收藏的文章、点赞的文章、
- * 发布的文章等个人内容管理功能。支持用户个人中心的文章数据展示。
- * <p>
- * <b>主要功能：</b>
- * - 获取用户收藏的文章列表（分页）
- * - 获取用户点赞的文章列表（分页）
- * - 获取用户发布的文章列表（分页）
- * - 提供文章互动统计信息
- * <p>
- * <b>安全性：</b>
- * - 需要用户登录认证
- * - 基于JWT Token验证用户身份
- * - 用户只能访问自己的数据
- * 
- * @author EcoWiki Development Team
- * @version 1.0
- * @since 2025-08-01
- */
 @RestController
 @RequestMapping("/api/user")
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")

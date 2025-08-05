@@ -1,3 +1,17 @@
+/**
+ * 文章控制器类
+ * 
+ * 功能：
+ * - 提供文章相关的REST API接口
+ * - 支持文章的创建、编辑、删除和查询
+ * - 实现文章搜索和分类筛选功能
+ * - 提供文章统计和推荐功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.controller.article;
 
 import java.util.HashMap;
@@ -35,21 +49,6 @@ import com.ecowiki.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-/**
- * 文章控制器
- * <p>
- * 提供EcoWiki文章相关的RESTful API，包括文章的增删改查、分类、标签、作者、搜索、点赞、评论统计等。
- * 依赖ArticleService进行业务处理，所有接口均返回统一的ApiResponse结构。
- * <p>
- * <b>设计说明：</b>
- * - 采用Spring Boot REST风格，支持分页、排序、条件过滤。
- * - 适用于Wiki内容管理、文章展示、社区互动等场景。
- * - 支持前后端分离，接口安全性可扩展。
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-07
- */
 @RestController
 @RequestMapping("/articles")
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")

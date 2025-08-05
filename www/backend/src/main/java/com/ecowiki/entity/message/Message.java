@@ -1,3 +1,17 @@
+/**
+ * 消息实体类
+ * 
+ * 功能：
+ * - 定义用户消息的数据模型
+ * - 包含发送者、接收者和消息内容
+ * - 支持消息状态管理和时间戳记录
+ * - 提供消息发送和接收的数据存储
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.message;
 
 import java.time.LocalDateTime;
@@ -10,16 +24,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
-/**
- * 消息实体类
- * 
- * 对应数据库中的messages表，用于存储用户之间的消息通知。
- * 支持消息发送、接收、状态管理等功能。
- * 
- * @author EcoWiki Team
- * @version 1.0.0
- * @since 2025-07-21
- */
 @Entity
 @Table(name = "messages")
 public class Message {

@@ -1,3 +1,17 @@
+/**
+ * 消息数据访问层接口
+ * 
+ * 功能：
+ * - 提供消息的数据库操作接口
+ * - 支持消息的查询、创建和状态管理
+ * - 实现消息统计和批量操作功能
+ * - 提供分页查询和条件筛选功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.repository.message;
 
 import java.util.List;
@@ -13,15 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ecowiki.entity.message.Message;
 
-/**
- * 消息数据访问接口
- * 
- * 提供消息的CRUD操作和查询功能
- * 
- * @author EcoWiki团队
- * @version 1.0
- * @since 2025-07-01
- */
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Integer> {
     
