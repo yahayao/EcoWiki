@@ -1,3 +1,17 @@
+/**
+ * 审核历史Repository接口
+ * 
+ * 功能：
+ * - 提供审核历史相关的数据访问操作
+ * - 支持历史记录的查询和管理
+ * - 提供按审核ID、操作员、操作类型查询
+ * - 支持时间范围和统计查询
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.repository.review;
 
 import java.time.LocalDateTime;
@@ -11,16 +25,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.ecowiki.entity.review.ReviewHistory;
-
-/**
- * 审核历史Repository接口
- * 
- * 提供审核历史相关的数据访问操作
- * 
- * @author EcoWiki Team
- * @version 1.0
- * @since 2025-07-25
- */
 @Repository
 public interface ReviewHistoryRepository extends JpaRepository<ReviewHistory, Long> {
     

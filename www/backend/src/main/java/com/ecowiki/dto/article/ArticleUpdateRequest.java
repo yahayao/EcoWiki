@@ -1,23 +1,22 @@
+/**
+ * 文章更新请求DTO类
+ * 
+ * 功能：
+ * - 接收前端文章更新请求数据
+ * - 提供数据验证确保完整性
+ * - 支持标题、内容、分类、标签字段更新
+ * - 不包含作者字段（通常不允许修改）
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.dto.article;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * 文章更新请求DTO
- * <p>
- * 用于接收前端更新文章的请求数据，包含可修改的文章信息。
- * 支持数据验证，确保更新的文章数据完整性。
- * <p>
- * <b>设计说明：</b>
- * - 包含可更新的文章字段（标题、内容、分类、标签）
- * - 不包含作者字段（通常不允许修改）
- * - 使用Bean Validation进行数据验证
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-07
- */
 public class ArticleUpdateRequest {
     /** 文章标题 */
     @NotBlank(message = "标题不能为空")

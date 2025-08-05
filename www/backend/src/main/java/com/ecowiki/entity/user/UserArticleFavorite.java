@@ -1,3 +1,17 @@
+/**
+ * 用户文章收藏实体类
+ * 
+ * 功能：
+ * - 记录用户收藏的文章信息
+ * - 支持用户个人文章管理功能
+ * - 提供收藏时间记录和统计
+ * - 对应数据库中的user_article_favorites表
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.user;
 
 import java.time.LocalDateTime;
@@ -8,16 +22,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-/**
- * 用户文章收藏实体
- * 
- * 记录用户收藏的文章信息，支持用户个人文章管理功能。
- * 
- * @author EcoWiki Development Team
- * @version 1.0
- * @since 2025-08-01
- */
 @Entity
 @Table(name = "user_article_favorites")
 public class UserArticleFavorite {

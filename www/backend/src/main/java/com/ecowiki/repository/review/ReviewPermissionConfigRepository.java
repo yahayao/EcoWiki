@@ -1,3 +1,17 @@
+/**
+ * 审核权限配置Repository接口
+ * 
+ * 功能：
+ * - 提供审核权限配置相关的数据访问操作
+ * - 支持按角色名称和审核类型查询配置
+ * - 提供自动分配和权限级别查询
+ * - 支持激活状态和优先级过滤
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.repository.review;
 
 import java.util.List;
@@ -10,16 +24,6 @@ import org.springframework.stereotype.Repository;
 
 import com.ecowiki.entity.article.ArticleReview;
 import com.ecowiki.entity.review.ReviewPermissionConfig;
-
-/**
- * 审核权限配置Repository接口
- * 
- * 提供审核权限配置相关的数据访问操作
- * 
- * @author EcoWiki Team
- * @version 1.0
- * @since 2025-07-25
- */
 @Repository
 public interface ReviewPermissionConfigRepository extends JpaRepository<ReviewPermissionConfig, Long> {
     

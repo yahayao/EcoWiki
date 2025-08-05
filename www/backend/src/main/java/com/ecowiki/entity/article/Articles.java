@@ -1,3 +1,17 @@
+/**
+ * 文章实体类
+ * 
+ * 功能：
+ * - 文章内容管理：存储文章标题、内容、作者等基本信息
+ * - 分类标签系统：支持文章分类和自定义标签管理
+ * - 时间追踪：记录文章的发布时间和最后更新时间
+ * - 统计数据：跟踪浏览量、点赞数、评论数等互动指标
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.article;
 
 import java.time.LocalDateTime;
@@ -10,57 +24,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-/**
- * 文章实体类
- * 
- * 该实体类映射数据库中的articles表，是EcoWiki系统的核心业务实体。
- * 负责存储和管理Wiki文章的完整信息，包括内容、元数据和统计数据。
- * 
- * 主要功能：
- * - 文章内容管理：存储文章标题、内容、作者等基本信息
- * - 分类标签系统：支持文章分类和自定义标签管理
- * - 时间追踪：记录文章的发布时间和最后更新时间
- * - 统计数据：跟踪浏览量、点赞数、评论数等互动指标
- * - 内容版本控制：支持文章内容的修改和历史追踪
- * 
- * 数据库表结构：
- * - article_id: 文章唯一标识符（主键，自增）
- * - title: 文章标题（唯一，必填）
- * - content: 文章内容（必填，支持Wiki语法）
- * - author: 文章作者（必填）
- * - publish_date: 发布时间（创建时自动设置，不可更新）
- * - update_time: 最后更新时间（修改时自动更新）
- * - category: 文章分类（可选）
- * - tags: 文章标签（可选，逗号分隔）
- * - views: 浏览次数（默认0）
- * - likes: 点赞次数（默认0）
- * - comments: 评论次数（默认0）
- * 
- * 业务特性：
- * - 内容格式：支持Wiki语法、Markdown等格式
- * - 分类体系：灵活的分类标签系统
- * - 社交功能：浏览、点赞、评论等互动功能
- * - 搜索优化：标题和内容支持全文搜索
- * - 权限控制：结合用户权限控制文章的查看和编辑
- * 
- * 使用场景：
- * - 知识库构建：企业或个人知识库的核心内容载体
- * - 协作编辑：多用户协作编辑和维护文章内容
- * - 内容管理：文章的创建、编辑、发布、归档管理
- * - 数据分析：基于统计数据分析内容受欢迎程度
- * 
- * 扩展性设计：
- * - 版本控制：可扩展支持文章版本历史
- * - 附件管理：可关联文件、图片等附件资源
- * - 评论系统：可扩展评论和回复功能
- * - 工作流：可集成审核、发布工作流
- * 
- * @author EcoWiki开发团队
- * @version 1.0.0
- * @since 2025-06-30
- * @see User 用户实体类（作者关联）
- */
 @Entity
 @Table(name = "articles")
 public class Articles {

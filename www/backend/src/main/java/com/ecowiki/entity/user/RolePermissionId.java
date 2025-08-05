@@ -1,48 +1,21 @@
+/**
+ * 角色权限关联复合主键类
+ * 
+ * 功能：
+ * - 作为RolePermission实体的复合主键
+ * - 用于JPA的@IdClass注解配置
+ * - 实现Serializable接口确保序列化能力
+ * - 提供equals/hashCode方法支持对象比较
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.user;
 
 import java.io.Serializable;
 import java.util.Objects;
-
-/**
- * 角色权限关联复合主键类
- * 
- * 该类作为RolePermission实体的复合主键，用于JPA的@IdClass注解配置。
- * 实现了Serializable接口，确保复合主键的序列化能力。
- * 
- * 主要功能：
- * - 复合主键定义：为角色权限关联表定义联合主键
- * - 唯一性保证：通过角色ID和权限ID的组合确保记录唯一性
- * - equals/hashCode：实现对象比较和哈希计算
- * - 序列化支持：实现Serializable接口，支持对象序列化
- * 
- * 设计特点：
- * - 复合主键：由roleId和permissionId组成联合主键
- * - 不可变性：一旦创建，主键值不应被随意修改
- * - 对象比较：正确实现equals和hashCode方法
- * - 序列化兼容：实现Serializable接口，支持分布式场景
- * 
- * 使用场景：
- * - JPA复合主键：配合@IdClass注解使用
- * - 关联查询：作为查询条件定位特定的角色权限关联
- * - 缓存键值：作为缓存的键值进行数据存储
- * - 数据传输：在服务间传输复合主键信息
- * 
- * 技术实现：
- * - 无参构造函数：JPA规范要求提供无参构造函数
- * - 有参构造函数：便于快速创建复合主键实例
- * - getter/setter：提供字段访问方法
- * - equals/hashCode：确保对象比较和集合操作的正确性
- * 
- * 注意事项：
- * - 必须实现Serializable接口，否则JPA会报错
- * - equals和hashCode方法必须基于主键字段实现
- * - 主键字段应该是不可变的，避免运行时修改
- * - 在集合中使用时，依赖正确的equals和hashCode实现
- * 
- * @author EcoWiki团队
- * @version 1.0
- * @since 2025-06-30
- */
 public class RolePermissionId implements Serializable {
     /**
      * 角色ID

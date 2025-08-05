@@ -1,3 +1,17 @@
+/**
+ * 文章草稿控制器类
+ * 
+ * 功能：
+ * - 用户提交文章草稿（新建/编辑）
+ * - 管理员审核草稿（通过/拒绝）
+ * - 草稿列表查询（分页、按状态筛选）
+ * - 草稿详情查看和删除
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.controller.article;
 
 import java.util.List;
@@ -33,23 +47,6 @@ import com.ecowiki.service.ArticleDraftService;
 import com.ecowiki.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
-
-/**
- * 文章草稿控制器
- * <p>
- * 提供文章草稿相关的RESTful API，包括草稿的提交、审核、查询等功能。
- * 实现完整的文章审核流程管理。
- * <p>
- * <b>主要功能：</b>
- * - 用户提交文章草稿（新建/编辑）
- * - 管理员审核草稿（通过/拒绝）
- * - 草稿列表查询（分页、按状态筛选）
- * - 草稿详情查看
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-31
- */
 @RestController
 @RequestMapping("/api/drafts")
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")

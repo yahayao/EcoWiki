@@ -1,3 +1,17 @@
+/**
+ * 文章版本Repository接口
+ * 
+ * 功能：
+ * - 提供文章版本的数据访问操作
+ * - 支持版本历史查询和管理
+ * - 提供基础版本和差异版本查询
+ * - 支持版本内容的存储和检索
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.repository.article;
 
 import java.time.LocalDateTime;
@@ -13,15 +27,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.ecowiki.entity.article.ArticleVersion;
-
-/**
- * 文章版本Repository接口
- * 提供文章版本的数据访问操作
- * 
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-01
- */
 @Repository
 public interface ArticleVersionRepository extends JpaRepository<ArticleVersion, Long> {
     

@@ -1,3 +1,19 @@
+<!--
+/**
+ * 塔防游戏组件
+ * 
+ * 功能：
+ * - 提供完整的塔防游戏体验和画面渲染
+ * - 实现敌人路径寻找和防御塔建造机制
+ * - 支持多种塔类型和升级系统
+ * - 集成游戏生命值、分数统计和关卡管理
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
+-->
 <template>
   <div class="game-wrapper" v-show="isVisible">
     <div class="game-overlay" @click="closeGame"></div>

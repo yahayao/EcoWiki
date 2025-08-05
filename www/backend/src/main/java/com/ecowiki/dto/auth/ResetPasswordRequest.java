@@ -1,18 +1,22 @@
+/**
+ * 密码重置请求DTO类
+ * 
+ * 功能：
+ * - 处理用户重置密码时的完整请求数据
+ * - 包含邮箱、验证答案和新密码
+ * - 作为密码重置流程的最终步骤
+ * - 确保用户能够安全地设置新密码
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.dto.auth;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * 密码重置请求数据传输对象
- * 
- * 该DTO用于处理用户重置密码时的完整请求数据，包含邮箱、验证答案和新密码。
- * 作为密码重置流程的最终步骤，确保用户能够安全地设置新密码。
- *
- * @author EcoWiki开发团队
- * @version 1.0.0
- * @since 2025-07-01
- */
 public class ResetPasswordRequest {
     /** 用户名（可选，与邮箱二选一） */
     private String username;

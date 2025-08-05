@@ -1,23 +1,23 @@
+/**
+ * 文章创建请求DTO类
+ * 
+ * 功能：
+ * - 接收前端文章创建请求数据
+ * - 提供数据验证确保完整性
+ * - 支持标题、作者、内容、分类、标签字段
+ * - 不包含服务端生成字段（ID、时间戳等）
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.dto.article;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * 文章创建请求DTO
- * <p>
- * 用于接收前端创建文章的请求数据，包含文章的基本信息。
- * 支持数据验证，确保创建的文章数据完整性。
- * <p>
- * <b>设计说明：</b>
- * - 仅包含创建文章所需的必要字段
- * - 使用Bean Validation进行数据验证
- * - 不包含ID、时间戳等服务端生成的字段
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-07
- */
+
 public class ArticleCreateRequest {
     /** 文章标题 */
     @NotBlank(message = "标题不能为空")

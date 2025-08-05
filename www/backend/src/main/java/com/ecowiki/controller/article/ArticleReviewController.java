@@ -1,3 +1,17 @@
+/**
+ * 文章审核控制器类
+ * 
+ * 功能：
+ * - 创建文章审核申请
+ * - 分配审核员和处理审核
+ * - 获取审核详情和历史记录
+ * - 审核统计和管理功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.controller.article;
 
 import java.time.LocalDateTime;
@@ -26,16 +40,6 @@ import com.ecowiki.entity.article.ArticleReview;
 import com.ecowiki.entity.review.ReviewHistory;
 import com.ecowiki.entity.review.ReviewerAssignment;
 import com.ecowiki.service.ArticleReviewService;
-
-/**
- * 文章审核控制器
- * 
- * 提供文章审核相关的REST API接口
- * 
- * @author EcoWiki Team
- * @version 1.0
- * @since 2025-07-25
- */
 @RestController
 @RequestMapping("/api/review")
 @CrossOrigin(origins = "*")

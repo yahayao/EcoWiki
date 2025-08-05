@@ -1,3 +1,17 @@
+/**
+ * 审核历史实体类
+ * 
+ * 功能：
+ * - 记录审核过程中的所有操作历史
+ * - 用于审计和追踪审核流程  
+ * - 支持操作类型和状态变更记录
+ * - 提供完整的审核操作日志
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.review;
 
 import java.time.LocalDateTime;
@@ -13,16 +27,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-
-/**
- * 审核历史实体类
- * 
- * 记录审核过程中的所有操作历史，用于审计和追踪
- * 
- * @author EcoWiki Team
- * @version 1.0
- * @since 2025-07-25
- */
 @Entity
 @Table(name = "review_history")
 public class ReviewHistory {

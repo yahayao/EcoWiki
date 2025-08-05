@@ -1,39 +1,22 @@
+/**
+ * 用户角色复合主键类
+ * 
+ * 功能：
+ * - 用于UserRole实体的复合主键定义
+ * - JPA要求复合主键类必须实现Serializable接口
+ * - 必须重写equals()和hashCode()方法
+ * - 确保用户和角色的组合唯一性
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.user;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
-
-/**
- * 用户角色复合主键类
- * 
- * 用于UserRole实体的复合主键定义。JPA要求复合主键类必须实现Serializable接口，
- * 并且必须重写equals()和hashCode()方法。
- * 
- * 设计原理：
- * - 确保用户和角色的组合唯一性
- * - 支持JPA的复合主键机制
- * - 提供高效的查找和比较操作
- * 
- * 主要字段：
- * - userId: 用户ID
- * - roleId: 角色ID
- * 
- * 使用场景：
- * - UserRole实体的@IdClass注解
- * - JPA查询中的复合主键条件
- * - 缓存和集合操作中的键值
- * 
- * 注意事项：
- * - 必须实现Serializable接口
- * - 必须有无参构造函数
- * - 必须重写equals()和hashCode()方法
- * - 字段名必须与UserRole实体中的主键字段名一致
- * 
- * @author EcoWiki Team
- * @version 1.0
- * @since 2025-06-30
- */
 public class UserRoleId implements Serializable {
     
     /**

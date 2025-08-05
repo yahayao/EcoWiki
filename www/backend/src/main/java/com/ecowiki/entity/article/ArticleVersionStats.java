@@ -1,16 +1,21 @@
+/**
+ * 文章版本统计信息实体类
+ * 
+ * 功能：
+ * - 跟踪文章版本的统计数据和优化信息
+ * - 记录版本数量、存储大小、压缩率等信息
+ * - 支持访问频率统计和优化判断
+ * - 提供版本管理的决策依据
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.article;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-
-/**
- * 文章版本统计信息实体类
- * 用于跟踪文章版本的统计数据和优化信息
- * 
- * @author EcoWiki
- * @version 1.0
- * @since 2025-06-30
- */
 @Entity
 @Table(name = "article_version_stats", indexes = {
     @Index(name = "idx_article_id", columnList = "article_id"),

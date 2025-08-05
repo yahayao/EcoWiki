@@ -1,3 +1,17 @@
+/**
+ * 审核员分配Repository接口
+ * 
+ * 功能：
+ * - 提供审核员分配相关的数据访问操作
+ * - 支持分配记录的查询和管理
+ * - 提供按状态、审核员等条件查询
+ * - 支持过期分配和自动分配查询
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.repository.review;
 
 import java.time.LocalDateTime;
@@ -12,16 +26,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.ecowiki.entity.review.ReviewerAssignment;
-
-/**
- * 审核员分配Repository接口
- * 
- * 提供审核员分配相关的数据访问操作
- * 
- * @author EcoWiki Team
- * @version 1.0
- * @since 2025-07-25
- */
 @Repository
 public interface ReviewerAssignmentRepository extends JpaRepository<ReviewerAssignment, Long> {
     

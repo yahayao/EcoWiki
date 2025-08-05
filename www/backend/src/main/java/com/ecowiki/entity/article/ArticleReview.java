@@ -1,3 +1,17 @@
+/**
+ * 文章审核实体类
+ * 
+ * 功能：
+ * - 管理文章的审核流程
+ * - 包括创建、更新、删除等操作的审核
+ * - 记录审核状态和审核结果
+ * - 支持审核员分配和审核时间管理
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.article;
 
 import java.time.LocalDateTime;
@@ -12,16 +26,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-
-/**
- * 文章审核实体类
- * 
- * 管理文章的审核流程，包括创建、更新、删除等操作的审核
- * 
- * @author EcoWiki Team
- * @version 1.0
- * @since 2025-07-25
- */
 @Entity
 @Table(name = "article_review")
 public class ArticleReview {

@@ -1,3 +1,17 @@
+/**
+ * 评论控制器类
+ * 
+ * 功能：
+ * - 处理评论相关的HTTP请求
+ * - 评论的创建、删除和点赞功能
+ * - 回复的创建和删除功能
+ * - 评论统计信息获取
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.controller.comment;
 
 import java.util.Map;
@@ -24,16 +38,6 @@ import com.ecowiki.service.CommentService.CommentStats;
 import com.ecowiki.service.CommentService.LikeResult;
 
 import jakarta.servlet.http.HttpServletRequest;
-
-/**
- * 评论控制器
- * 
- * 处理评论相关的HTTP请求
- * 
- * @author EcoWiki Team
- * @version 1.0.0
- * @since 2025-07-21
- */
 @RestController
 @RequestMapping("/api/comments")
 @CrossOrigin(originPatterns = {"http://localhost:*", "http://127.0.0.1:*"}, allowCredentials = "true", maxAge = 3600)

@@ -1,3 +1,17 @@
+/**
+ * 头像上传控制器类
+ * 
+ * 功能：
+ * - 专门处理用户头像上传功能
+ * - 提供安全的文件上传服务
+ * - 支持多种图片格式和文件验证
+ * - 自动生成唯一文件名并更新用户数据库记录
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.controller.upload;
 
 import java.io.IOException;
@@ -26,26 +40,6 @@ import com.ecowiki.security.JwtUtil;
 import com.ecowiki.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
-
-/**
- * 头像上传API控制器
- * 
- * 专门处理用户头像上传功能，提供安全的文件上传服务
- * 支持多种图片格式，自动生成唯一文件名，并更新用户数据库记录
- * 
- * 主要功能：
- * - 头像文件上传和验证
- * - 自动文件命名和存储
- * - 数据库头像URL更新
- * - 文件安全检查
- * 
- * 注意：由于 server.servlet.context-path=/api，所以这里的映射路径为 /avatar
- * 实际访问路径为 /api/avatar/upload
- * 
- * @author EcoWiki Team
- * @version 1.0.0
- * @since 2025-07-25
- */
 @RestController
 @RequestMapping("/avatar")
 public class AvatarUploadController {

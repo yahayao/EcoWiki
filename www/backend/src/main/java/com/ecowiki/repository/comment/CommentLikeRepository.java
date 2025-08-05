@@ -1,3 +1,17 @@
+/**
+ * 评论点赞Repository接口
+ * 
+ * 功能：
+ * - 提供评论点赞数据访问功能
+ * - 匹配实际数据库结构
+ * - 支持点赞记录的增删改查操作
+ * - 提供点赞统计和验证功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.repository.comment;
 
 import java.util.Optional;
@@ -10,16 +24,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ecowiki.entity.comment.CommentLike;
-
-/**
- * 评论点赞Repository接口
- * 
- * 提供评论点赞数据访问功能，匹配实际数据库结构
- * 
- * @author EcoWiki Team
- * @version 1.0.0
- * @since 2025-07-21
- */
 @Repository
 public interface CommentLikeRepository extends JpaRepository<CommentLike, Long> {
     

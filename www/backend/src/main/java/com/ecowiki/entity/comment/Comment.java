@@ -1,3 +1,17 @@
+/**
+ * 评论实体类
+ * 
+ * 功能：
+ * - 对应数据库中的comments表
+ * - 支持评论的基本信息存储
+ * - 提供评论回复功能（父子关系）
+ * - 支持点赞和软删除功能
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.comment;
 
 import java.time.LocalDateTime;
@@ -12,16 +26,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
-/**
- * 评论实体类
- * 
- * 对应数据库中的comments表
- * 
- * @author EcoWiki Team
- * @version 1.0.0
- * @since 2025-07-21
- */
 @Entity
 @Table(name = "comments")
 public class Comment {

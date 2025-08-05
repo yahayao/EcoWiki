@@ -1,3 +1,17 @@
+/**
+ * 用户角色关联数据访问接口
+ * 
+ * 功能：
+ * - 负责用户角色关联表的数据库操作
+ * - 管理用户与角色之间的多对多关系
+ * - 提供用户角色分配、查询、统计、删除等功能
+ * - 支持基于角色的用户权限管理
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.repository.user;
 
 import java.util.List;
@@ -12,22 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ecowiki.entity.user.UserRole;
 import com.ecowiki.entity.user.UserRoleId;
-
-/**
- * 用户角色关联数据访问接口
- * <p>
- * 继承JpaRepository，提供用户角色关联实体的基础CRUD操作和自定义查询方法。
- * 支持多对多关系管理、角色分配、权限查询等功能。
- * <p>
- * <b>设计说明：</b>
- * - 基于复合主键的多对多关系管理
- * - 支持事务操作，确保数据一致性
- * - 提供丰富的查询方法，满足权限管理需求
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-01
- */
 @Repository
 public interface UserRoleRepository extends JpaRepository<UserRole, UserRoleId> {
     /**

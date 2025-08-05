@@ -1,17 +1,21 @@
+/**
+ * 审核草稿请求DTO类
+ * 
+ * 功能：
+ * - 用于超级管理员审核文章草稿时的数据传输
+ * - 传输审核结果（通过/拒绝）
+ * - 提供审核备注功能
+ * - 支持数据验证确保完整性
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.dto.article;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
-/**
- * 审核草稿请求DTO
- * 
- * 用于superadmin审核文章草稿时的数据传输。
- *
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-31
- */
 public class ReviewDraftRequest {
     
     /** 审核结果：true为通过，false为拒绝 */

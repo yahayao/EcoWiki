@@ -1,3 +1,17 @@
+/**
+ * 文章版本统计Repository接口
+ * 
+ * 功能：
+ * - 提供文章版本统计数据的访问操作
+ * - 支持优化需求分析和冷数据识别
+ * - 提供存储占用和压缩率统计
+ * - 支持版本统计的查询和管理
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.repository.article;
 
 import java.time.LocalDateTime;
@@ -10,14 +24,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.ecowiki.entity.article.ArticleVersionStats;
-
-/**
- * 文章版本统计Repository接口
- * 
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-01
- */
 @Repository
 public interface ArticleVersionStatsRepository extends JpaRepository<ArticleVersionStats, Long> {
     

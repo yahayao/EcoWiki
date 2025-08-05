@@ -1,3 +1,17 @@
+/**
+ * 文章版本控制器类
+ * 
+ * 功能：
+ * - 创建文章新版本和获取版本内容
+ * - 提供版本历史列表和统计信息
+ * - 支持版本恢复功能
+ * - 版本管理相关的REST API接口
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.controller.article;
 
 import java.util.HashMap;
@@ -26,14 +40,6 @@ import com.ecowiki.service.ArticleVersionService;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-/**
- * 文章版本控制器
- * 提供文章版本管理的REST API
- * 
- * @author EcoWiki
- * @version 1.0
- * @since 2025-07-01
- */
 @RestController
 @RequestMapping("/articles/{articleId}/versions")
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")

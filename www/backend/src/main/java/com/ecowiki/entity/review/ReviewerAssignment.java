@@ -1,3 +1,17 @@
+/**
+ * 审核员分配实体类
+ * 
+ * 功能：
+ * - 管理审核任务的审核员分配记录
+ * - 记录分配状态和时间信息
+ * - 支持自动分配和手动分配
+ * - 提供分配权重和原因记录
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.review;
 
 import java.time.LocalDateTime;
@@ -11,16 +25,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-
-/**
- * 审核员分配实体类
- * 
- * 管理审核任务的审核员分配记录
- * 
- * @author EcoWiki Team
- * @version 1.0
- * @since 2025-07-25
- */
 @Entity
 @Table(name = "reviewer_assignment")
 public class ReviewerAssignment {

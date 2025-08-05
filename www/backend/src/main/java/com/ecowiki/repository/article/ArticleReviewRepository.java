@@ -1,3 +1,17 @@
+/**
+ * 文章审核Repository接口
+ * 
+ * 功能：
+ * - 提供文章审核相关的数据访问操作
+ * - 支持审核记录的查询和管理
+ * - 提供按状态、类型、时间等条件查询
+ * - 支持过期审核和即将过期审核的查询
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.repository.article;
 
 import java.time.LocalDateTime;
@@ -12,16 +26,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.ecowiki.entity.article.ArticleReview;
-
-/**
- * 文章审核Repository接口
- * 
- * 提供文章审核相关的数据访问操作
- * 
- * @author EcoWiki Team
- * @version 1.0
- * @since 2025-07-25
- */
 @Repository
 public interface ArticleReviewRepository extends JpaRepository<ArticleReview, Long> {
     

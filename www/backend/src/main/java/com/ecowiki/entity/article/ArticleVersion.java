@@ -1,3 +1,17 @@
+/**
+ * 文章版本实体类
+ * 
+ * 功能：
+ * - 支持混合存储策略：第一个版本存储完整内容
+ * - 小改动只存储差异，差异大小超过原文70%时存储完整版本
+ * - 冷热数据分离：旧版本移到压缩存储
+ * - 版本历史管理和访问控制
+ * 
+ * @author EcoWiki开发团队
+ * @version 1.0.0
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
+ */
 package com.ecowiki.entity.article;
 
 import java.time.LocalDateTime;
@@ -14,19 +28,6 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
-/**
- * 文章版本实体类
- * 支持混合存储策略：
- * - 第一个版本存储完整内容
- * - 小改动只存储差异
- * - 差异大小超过原文70%时，直接存储完整版本
- * - 冷热数据分离：旧版本移到压缩存储
- * 
- * @author EcoWiki
- * @version 1.0
- * @since 2025-06-30
- */
 @Entity
 @Table(name = "article_versions", indexes = {
     @Index(name = "idx_article_id", columnList = "article_id"),

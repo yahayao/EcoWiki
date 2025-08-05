@@ -1,14 +1,19 @@
-package com.ecowiki.dto.comment;
-
 /**
  * 回复DTO类
  * 
- * 用于前端交互的回复数据传输对象
+ * 功能：
+ * - 用于前端交互的回复数据传输对象
+ * - 包含回复的基本信息和状态
+ * - 支持用户头像和点赞状态显示
+ * - 提供完整的回复信息结构
  * 
- * @author EcoWiki Team
+ * @author EcoWiki开发团队
  * @version 1.0.0
- * @since 2025-07-21
+ * @since 2025-07-01
+ * @lastModified 2025-08-05
  */
+package com.ecowiki.dto.comment;
+
 public class ReplyDTO {
     private String id;
     private String commentId;
