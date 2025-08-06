@@ -1,6 +1,6 @@
 /**
  * 文章控制器类
- * 
+ *
  * 功能：
  * - 提供文章相关的REST API接口
  * - 支持文章的创建、编辑、删除和查询
@@ -102,7 +102,7 @@ public class ArticleController {
                 
                 if (userOpt.isPresent()) {
                     User user = userOpt.get();
-                    System.out.println("找到用户详情: ID=" + user.getUserId() + ", Username=" + user.getUsername() + ", UserGroup=" + user.getUserGroup());
+                    System.out.println("找到用户详情: ID=" + user.getUserId() + ", Username=" + user.getUsername() + ", UserGroup=" + user.getUserGroup());//注意这里要替换成userService的方法，还没替换
                     return user;
                 } else {
                     System.out.println("未找到用户: " + username);
@@ -321,7 +321,7 @@ public class ArticleController {
                         debugInfo.put("userFound", true);
                         debugInfo.put("userId", user.getUserId());
                         debugInfo.put("username", user.getUsername());
-                        debugInfo.put("userGroup", user.getUserGroup());
+                        debugInfo.put("userGroup", user.getUserGroup());//要替换成userService方法
                         debugInfo.put("active", user.getActive());
                     } else {
                         debugInfo.put("userFound", false);

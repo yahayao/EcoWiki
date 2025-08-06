@@ -9,8 +9,8 @@
  * 
  * @author EcoWiki开发团队
  * @version 1.0.0
- * @since 2025-07-01
- * @lastModified 2025-08-05
+ * @since 2025-06-28
+ * @lastModified 2025-08-06
  */
 package com.ecowiki.entity.user;
 

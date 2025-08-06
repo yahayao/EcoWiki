@@ -402,7 +402,7 @@ public class ArticleDraftService {
         if (!draft.getEditorUserId().equals(operatorUserId)) {
             // 检查操作者是否为管理员
             Optional<User> operatorOpt = userRepository.findById(operatorUserId);
-            if (operatorOpt.isEmpty() || !"admin".equals(operatorOpt.get().getUserGroup())) {
+            if (operatorOpt.isEmpty() || !"admin".equals(operatorOpt.get().getUserGroup())) {//这里的getUserGroup也要改成userService的方法
                 throw new IllegalArgumentException("无权限删除此草稿");
             }
         }
