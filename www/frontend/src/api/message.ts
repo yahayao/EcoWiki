@@ -1,4 +1,3 @@
-<!--
 /**
  * 消息管理API模块
  * 
@@ -14,7 +13,7 @@
  * @since 2025-07-01
  * @lastModified 2025-08-05
  */
--->
+
 
 import { api } from './index'
 

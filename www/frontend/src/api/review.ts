@@ -1,4 +1,3 @@
-<!--
 /**
  * 文章审核API模块
  * 
@@ -14,7 +13,7 @@
  * @since 2025-07-01
  * @lastModified 2025-08-05
  */
--->
+
 
 import axios from 'axios';
 import type {
