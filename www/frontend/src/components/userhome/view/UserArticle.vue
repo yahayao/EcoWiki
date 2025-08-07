@@ -121,13 +121,13 @@
             </div>
           </div>
           <div class="card-actions">
-            <button class="action-btn primary" @click="viewArticle(article.id)">
+            <button class="action-btn primary" @click="viewArticle(article.articleId || article.id)">
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5M12,17C9.24,17 7,14.76 7,12C7,9.24 9.24,7 12,7C14.76,7 17,9.24 17,12C17,14.76 14.76,17 12,17M12,9C10.34,9 9,10.34 9,12C9,13.66 10.34,15 12,15C13.66,15 15,13.66 15,12C15,10.34 13.66,9 12,9Z"/>
               </svg>
               查看
             </button>
-            <button class="action-btn secondary" @click="unfavoriteArticle(article.id)">
+            <button class="action-btn secondary" @click="unfavoriteArticle(article.articleId || article.id)">
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M12.1,18.55L12,18.65L11.89,18.55C7.14,14.24 4,11.39 4,8.5C4,6.5 5.5,5 7.5,5C9.04,5 10.54,6 11.07,7.36H12.93C13.46,6 14.96,5 16.5,5C18.5,5 20,6.5 20,8.5C20,11.39 16.86,14.24 12.1,18.55M16.5,3C14.76,3 13.09,3.81 12,5.08C10.91,3.81 9.24,3 7.5,3C4.42,3 2,5.41 2,8.5C2,12.27 5.4,15.36 10.55,20.03L12,21.35L13.45,20.03C18.6,15.36 22,12.27 22,8.5C22,5.41 19.58,3 16.5,3Z"/>
               </svg>
@@ -172,13 +172,13 @@
             </div>
           </div>
           <div class="card-actions">
-            <button class="action-btn primary" @click="editArticle(article.id)">
+            <button class="action-btn primary" @click="editArticle(article.articleId || article.id)">
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
               </svg>
               编辑
             </button>
-            <button class="action-btn secondary" @click="viewArticle(article.id)">
+            <button class="action-btn secondary" @click="viewArticle(article.articleId || article.id)">
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5M12,17C9.24,17 7,14.76 7,12C7,9.24 9.24,7 12,7C14.76,7 17,9.24 17,12C17,14.76 14.76,17 12,17M12,9C10.34,9 9,10.34 9,12C9,13.66 10.34,15 12,15C13.66,15 15,13.66 15,12C15,10.34 13.66,9 12,9Z"/>
               </svg>
@@ -217,13 +217,13 @@
             </div>
           </div>
           <div class="card-actions">
-            <button class="action-btn primary" @click="editDraft(draft.id)">
+            <button class="action-btn primary" @click="editDraft(draft.articleId || draft.id)">
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
               </svg>
               继续编辑
             </button>
-            <button class="action-btn danger" @click="deleteDraft(draft.id)">
+            <button class="action-btn danger" @click="deleteDraft(draft.articleId || draft.id)">
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
               </svg>
@@ -278,13 +278,13 @@
             </div>
           </div>
           <div class="card-actions">
-            <button class="action-btn primary" @click="viewArticle(article.id)">
+            <button class="action-btn primary" @click="viewArticle(article.articleId || article.id)">
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5M12,17C9.24,17 7,14.76 7,12C7,9.24 9.24,7 12,7C14.76,7 17,9.24 17,12C17,14.76 14.76,17 12,17M12,9C10.34,9 9,10.34 9,12C9,13.66 10.34,15 12,15C13.66,15 15,13.66 15,12C15,10.34 13.66,9 12,9Z"/>
               </svg>
               查看
             </button>
-            <button class="action-btn secondary" @click="unlikeArticle(article.id)">
+            <button class="action-btn secondary" @click="unlikeArticle(article.articleId || article.id)">
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M23,10C23,8.89 22.1,8 21,8H14.68L15.64,3.43C15.66,3.33 15.67,3.22 15.67,3.11C15.67,2.7 15.5,2.32 15.23,2.05L14.17,1L7.59,7.58C7.22,7.95 7,8.45 7,9V19A2,2 0 0,0 9,21H18C18.83,21 19.54,20.5 19.84,19.78L22.86,12.73C22.95,12.5 23,12.26 23,12V10.08L23,10M1,21H5V9H1V21Z"/>
               </svg>
@@ -314,6 +314,7 @@ const favoriteArticles = ref<any[]>([])
 const createdArticles = ref<any[]>([])
 const draftArticles = ref<any[]>([])
 const likedArticles = ref<any[]>([])
+const loading = ref(false)
 const articleStats = ref({
   totalArticles: 0,
   publishedArticles: 0,
@@ -323,9 +324,6 @@ const articleStats = ref({
   totalViews: 0,
   totalLikes: 0
 })
-
-// 加载状态
-const loading = ref(false)
 
 // 统计数据计算属性
 const favoriteCount = computed(() => articleStats.value.favoriteArticles)
@@ -436,18 +434,36 @@ const loadLikedArticles = async () => {
 
 // 文章操作方法
 const createNewArticle = () => {
-  router.push('/editor/new')
+  router.push('/create')
 }
 
-const viewArticle = (articleId: number) => {
-  router.push(`/article/${articleId}`)
+const viewArticle = async (articleId: number) => {
+  try {
+    // 通过ID获取文章信息以获得title
+    const article = await articleApi.getArticleById(articleId)
+    router.push(`/wiki/${encodeURIComponent(article.title)}`)
+  } catch (error: any) {
+    console.error('获取文章信息失败:', error)
+    toast.error('无法打开文章', '错误')
+  }
 }
 
-const editArticle = (articleId: number) => {
-  router.push(`/editor/${articleId}`)
+const editArticle = async (articleId: number) => {
+  try {
+    // 通过ID获取文章信息以获得title
+    const article = await articleApi.getArticleById(articleId)
+    router.push(`/edit/${encodeURIComponent(article.title)}`)
+  } catch (error: any) {
+    console.error('获取文章信息失败:', error)
+    toast.error('无法编辑文章', '错误')
+  }
 }
 
 const unfavoriteArticle = async (articleId: number) => {
+  if (!confirm('确定要取消收藏这篇文章吗？')) {
+    return
+  }
+  
   try {
     await articleApi.unfavoriteArticle(articleId)
     toast.success('已取消收藏', '操作成功')
@@ -456,11 +472,16 @@ const unfavoriteArticle = async (articleId: number) => {
     // 更新统计数据
     await loadArticleStats()
   } catch (error: any) {
-    toast.error('取消收藏失败', '错误')
+    console.error('取消收藏失败:', error)
+    toast.error(error.message || '取消收藏失败', '错误')
   }
 }
 
 const unlikeArticle = async (articleId: number) => {
+  if (!confirm('确定要取消点赞这篇文章吗？')) {
+    return
+  }
+  
   try {
     await articleApi.unlikeArticle(articleId)
     toast.success('已取消点赞', '操作成功')
@@ -469,7 +490,8 @@ const unlikeArticle = async (articleId: number) => {
     // 更新统计数据
     await loadArticleStats()
   } catch (error: any) {
-    toast.error('取消点赞失败', '错误')
+    console.error('取消点赞失败:', error)
+    toast.error(error.message || '取消点赞失败', '错误')
   }
 }
 
@@ -479,12 +501,17 @@ const deleteArticle = async (articleId: number) => {
   }
   
   try {
+    loading.value = true
     await articleApi.deleteArticle(articleId)
     toast.success('文章已删除', '操作成功')
-    // 重新加载文章列表
+    // 重新加载文章列表和统计数据
     await loadCreatedArticles()
+    await loadArticleStats()
   } catch (error: any) {
-    toast.error('删除文章失败', '错误')
+    console.error('删除文章失败:', error)
+    toast.error(error.message || '删除文章失败', '错误')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -494,17 +521,27 @@ const deleteDraft = async (draftId: number) => {
   }
   
   try {
+    loading.value = true
     await articleApi.deleteArticle(draftId)
     toast.success('草稿已删除', '操作成功')
-    // 重新加载草稿列表
+    // 重新加载草稿列表和统计数据
     await loadDraftArticles()
+    await loadArticleStats()
   } catch (error: any) {
-    toast.error('删除草稿失败', '错误')
+    console.error('删除草稿失败:', error)
+    toast.error(error.message || '删除草稿失败', '错误')
+  } finally {
+    loading.value = false
   }
 }
 
 const publishDraft = async (draftId: number) => {
+  if (!confirm('确定要发布这个草稿吗？')) {
+    return
+  }
+  
   try {
+    loading.value = true
     await articleApi.publishArticle(draftId)
     toast.success('草稿已发布', '操作成功')
     // 重新加载数据
@@ -512,7 +549,10 @@ const publishDraft = async (draftId: number) => {
     await loadCreatedArticles()
     await loadArticleStats()
   } catch (error: any) {
-    toast.error('发布草稿失败', '错误')
+    console.error('发布草稿失败:', error)
+    toast.error(error.message || '发布草稿失败', '错误')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -538,8 +578,15 @@ onMounted(async () => {
 })
 
 // 草稿编辑方法
-const editDraft = (draftId: number) => {
-  router.push(`/editor/${draftId}`)
+const editDraft = async (draftId: number) => {
+  try {
+    // 通过ID获取草稿信息以获得title
+    const draft = await articleApi.getArticleById(draftId)
+    router.push(`/edit/${encodeURIComponent(draft.title)}`)
+  } catch (error: any) {
+    console.error('获取草稿信息失败:', error)
+    toast.error('无法编辑草稿', '错误')
+  }
 }
 </script>
 
