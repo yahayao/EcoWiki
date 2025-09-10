@@ -34,9 +34,8 @@ public class PermissionService {
      * @return 如果用户为admin或superadmin角色，返回true，否则返回false
      */
     public boolean isAdmin(User user) {
-        if (user == null) return false;
-        String roleName = userService.getUserRoleName(user.getUserId().intValue());
-        return "admin".equals(roleName) || "superadmin".equals(roleName);
+    // reuse hasPermission which already treats superadmin as having all permissions
+    return hasPermission(user, "admin");
     }
 
     /**
@@ -46,9 +45,7 @@ public class PermissionService {
      * @return 如果用户为superadmin角色，返回true，否则返回false
      */
     public boolean isSuperAdmin(User user) {
-        if (user == null) return false;
-        String roleName = userService.getUserRoleName(user.getUserId().intValue());
-        return "superadmin".equals(roleName);
+        return hasPermission(user, "user");
     }
 
     /**
