@@ -13,7 +13,6 @@
  * @lastModified 2025-08-05
  */
 // === 依赖导入 ===
-import axios from 'axios'  // HTTP客户端
 import { api } from './index'  // 通用API实例
 import type {
   PermissionGroup,
@@ -27,88 +26,7 @@ import type {
 
 // === API配置 ===
 
-/** 后端API服务的基础地址 */
-const API_BASE_URL = 'http://localhost:8080/api'
-
-/**
- * 独立的API客户端实例
- * 专门用于用户权限相关的API调用，提供独立的配置和拦截器
- */
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,  // 10秒超时
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  }
-})
-
-// === HTTP拦截器配置 ===
-
-/**
- * 请求拦截器
- * 自动为所有请求添加JWT认证头
- */
-apiClient.interceptors.request.use(
-  (config) => {
-    // 从本地存储获取JWT令牌
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => {
-    console.error('请求拦截器错误:', error)
-    return Promise.reject(error)
-  }
-)
-
-/**
- * 响应拦截器
- * 统一处理API响应和错误状态
- */
-apiClient.interceptors.response.use(
-  (response) => {
-    // 成功响应直接返回
-    return response
-  },
-  (error) => {
-    // 统一错误处理
-    if (error.response) {
-      // 服务器返回错误状态码
-      const { status, data } = error.response
-
-      switch (status) {
-        case 401:
-          // 未授权，清除本地令牌并跳转到登录页
-          localStorage.removeItem('token')
-          localStorage.removeItem('user')
-          // 可以在这里触发全局事件或路由跳转
-          break
-        case 403:
-          console.error('权限不足:', data.message || '无权限访问')
-          break
-        case 404:
-          console.error('资源不存在:', data.message || '请求的资源未找到')
-          break
-        case 500:
-          console.error('服务器内部错误:', data.message || '服务器发生错误')
-          break
-        default:
-          console.error('API错误:', data.message || `请求失败 (${status})`)
-      }
-    } else if (error.request) {
-      // 网络错误
-      console.error('网络连接错误:', error.message)
-    } else {
-      // 其他错误
-      console.error('请求配置错误:', error.message)
-    }
-
-    return Promise.reject(error)
-  }
-)
+// 使用项目统一导出的 `api` 实例（请求拦截器/认证头应在 `./index` 中统一配置）
 
 // === 类型定义 ===
 
@@ -1015,7 +933,7 @@ export const userApi = {
     totalLikes: number
   }> => {
     try {
-      const response = await apiClient.get('/api/user/article-stats')
+  const response = await api.get('/user/article-stats')
 
       if (response.data.code === 200 && response.data.data) {
         return response.data.data
@@ -1042,7 +960,7 @@ export const userApi = {
     number: number
   }> => {
     try {
-      const response = await apiClient.get('/api/user/favorite-articles', {
+  const response = await api.get('/user/favorite-articles', {
         params: { page, size }
       })
 
@@ -1077,7 +995,7 @@ export const userApi = {
         params.status = status
       }
 
-      const response = await apiClient.get('/api/user/articles', {
+  const response = await api.get('/user/articles', {
         params
       })
 
@@ -1106,7 +1024,7 @@ export const userApi = {
     number: number
   }> => {
     try {
-      const response = await apiClient.get('/api/user/liked-articles', {
+  const response = await api.get('/user/liked-articles', {
         params: { page, size }
       })
 
@@ -1158,7 +1076,7 @@ export const permissionGroupApi = {
    * 获取所有权限分组及其权限
    */
   async getAllPermissionGroups(): Promise<PermissionGroup[]> {
-    const response = await apiClient.get('/admin/permission-groups')
+  const response = await api.get('/admin/permission-groups')
     return response.data
   },
 
@@ -1166,7 +1084,7 @@ export const permissionGroupApi = {
    * 根据ID获取权限分组
    */
   async getPermissionGroupById(groupId: number): Promise<PermissionGroup> {
-    const response = await apiClient.get(`/admin/permission-groups/${groupId}`)
+  const response = await api.get(`/admin/permission-groups/${groupId}`)
     return response.data
   },
 
@@ -1174,7 +1092,7 @@ export const permissionGroupApi = {
    * 创建权限分组
    */
   async createPermissionGroup(data: PermissionGroupForm): Promise<PermissionGroup> {
-    const response = await apiClient.post('/admin/permission-groups', data)
+  const response = await api.post('/admin/permission-groups', data)
     return response.data
   },
 
@@ -1182,7 +1100,7 @@ export const permissionGroupApi = {
    * 更新权限分组
    */
   async updatePermissionGroup(groupId: number, data: PermissionGroupForm): Promise<PermissionGroup> {
-    const response = await apiClient.put(`/admin/permission-groups/${groupId}`, data)
+  const response = await api.put(`/admin/permission-groups/${groupId}`, data)
     return response.data
   },
 
@@ -1190,14 +1108,14 @@ export const permissionGroupApi = {
    * 删除权限分组
    */
   async deletePermissionGroup(groupId: number): Promise<void> {
-    await apiClient.delete(`/admin/permission-groups/${groupId}`)
+  await api.delete(`/admin/permission-groups/${groupId}`)
   },
 
   /**
    * 获取分组下的所有权限
    */
   async getPermissionsByGroupId(groupId: number): Promise<Permission[]> {
-    const response = await apiClient.get(`/admin/permission-groups/${groupId}/permissions`)
+  const response = await api.get(`/admin/permission-groups/${groupId}/permissions`)
     return response.data
   },
 
@@ -1205,7 +1123,7 @@ export const permissionGroupApi = {
    * 为分组添加权限
    */
   async addPermissionToGroup(groupId: number, data: PermissionForm): Promise<Permission> {
-    const response = await apiClient.post(`/admin/permission-groups/${groupId}/permissions`, data)
+  const response = await api.post(`/admin/permission-groups/${groupId}/permissions`, data)
     return response.data
   },
 
@@ -1213,7 +1131,7 @@ export const permissionGroupApi = {
    * 批量更新分组内权限的排序
    */
   async updatePermissionsOrder(groupId: number, permissionIds: number[]): Promise<void> {
-    await apiClient.put(`/admin/permission-groups/${groupId}/permissions/order`, permissionIds)
+  await api.put(`/admin/permission-groups/${groupId}/permissions/order`, permissionIds)
   }
 }
 
@@ -1251,7 +1169,7 @@ export const rolePermissionApi = {
    */
   async getRoles(): Promise<{ data: Role[] }> {
     try {
-      const response = await apiClient.get('/admin/roles/details')
+  const response = await api.get('/admin/roles/details')
       if (response.data && response.data.code === 200 && response.data.data) {
         return { data: response.data.data }
       } else {
@@ -1274,7 +1192,7 @@ export const rolePermissionApi = {
    * @throws Error 当角色名重复、权限不足或服务器错误时抛出异常
    */
   async createRole(roleForm: RoleForm): Promise<Role> {
-    const response = await apiClient.post('/admin/roles', roleForm)
+  const response = await api.post('/admin/roles', roleForm)
     return response.data.data
   },
 
@@ -1290,7 +1208,7 @@ export const rolePermissionApi = {
    * @throws Error 当角色不存在、权限不足或服务器错误时抛出异常
    */
   async updateRole(roleId: number, roleForm: RoleForm): Promise<Role> {
-    const response = await apiClient.put(`/admin/roles/${roleId}`, roleForm)
+  const response = await api.put(`/admin/roles/${roleId}`, roleForm)
     return response.data.data
   },
 
@@ -1305,7 +1223,7 @@ export const rolePermissionApi = {
    * @throws Error 当角色不存在、仍有用户使用或权限不足时抛出异常
    */
   async deleteRole(roleId: number): Promise<void> {
-    await apiClient.delete(`/admin/roles/${roleId}`)
+  await api.delete(`/admin/roles/${roleId}`)
   },
 
   /**
@@ -1319,7 +1237,7 @@ export const rolePermissionApi = {
    * @throws Error 当角色不存在或权限不足时抛出异常
    */
   async getRolePermissions(roleId: number): Promise<Permission[]> {
-    const response = await apiClient.get(`/admin/roles/${roleId}/permissions`)
+  const response = await api.get(`/admin/roles/${roleId}/permissions`)
     return response.data.data || []
   },
 
@@ -1327,7 +1245,7 @@ export const rolePermissionApi = {
    * 更新角色的权限配置
    */
   async updateRolePermissions(roleId: number, permissionIds: number[]): Promise<void> {
-    await apiClient.put(`/admin/roles/${roleId}/permissions`, { permissionIds })
+  await api.put(`/admin/roles/${roleId}/permissions`, { permissionIds })
   },
 
   /**
@@ -1343,7 +1261,7 @@ export const rolePermissionApi = {
    */
   async getAllPermissions(): Promise<Permission[]> {
     try {
-      const response = await apiClient.get('/admin/permissions')
+  const response = await api.get('/admin/permissions')
       if (response.data && response.data.code === 200 && response.data.data) {
         return response.data.data
       } else {
@@ -1359,22 +1277,22 @@ export const rolePermissionApi = {
    * 批量分配权限给多个角色
    */
   async batchAssignPermissions(assignments: { roleId: number, permissionIds: number[] }[]): Promise<void> {
-    await apiClient.post('/admin/roles/batch-assign-permissions', { assignments })
+  await api.post('/admin/roles/batch-assign-permissions', { assignments })
   },
 
   /**
    * 获取所有角色权限关联
    */
   async getAllRolePermissions(): Promise<{ data: RolePermission[] }> {
-    const response = await apiClient.get('/admin/role-permissions')
-    return { data: response.data.data || [] }
+  const response = await api.get('/admin/role-permissions')
+  return { data: response.data.data || [] }
   },
 
   /**
    * 获取权限的分配统计
    */
   async getPermissionAssignmentStats(): Promise<any> {
-    const response = await apiClient.get('/admin/permissions/assignment-stats')
-    return response.data
+  const response = await api.get('/admin/permissions/assignment-stats')
+  return response.data
   }
 }

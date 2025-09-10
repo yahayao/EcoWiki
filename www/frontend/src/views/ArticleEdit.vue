@@ -15,6 +15,7 @@
  * @lastModified 2025-08-05
  */
 -->
+<!--
   - EditHeader: 页面头部组件，显示标题和导航
   - EditNotice: 编辑提示组件，显示使用说明
   - EditorToolbar: 工具栏组件，提供格式化按钮
@@ -454,10 +455,6 @@ const handleSave = async () => {
       await router.push(`/article/${encodeURIComponent(currentTitle.value)}`)
       return
       
-      // 使用setTimeout确保状态更新后再导航
-      setTimeout(() => {
-        router.push(`/wiki/${updated.title}`)
-      }, 100)
     } else {
       // 创建文章 - 提交到草稿表等待审核
       const currentAuthor = user.value?.username || userDisplayName.value || '未知用户'
@@ -570,13 +567,45 @@ onMounted(() => {
 })
 
 // 监听内容变化（预览现在是独立的，不需要自动更新）
-watch(() => articleForm.value.content, () => {
-  // 内容变化时可以在这里处理其他逻辑，比如自动保存
+// 防抖定时器 id，用于延迟解析内容中的分类模板
+const _extractionTimer = ref<number | null>(null)
+
+// 监听内容变化：当用户输入或插入包含分类/标签模板的文本时，使用 wikiParser 提取分类并更新 articleForm.tags（仅前端显示），不自动提交到后端。
+watch(() => articleForm.value.content, (newContent: string) => {
+  // 清理之前的定时器
+  if (_extractionTimer.value) {
+    window.clearTimeout(_extractionTimer.value)
+    _extractionTimer.value = null
+  }
+
+  // 300ms 防抖，减少频繁解析
+  _extractionTimer.value = window.setTimeout(() => {
+    try {
+      wikiParser.clearExtractedCategories()
+      // 解析内容，parser 会记录解析到的分类信息
+      wikiParser.parseToHtml(newContent || '')
+      const extractedCategories = wikiParser.getExtractedCategories() || []
+      const joined = extractedCategories.join(', ')
+
+      // 仅在有差异时更新，以避免不必要的响应式触发
+      if (joined !== articleForm.value.tags) {
+        articleForm.value.tags = joined
+      }
+    } catch (err) {
+      // 解析失败不影响编辑流程
+      console.warn('解析内容提取分类失败:', err)
+    }
+  }, 300) as unknown as number
 })
 
 onUnmounted(() => {
   // 组件卸载时移除事件监听器
   window.removeEventListener('beforeunload', handleBeforeUnload)
+  // 清理防抖定时器
+  if (_extractionTimer.value) {
+    window.clearTimeout(_extractionTimer.value)
+    _extractionTimer.value = null
+  }
 })
 
 // 处理浏览器 beforeunload 事件（刷新页面、关闭标签页等）
@@ -588,20 +617,9 @@ const handleBeforeUnload = (event: BeforeUnloadEvent) => {
   
   // 检查是否有未保存的更改
   if (hasUnsavedChanges.value) {
-    // 设置返回值以触发浏览器的确认对话框
+    // 仅调用 preventDefault() 以触发浏览器的离开确认提示。
     event.preventDefault()
-    // 对于现代浏览器，返回值会被忽略，但设置它仍然是个好习惯
-    event.returnValue = '您所做的更改可能未保存。'
-    return '您所做的更改可能未保存。'
   }
-}
-
-const loadArticleForEdit = async () => {
-  // 这个函数已被 loadArticle() 替代，移除冗余代码
-}
-
-const handleInput = () => {
-  // 处理输入事件，现在预览是独立的，不需要特殊处理
 }
 
 const insertTemplate = () => {
