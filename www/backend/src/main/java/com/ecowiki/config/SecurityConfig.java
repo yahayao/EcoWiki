@@ -62,6 +62,7 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/uploads/**").permitAll() // 允许访问上传的静态文件
                 .requestMatchers("/admin/**").authenticated() // 管理员接口需要认证
+                .requestMatchers("/messages/**").authenticated() // 消息接口需要认证
                 .anyRequest().permitAll()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

@@ -54,6 +54,25 @@ public interface MessageRefactoredRepository extends JpaRepository<MessageRefact
     }
     
     /**
+     * 根据用户ID查询所有相关消息（发送和接收）
+     */
+    @Query("SELECT m FROM MessageRefactored m WHERE (m.recipientUserId = :userId OR m.senderUserId = :userId) " +
+           "AND m.status != :deletedStatus AND (m.expireTime IS NULL OR m.expireTime > :now) " +
+           "ORDER BY m.sendTime DESC")
+    Page<MessageRefactored> findVisibleByUserId(
+            @Param("userId") Integer userId,
+            @Param("deletedStatus") MessageStatus deletedStatus,
+            @Param("now") LocalDateTime now,
+            Pageable pageable);
+    
+    /**
+     * 根据用户ID查询所有相关消息（发送和接收）- 简化版本
+     */
+    default Page<MessageRefactored> findVisibleByUserId(Integer userId, Pageable pageable) {
+        return findVisibleByUserId(userId, MessageStatus.DELETED, LocalDateTime.now(), pageable);
+    }
+    
+    /**
      * 根据发送用户ID查询可见消息（分页）
      */
     @Query("SELECT m FROM MessageRefactored m WHERE m.senderUserId = :senderUserId " +

@@ -41,7 +41,7 @@ import com.ecowiki.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/user")
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")
 public class UserArticleController {
     

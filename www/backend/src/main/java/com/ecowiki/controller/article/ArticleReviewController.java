@@ -41,7 +41,7 @@ import com.ecowiki.entity.review.ReviewHistory;
 import com.ecowiki.entity.review.ReviewerAssignment;
 import com.ecowiki.service.ArticleReviewService;
 @RestController
-@RequestMapping("/api/review")
+@RequestMapping("/review")
 @CrossOrigin(origins = "*")
 public class ArticleReviewController {
     

@@ -39,8 +39,8 @@ import com.ecowiki.service.CommentService.LikeResult;
 
 import jakarta.servlet.http.HttpServletRequest;
 @RestController
-@RequestMapping("/api/comments")
-@CrossOrigin(originPatterns = {"http://localhost:*", "http://127.0.0.1:*"}, allowCredentials = "true", maxAge = 3600)
+@RequestMapping("/comments")
+@CrossOrigin(originPatterns = "*", allowCredentials = "true", maxAge = 3600)
 public class CommentController {
     
     @Autowired
