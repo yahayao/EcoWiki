@@ -216,7 +216,7 @@ export const adminApi = {
    */
   getUsers: async (page = 0, size = 10, sortBy = 'userId', sortDir = 'desc') => {
     try {
-      const response = await api.get(`/admin/users?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`)
+      const response = await api.get(`/api/admin/users?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`)
       return response.data
     } catch (error: any) {
       console.error('获取用户列表失败:', error)
@@ -241,7 +241,7 @@ export const adminApi = {
    */
   getAllActiveUsers: async () => {
     try {
-      const response = await api.get('/admin/users/active')
+      const response = await api.get('/api/admin/users/active')
       if (response.data && response.data.code === 200 && response.data.data) {
         return response.data.data
       } else {
@@ -272,7 +272,7 @@ export const adminApi = {
    */
   updateUserGroup: async (userId: number, userGroup: UserGroup) => {
     try {
-      const response = await api.put(`/admin/users/${userId}/group`, { userGroup })
+      const response = await api.put(`/api/admin/users/${userId}/group`, { userGroup })
       return response.data
     } catch (error: any) {
       console.error('更新用户权限失败:', error)
@@ -299,7 +299,7 @@ export const adminApi = {
    */
   updateUserStatus: async (userId: number, active: boolean) => {
     try {
-      const response = await api.put(`/admin/users/${userId}/status`, { active })
+      const response = await api.put(`/api/admin/users/${userId}/status`, { active })
       return response.data
     } catch (error: any) {
       console.error('更新用户状态失败:', error)
@@ -324,7 +324,7 @@ export const adminApi = {
    */
   getSystemStats: async () => {
     try {
-      const response = await api.get('/admin/stats')
+      const response = await api.get('/api/admin/stats')
       return response.data
     } catch (error: any) {
       console.error('获取系统统计失败:', error)
@@ -349,7 +349,7 @@ export const adminApi = {
    */
   getRoles: async () => {
     try {
-      const response = await api.get('/admin/roles')
+      const response = await api.get('/api/admin/roles')
       // 后端返回的是 ApiResponse<List<String>> 格式
       return response.data
     } catch (error: any) {
@@ -375,7 +375,7 @@ export const adminApi = {
    */
   getRolesDetails: async () => {
     try {
-      const response = await api.get('/admin/roles/details')
+      const response = await api.get('/api/admin/roles/details')
       // 后端返回的是 ApiResponse<List<Role>> 格式
       if (response.data && response.data.code === 200 && response.data.data) {
         return response.data.data
@@ -395,7 +395,7 @@ export const adminApi = {
    */
   createRole: async (roleData: { roleName: string; description?: string }) => {
     try {
-      const response = await api.post('/admin/roles', roleData)
+      const response = await api.post('/api/admin/roles', roleData)
       // 后端返回的是 ApiResponse<Role> 格式
       if (response.data && response.data.code === 200) {
         return response.data.data
@@ -416,7 +416,7 @@ export const adminApi = {
    */
   updateRole: async (roleId: number, roleData: { roleName?: string; description?: string }) => {
     try {
-      const response = await api.put(`/admin/roles/${roleId}`, roleData)
+      const response = await api.put(`/api/admin/roles/${roleId}`, roleData)
       // 后端返回的是 ApiResponse<Role> 格式
       if (response.data && response.data.code === 200) {
         return response.data.data
@@ -436,7 +436,7 @@ export const adminApi = {
    */
   deleteRole: async (roleId: number) => {
     try {
-      const response = await api.delete(`/admin/roles/${roleId}`)
+      const response = await api.delete(`/api/admin/roles/${roleId}`)
       // 后端返回的是 ApiResponse<String> 格式
       if (response.data && response.data.code === 200) {
         return response.data
@@ -456,7 +456,7 @@ export const adminApi = {
    */
   deleteUser: async (userId: number) => {
     try {
-      const response = await api.delete(`/admin/users/${userId}`)
+      const response = await api.delete(`/api/admin/users/${userId}`)
       return response.data
     } catch (error: any) {
       console.error('禁用用户失败:', error)
@@ -471,7 +471,7 @@ export const adminApi = {
    */
   restoreUser: async (userId: number) => {
     try {
-      const response = await api.put(`/admin/users/${userId}/restore`)
+      const response = await api.put(`/api/admin/users/${userId}/restore`)
       return response.data
     } catch (error: any) {
       console.error('恢复用户失败:', error)
@@ -485,7 +485,7 @@ export const adminApi = {
    */
   getAllPermissions: async () => {
     try {
-      const response = await api.get('/admin/permissions')
+      const response = await api.get('/api/admin/permissions')
       // 后端返回的是 ApiResponse<List<Permission>> 格式
       if (response.data && response.data.code === 200 && response.data.data) {
         return response.data.data
@@ -505,7 +505,7 @@ export const adminApi = {
    */
   createPermission: async (permissionData: { permissionName: string; description?: string }) => {
     try {
-      const response = await api.post('/admin/permissions', permissionData)
+      const response = await api.post('/api/admin/permissions', permissionData)
       // 后端返回的是 ApiResponse<Permission> 格式
       if (response.data && response.data.code === 200) {
         return response.data.data
@@ -526,7 +526,7 @@ export const adminApi = {
    */
   updatePermission: async (permissionId: number, permissionData: { permissionName?: string; description?: string }) => {
     try {
-      const response = await api.put(`/admin/permissions/${permissionId}`, permissionData)
+      const response = await api.put(`/api/admin/permissions/${permissionId}`, permissionData)
       // 后端返回的是 ApiResponse<Permission> 格式
       if (response.data && response.data.code === 200) {
         return response.data.data
@@ -546,7 +546,7 @@ export const adminApi = {
    */
   deletePermission: async (permissionId: number) => {
     try {
-      const response = await api.delete(`/admin/permissions/${permissionId}`)
+      const response = await api.delete(`/api/admin/permissions/${permissionId}`)
       // 后端返回的是 ApiResponse<String> 格式
       if (response.data && response.data.code === 200) {
         return response.data
@@ -577,7 +577,7 @@ export const userApi = {
         rememberMe: data.rememberMe
       })
 
-      const response = await api.post('/auth/login', {
+      const response = await api.post('/api/auth/login', {
         username: data.username,
         email: data.email,
         password: data.password,
@@ -618,7 +618,7 @@ export const userApi = {
         newPassword: data.newPassword,
         confirmPassword: data.confirmPassword
       })
-      const response = await api.post('/auth/reset-password', {
+      const response = await api.post('/api/auth/reset-password', {
         username: data.username,
         email: data.email,
         newPassword: data.newPassword,
@@ -660,7 +660,7 @@ export const userApi = {
         fullName: data.fullName
       })
 
-      const response = await api.post('/auth/register', {
+      const response = await api.post('/api/auth/register', {
         username: data.username,
         email: data.email,
         password: data.password,
@@ -697,7 +697,7 @@ export const userApi = {
    */
   checkUsername: async (username: string): Promise<boolean> => {
     try {
-      const response = await api.get(`/auth/check-username?username=${encodeURIComponent(username)}`)
+      const response = await api.get(`/api/auth/check-username?username=${encodeURIComponent(username)}`)
 
       if (response.data.code === 200 && response.data.data) {
         return response.data.data.available
@@ -722,7 +722,7 @@ export const userApi = {
    */
   checkEmail: async (email: string): Promise<boolean> => {
     try {
-      const response = await api.get(`/auth/check-email?email=${encodeURIComponent(email)}`)
+      const response = await api.get(`/api/auth/check-email?email=${encodeURIComponent(email)}`)
 
       if (response.data.code === 200 && response.data.data) {
         return response.data.data.available
@@ -746,7 +746,7 @@ export const userApi = {
    */
   getCurrentUser: async (): Promise<UserResponse> => {
     try {
-      const response = await api.get('/auth/me')
+      const response = await api.get('/api/auth/me')
 
       if (response.data.code === 200 && response.data.data) {
         return response.data.data
@@ -765,7 +765,7 @@ export const userApi = {
   logout: async (): Promise<void> => {
     try {
       try {
-        await api.post('/auth/logout')
+        await api.post('/api/auth/logout')
       } catch (error) {
         console.warn('后端登出接口调用失败，但仍清除本地数据')
       }
@@ -789,7 +789,7 @@ export const userApi = {
    */
   refreshToken: async (refreshToken: string): Promise<{ token: string; refreshToken: string }> => {
     try {
-      const response = await api.post('/auth/refresh', { refreshToken })
+      const response = await api.post('/api/auth/refresh', { refreshToken })
 
       if (response.data.code === 200 && response.data.data) {
         return response.data.data
@@ -833,7 +833,7 @@ export const userApi = {
     email?: string
   }): Promise<UserResponse> => {
     try {
-      const response = await api.put('/auth/profile', profileData)
+      const response = await api.put('/api/auth/profile', profileData)
 
       if (response.data.code === 200 && response.data.data) {
         return response.data.data
@@ -860,7 +860,7 @@ export const userApi = {
         fileSize: avatarFile.size,
         fileType: avatarFile.type
       })
-      const response = await api.post('/profile/avatar', formData, {
+      const response = await api.post('/api/profile/avatar', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -888,7 +888,7 @@ export const userApi = {
     confirmPassword: string
   }): Promise<void> => {
     try {
-      const response = await api.post('/auth/change-password', passwordData)
+      const response = await api.post('/api/auth/change-password', passwordData)
 
       if (response.data.code !== 200) {
         throw new Error(response.data.message || '修改密码失败')
@@ -909,7 +909,7 @@ export const userApi = {
     securityAnswer?: string
   }): Promise<void> => {
     try {
-      const response = await api.put('/auth/security', securityData)
+      const response = await api.put('/api/auth/security', securityData)
 
       if (response.data.code !== 200) {
         throw new Error(response.data.message || '更新安全设置失败')
@@ -933,7 +933,7 @@ export const userApi = {
     totalLikes: number
   }> => {
     try {
-  const response = await api.get('/user/article-stats')
+  const response = await api.get('/api/user/article-stats')
 
       if (response.data.code === 200 && response.data.data) {
         return response.data.data
@@ -960,7 +960,7 @@ export const userApi = {
     number: number
   }> => {
     try {
-  const response = await api.get('/user/favorite-articles', {
+  const response = await api.get('/api/user/favorite-articles', {
         params: { page, size }
       })
 
@@ -995,7 +995,7 @@ export const userApi = {
         params.status = status
       }
 
-  const response = await api.get('/user/articles', {
+  const response = await api.get('/api/user/articles', {
         params
       })
 
@@ -1024,7 +1024,7 @@ export const userApi = {
     number: number
   }> => {
     try {
-  const response = await api.get('/user/liked-articles', {
+  const response = await api.get('/api/user/liked-articles', {
         params: { page, size }
       })
 
@@ -1054,7 +1054,7 @@ export const userApi = {
     contributionCalendar: any[]
   }> => {
     try {
-      const response = await api.get('/auth/contributions')
+      const response = await api.get('/api/auth/contributions')
 
       if (response.data.code === 200 && response.data.data) {
         return response.data.data
@@ -1076,7 +1076,7 @@ export const permissionGroupApi = {
    * 获取所有权限分组及其权限
    */
   async getAllPermissionGroups(): Promise<PermissionGroup[]> {
-  const response = await api.get('/admin/permission-groups')
+  const response = await api.get('/api/admin/permission-groups')
     return response.data
   },
 
@@ -1084,7 +1084,7 @@ export const permissionGroupApi = {
    * 根据ID获取权限分组
    */
   async getPermissionGroupById(groupId: number): Promise<PermissionGroup> {
-  const response = await api.get(`/admin/permission-groups/${groupId}`)
+  const response = await api.get(`/api/admin/permission-groups/${groupId}`)
     return response.data
   },
 
@@ -1092,7 +1092,7 @@ export const permissionGroupApi = {
    * 创建权限分组
    */
   async createPermissionGroup(data: PermissionGroupForm): Promise<PermissionGroup> {
-  const response = await api.post('/admin/permission-groups', data)
+  const response = await api.post('/api/admin/permission-groups', data)
     return response.data
   },
 
@@ -1100,7 +1100,7 @@ export const permissionGroupApi = {
    * 更新权限分组
    */
   async updatePermissionGroup(groupId: number, data: PermissionGroupForm): Promise<PermissionGroup> {
-  const response = await api.put(`/admin/permission-groups/${groupId}`, data)
+  const response = await api.put(`/api/admin/permission-groups/${groupId}`, data)
     return response.data
   },
 
@@ -1108,14 +1108,14 @@ export const permissionGroupApi = {
    * 删除权限分组
    */
   async deletePermissionGroup(groupId: number): Promise<void> {
-  await api.delete(`/admin/permission-groups/${groupId}`)
+  await api.delete(`/api/admin/permission-groups/${groupId}`)
   },
 
   /**
    * 获取分组下的所有权限
    */
   async getPermissionsByGroupId(groupId: number): Promise<Permission[]> {
-  const response = await api.get(`/admin/permission-groups/${groupId}/permissions`)
+  const response = await api.get(`/api/admin/permission-groups/${groupId}/permissions`)
     return response.data
   },
 
@@ -1123,7 +1123,7 @@ export const permissionGroupApi = {
    * 为分组添加权限
    */
   async addPermissionToGroup(groupId: number, data: PermissionForm): Promise<Permission> {
-  const response = await api.post(`/admin/permission-groups/${groupId}/permissions`, data)
+  const response = await api.post(`/api/admin/permission-groups/${groupId}/permissions`, data)
     return response.data
   },
 
@@ -1131,7 +1131,7 @@ export const permissionGroupApi = {
    * 批量更新分组内权限的排序
    */
   async updatePermissionsOrder(groupId: number, permissionIds: number[]): Promise<void> {
-  await api.put(`/admin/permission-groups/${groupId}/permissions/order`, permissionIds)
+  await api.put(`/api/admin/permission-groups/${groupId}/permissions/order`, permissionIds)
   }
 }
 
@@ -1169,7 +1169,7 @@ export const rolePermissionApi = {
    */
   async getRoles(): Promise<{ data: Role[] }> {
     try {
-  const response = await api.get('/admin/roles/details')
+  const response = await api.get('/api/admin/roles/details')
       if (response.data && response.data.code === 200 && response.data.data) {
         return { data: response.data.data }
       } else {
@@ -1192,7 +1192,7 @@ export const rolePermissionApi = {
    * @throws Error 当角色名重复、权限不足或服务器错误时抛出异常
    */
   async createRole(roleForm: RoleForm): Promise<Role> {
-  const response = await api.post('/admin/roles', roleForm)
+  const response = await api.post('/api/admin/roles', roleForm)
     return response.data.data
   },
 
@@ -1208,7 +1208,7 @@ export const rolePermissionApi = {
    * @throws Error 当角色不存在、权限不足或服务器错误时抛出异常
    */
   async updateRole(roleId: number, roleForm: RoleForm): Promise<Role> {
-  const response = await api.put(`/admin/roles/${roleId}`, roleForm)
+  const response = await api.put(`/api/admin/roles/${roleId}`, roleForm)
     return response.data.data
   },
 
@@ -1223,7 +1223,7 @@ export const rolePermissionApi = {
    * @throws Error 当角色不存在、仍有用户使用或权限不足时抛出异常
    */
   async deleteRole(roleId: number): Promise<void> {
-  await api.delete(`/admin/roles/${roleId}`)
+  await api.delete(`/api/admin/roles/${roleId}`)
   },
 
   /**
@@ -1237,7 +1237,7 @@ export const rolePermissionApi = {
    * @throws Error 当角色不存在或权限不足时抛出异常
    */
   async getRolePermissions(roleId: number): Promise<Permission[]> {
-  const response = await api.get(`/admin/roles/${roleId}/permissions`)
+  const response = await api.get(`/api/admin/roles/${roleId}/permissions`)
     return response.data.data || []
   },
 
@@ -1245,7 +1245,7 @@ export const rolePermissionApi = {
    * 更新角色的权限配置
    */
   async updateRolePermissions(roleId: number, permissionIds: number[]): Promise<void> {
-  await api.put(`/admin/roles/${roleId}/permissions`, { permissionIds })
+  await api.put(`/api/admin/roles/${roleId}/permissions`, { permissionIds })
   },
 
   /**
@@ -1261,7 +1261,7 @@ export const rolePermissionApi = {
    */
   async getAllPermissions(): Promise<Permission[]> {
     try {
-  const response = await api.get('/admin/permissions')
+  const response = await api.get('/api/admin/permissions')
       if (response.data && response.data.code === 200 && response.data.data) {
         return response.data.data
       } else {
@@ -1277,14 +1277,14 @@ export const rolePermissionApi = {
    * 批量分配权限给多个角色
    */
   async batchAssignPermissions(assignments: { roleId: number, permissionIds: number[] }[]): Promise<void> {
-  await api.post('/admin/roles/batch-assign-permissions', { assignments })
+  await api.post('/api/admin/roles/batch-assign-permissions', { assignments })
   },
 
   /**
    * 获取所有角色权限关联
    */
   async getAllRolePermissions(): Promise<{ data: RolePermission[] }> {
-  const response = await api.get('/admin/role-permissions')
+  const response = await api.get('/api/admin/role-permissions')
   return { data: response.data.data || [] }
   },
 
@@ -1292,7 +1292,7 @@ export const rolePermissionApi = {
    * 获取权限的分配统计
    */
   async getPermissionAssignmentStats(): Promise<any> {
-  const response = await api.get('/admin/permissions/assignment-stats')
+  const response = await api.get('/api/admin/permissions/assignment-stats')
   return response.data
   }
 }

@@ -77,7 +77,7 @@ export class TagApi {
       params.append('description', description)
     }
     
-    const response = await api.post('/tags', params)
+    const response = await api.post('/api/tags', params)
     return response.data
   }
 
@@ -87,7 +87,7 @@ export class TagApi {
    * @returns Promise<ApiResponse<TagDto>>
    */
   static async getTagById(tagId: number): Promise<ApiResponse<TagDto>> {
-    const response = await api.get(`/tags/${tagId}`)
+    const response = await api.get(`/api/tags/${tagId}`)
     return response.data
   }
 
@@ -97,7 +97,7 @@ export class TagApi {
    * @returns Promise<ApiResponse<TagDto>>
    */
   static async getTagByName(tagName: string): Promise<ApiResponse<TagDto>> {
-    const response = await api.get(`/tags/name/${encodeURIComponent(tagName)}`)
+    const response = await api.get(`/api/tags/name/${encodeURIComponent(tagName)}`)
     return response.data
   }
 
@@ -115,7 +115,7 @@ export class TagApi {
       params.append('description', description)
     }
     
-    const response = await api.put(`/tags/${tagId}`, params)
+    const response = await api.put(`/api/tags/${tagId}`, params)
     return response.data
   }
 
@@ -125,7 +125,7 @@ export class TagApi {
    * @returns Promise<ApiResponse<string>>
    */
   static async deleteTag(tagId: number): Promise<ApiResponse<string>> {
-    const response = await api.delete(`/tags/${tagId}`)
+    const response = await api.delete(`/api/tags/${tagId}`)
     return response.data
   }
 
@@ -134,7 +134,7 @@ export class TagApi {
    * @returns Promise<ApiResponse<TagDto[]>>
    */
   static async getAllTags(): Promise<ApiResponse<TagDto[]>> {
-    const response = await api.get('/tags')
+    const response = await api.get('/api/tags')
     return response.data
   }
 
@@ -156,7 +156,7 @@ export class TagApi {
     size: number
     number: number
   }>> {
-    const response = await api.get('/tags/search', {
+    const response = await api.get('/api/tags/search', {
       params: { keyword, page, size }
     })
     return response.data
@@ -168,7 +168,7 @@ export class TagApi {
    * @returns Promise<ApiResponse<TagDto[]>>
    */
   static async getPopularTags(limit: number = 10): Promise<ApiResponse<TagDto[]>> {
-    const response = await api.get('/tags/popular', {
+    const response = await api.get('/api/tags/popular', {
       params: { limit }
     })
     return response.data
@@ -180,7 +180,7 @@ export class TagApi {
    * @returns Promise<ApiResponse<TagDto[]>>
    */
   static async getRecentTags(limit: number = 10): Promise<ApiResponse<TagDto[]>> {
-    const response = await api.get('/tags/recent', {
+    const response = await api.get('/api/tags/recent', {
       params: { limit }
     })
     return response.data
@@ -191,7 +191,7 @@ export class TagApi {
    * @returns Promise<ApiResponse<TagStatisticsDto>>
    */
   static async getTagStatistics(): Promise<ApiResponse<TagStatisticsDto>> {
-    const response = await api.get('/tags/statistics')
+    const response = await api.get('/api/tags/statistics')
     return response.data
   }
 
@@ -202,7 +202,7 @@ export class TagApi {
    * @returns Promise<ApiResponse<TagDto[]>>
    */
   static async getRecommendedTags(articleId: number, limit: number = 5): Promise<ApiResponse<TagDto[]>> {
-    const response = await api.get('/tags/recommendations', {
+    const response = await api.get('/api/tags/recommendations', {
       params: { articleId, limit }
     })
     return response.data
@@ -213,7 +213,7 @@ export class TagApi {
    * @returns Promise<ApiResponse<number>>
    */
   static async deleteUnusedTags(): Promise<ApiResponse<number>> {
-    const response = await api.delete('/tags/unused')
+    const response = await api.delete('/api/tags/unused')
     return response.data
   }
 

@@ -32,6 +32,8 @@ import com.ecowiki.entity.user.User;
 import com.ecowiki.repository.article.ArticleDraftRepository;
 import com.ecowiki.repository.article.ArticleRepository;
 import com.ecowiki.repository.user.UserRepository;
+import com.ecowiki.service.message.MessageService;
+import com.ecowiki.enums.message.MessageType;
 @Service
 @Transactional
 public class ArticleDraftService {
@@ -263,7 +265,7 @@ public class ArticleDraftService {
         );
         
         try {
-            messageService.sendMessage(draft.getEditorUserId().intValue(), superAdmin.getUserId().intValue(), messageContent);
+            messageService.sendMessage(draft.getEditorUserId().intValue(), superAdmin.getUserId().intValue(), messageContent, MessageType.ARTICLE_REVIEW);
         } catch (Exception e) {
             System.err.println("发送审核通知失败: " + e.getMessage());
         }
@@ -297,7 +299,7 @@ public class ArticleDraftService {
         );
         
         try {
-            messageService.sendMessage(reviewerUserId.intValue(), draft.getEditorUserId().intValue(), messageContent);
+            messageService.sendMessage(reviewerUserId.intValue(), draft.getEditorUserId().intValue(), messageContent, MessageType.ARTICLE_REVIEW);
         } catch (Exception e) {
             System.err.println("发送审核通过通知失败: " + e.getMessage());
         }
@@ -331,7 +333,7 @@ public class ArticleDraftService {
         );
         
         try {
-            messageService.sendMessage(reviewerUserId.intValue(), draft.getEditorUserId().intValue(), messageContent);
+            messageService.sendMessage(reviewerUserId.intValue(), draft.getEditorUserId().intValue(), messageContent, MessageType.ARTICLE_REVIEW);
         } catch (Exception e) {
             System.err.println("发送审核拒绝通知失败: " + e.getMessage());
         }

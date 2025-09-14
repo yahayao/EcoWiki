@@ -1,52 +1,53 @@
 /**
- * 消息API控制器类
+ * 改进的消息API控制器类 - 简化版本
  * 
  * 功能：
- * - 提供消息发送和接收的REST API接口
- * - 支持单点消息发送和群发消息功能
- * - 处理消息状态管理（已读/未读标记）
- * - 提供消息历史查询和对话管理功能
+ * - 提供RESTful消息管理接口
+ * - 支持多种消息类型和操作
+ * - 包含完整的权限验证和异常处理
+ * - 提供统一的API响应格式
  * 
  * @author EcoWiki开发团队
- * @version 1.0.0
- * @since 2025-07-01
- * @lastModified 2025-08-05
+ * @version 2.0.0
+ * @since 2025-09-14
  */
 package com.ecowiki.controller.message;
 
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import com.ecowiki.dto.ApiResponse;
-import com.ecowiki.dto.message.BroadcastMessageRequest;
-import com.ecowiki.dto.message.MessageDto;
-import com.ecowiki.dto.message.SendMessageRequest;
+import com.ecowiki.dto.message.MessageRefactoredDto;
+import com.ecowiki.dto.message.SendMessageRefactoredRequest;
+import com.ecowiki.dto.message.BroadcastMessageRefactoredRequest;
 import com.ecowiki.entity.user.User;
+import com.ecowiki.enums.message.MessageType;
 import com.ecowiki.security.JwtUtil;
-import com.ecowiki.service.MessageService;
+import com.ecowiki.service.message.MessageService;
 import com.ecowiki.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
-@RestController
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
+@RestController("messageRefactoredControllerSimple")
 @RequestMapping("/api/messages")
 @CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173"}, allowCredentials = "true")
-public class MessageController {
+@Validated
+public class MessageRefactoredControllerSimple {
+    
+    private static final Logger logger = LoggerFactory.getLogger(MessageRefactoredControllerSimple.class);
     
     @Autowired
     private MessageService messageService;
@@ -57,15 +58,14 @@ public class MessageController {
     @Autowired
     private JwtUtil jwtUtil;
     
+    // ===== 消息发送接口 =====
+    
     /**
      * 发送消息
-     * @param request 发送消息请求
-     * @param httpRequest HTTP请求
-     * @return 发送结果
      */
     @PostMapping("/send")
-    public ResponseEntity<ApiResponse<MessageDto>> sendMessage(
-            @RequestBody SendMessageRequest request,
+    public ResponseEntity<ApiResponse<MessageRefactoredDto>> sendMessage(
+            @Valid @RequestBody SendMessageRefactoredRequest request,
             HttpServletRequest httpRequest) {
         try {
             User currentUser = getCurrentUser(httpRequest);
@@ -74,14 +74,22 @@ public class MessageController {
                     .body(ApiResponse.error("用户未登录"));
             }
             
-            MessageDto message = messageService.sendMessage(
+            MessageRefactoredDto message = messageService.sendMessage(
                 currentUser.getUserId().intValue(),
                 request.getRecipientUserId(),
-                request.getContent()
+                request.getContent(),
+                request.getSubject(),
+                request.getMessageType() != null ? request.getMessageType() : MessageType.USER_PRIVATE,
+                request.getMetadata(),
+                request.getExpireTime()
             );
+            
+            logger.info("消息发送成功: 发送者={}, 接收者={}, 类型={}", 
+                       currentUser.getUserId(), request.getRecipientUserId(), message.getMessageType());
             
             return ResponseEntity.ok(ApiResponse.success(message, "消息发送成功"));
         } catch (Exception e) {
+            logger.error("发送消息失败", e);
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("发送失败: " + e.getMessage()));
         }
@@ -89,13 +97,10 @@ public class MessageController {
     
     /**
      * 群发消息
-     * @param request 群发消息请求
-     * @param httpRequest HTTP请求
-     * @return 发送结果
      */
     @PostMapping("/broadcast")
-    public ResponseEntity<ApiResponse<List<MessageDto>>> broadcastMessage(
-            @RequestBody BroadcastMessageRequest request,
+    public ResponseEntity<ApiResponse<List<MessageRefactoredDto>>> broadcastMessage(
+            @Valid @RequestBody BroadcastMessageRefactoredRequest request,
             HttpServletRequest httpRequest) {
         try {
             User currentUser = getCurrentUser(httpRequest);
@@ -104,14 +109,19 @@ public class MessageController {
                     .body(ApiResponse.error("用户未登录"));
             }
             
-            List<MessageDto> messages = messageService.broadcastMessage(
+            List<MessageRefactoredDto> messages = messageService.broadcastMessage(
                 currentUser.getUserId().intValue(),
                 request.getRecipientUserIds(),
-                request.getContent()
+                request.getContent(),
+                request.getMessageType() != null ? request.getMessageType() : MessageType.USER_PRIVATE
             );
+            
+            logger.info("群发消息成功: 发送者={}, 成功数量={}", 
+                       currentUser.getUserId(), messages.size());
             
             return ResponseEntity.ok(ApiResponse.success(messages, "消息群发成功"));
         } catch (Exception e) {
+            logger.error("群发消息失败", e);
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("群发失败: " + e.getMessage()));
         }
@@ -119,15 +129,11 @@ public class MessageController {
     
     /**
      * 获取收到的消息
-     * @param page 页码
-     * @param size 每页大小
-     * @param httpRequest HTTP请求
-     * @return 消息列表
      */
     @GetMapping("/received")
-    public ResponseEntity<ApiResponse<Page<MessageDto>>> getReceivedMessages(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+    public ResponseEntity<ApiResponse<Page<MessageRefactoredDto>>> getReceivedMessages(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             HttpServletRequest httpRequest) {
         try {
             User currentUser = getCurrentUser(httpRequest);
@@ -137,112 +143,19 @@ public class MessageController {
             }
             
             Pageable pageable = PageRequest.of(page, size);
-            Page<MessageDto> messages = messageService.getReceivedMessages(
+            Page<MessageRefactoredDto> messages = messageService.getReceivedMessages(
                 currentUser.getUserId().intValue(), pageable);
             
             return ResponseEntity.ok(ApiResponse.success(messages, "获取消息成功"));
         } catch (Exception e) {
+            logger.error("获取收到消息失败", e);
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("获取消息失败: " + e.getMessage()));
-        }
-    }
-    
-    /**
-     * 获取发送的消息
-     * @param page 页码
-     * @param size 每页大小
-     * @param httpRequest HTTP请求
-     * @return 消息列表
-     */
-    @GetMapping("/sent")
-    public ResponseEntity<ApiResponse<Page<MessageDto>>> getSentMessages(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            HttpServletRequest httpRequest) {
-        try {
-            User currentUser = getCurrentUser(httpRequest);
-            if (currentUser == null) {
-                return ResponseEntity.status(401)
-                    .body(ApiResponse.error("用户未登录"));
-            }
-            
-            Pageable pageable = PageRequest.of(page, size);
-            Page<MessageDto> messages = messageService.getSentMessages(
-                currentUser.getUserId().intValue(), pageable);
-            
-            return ResponseEntity.ok(ApiResponse.success(messages, "获取消息成功"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.error("获取消息失败: " + e.getMessage()));
-        }
-    }
-    
-    /**
-     * 获取所有消息（收发）
-     * @param page 页码
-     * @param size 每页大小
-     * @param httpRequest HTTP请求
-     * @return 消息列表
-     */
-    @GetMapping("/all")
-    public ResponseEntity<ApiResponse<Page<MessageDto>>> getAllMessages(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            HttpServletRequest httpRequest) {
-        try {
-            User currentUser = getCurrentUser(httpRequest);
-            if (currentUser == null) {
-                return ResponseEntity.status(401)
-                    .body(ApiResponse.error("用户未登录"));
-            }
-            
-            Pageable pageable = PageRequest.of(page, size);
-            Page<MessageDto> messages = messageService.getUserMessages(
-                currentUser.getUserId().intValue(), pageable);
-            
-            return ResponseEntity.ok(ApiResponse.success(messages, "获取消息成功"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.error("获取消息失败: " + e.getMessage()));
-        }
-    }
-    
-    /**
-     * 获取与指定用户的对话
-     * @param userId 对方用户ID
-     * @param page 页码
-     * @param size 每页大小
-     * @param httpRequest HTTP请求
-     * @return 对话消息列表
-     */
-    @GetMapping("/conversation/{userId}")
-    public ResponseEntity<ApiResponse<Page<MessageDto>>> getConversation(
-            @PathVariable Integer userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            HttpServletRequest httpRequest) {
-        try {
-            User currentUser = getCurrentUser(httpRequest);
-            if (currentUser == null) {
-                return ResponseEntity.status(401)
-                    .body(ApiResponse.error("用户未登录"));
-            }
-            
-            Pageable pageable = PageRequest.of(page, size);
-            Page<MessageDto> messages = messageService.getConversation(
-                currentUser.getUserId().intValue(), userId, pageable);
-            
-            return ResponseEntity.ok(ApiResponse.success(messages, "获取对话成功"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.error("获取对话失败: " + e.getMessage()));
         }
     }
     
     /**
      * 获取未读消息数量
-     * @param httpRequest HTTP请求
-     * @return 未读消息数量
      */
     @GetMapping("/unread/count")
     public ResponseEntity<ApiResponse<Long>> getUnreadCount(HttpServletRequest httpRequest) {
@@ -256,38 +169,14 @@ public class MessageController {
             Long count = messageService.getUnreadMessageCount(currentUser.getUserId().intValue());
             return ResponseEntity.ok(ApiResponse.success(count, "获取未读数量成功"));
         } catch (Exception e) {
+            logger.error("获取未读消息数量失败", e);
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("获取未读数量失败: " + e.getMessage()));
         }
     }
     
     /**
-     * 获取未读消息列表
-     * @param httpRequest HTTP请求
-     * @return 未读消息列表
-     */
-    @GetMapping("/unread")
-    public ResponseEntity<ApiResponse<List<MessageDto>>> getUnreadMessages(HttpServletRequest httpRequest) {
-        try {
-            User currentUser = getCurrentUser(httpRequest);
-            if (currentUser == null) {
-                return ResponseEntity.status(401)
-                    .body(ApiResponse.error("用户未登录"));
-            }
-            
-            List<MessageDto> messages = messageService.getUnreadMessages(currentUser.getUserId().intValue());
-            return ResponseEntity.ok(ApiResponse.success(messages, "获取未读消息成功"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.error("获取未读消息失败: " + e.getMessage()));
-        }
-    }
-    
-    /**
      * 标记消息为已读
-     * @param messageId 消息ID
-     * @param httpRequest HTTP请求
-     * @return 操作结果
      */
     @PutMapping("/{messageId}/read")
     public ResponseEntity<ApiResponse<String>> markAsRead(
@@ -300,9 +189,10 @@ public class MessageController {
                     .body(ApiResponse.error("用户未登录"));
             }
             
-            messageService.markAsRead(messageId);
+            messageService.markAsRead(messageId, currentUser.getUserId().intValue());
             return ResponseEntity.ok(ApiResponse.success(null, "标记已读成功"));
         } catch (Exception e) {
+            logger.error("标记消息已读失败", e);
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("标记已读失败: " + e.getMessage()));
         }
@@ -310,8 +200,6 @@ public class MessageController {
     
     /**
      * 标记所有消息为已读
-     * @param httpRequest HTTP请求
-     * @return 操作结果
      */
     @PutMapping("/read-all")
     public ResponseEntity<ApiResponse<String>> markAllAsRead(HttpServletRequest httpRequest) {
@@ -325,6 +213,7 @@ public class MessageController {
             messageService.markAllAsRead(currentUser.getUserId().intValue());
             return ResponseEntity.ok(ApiResponse.success(null, "全部标记已读成功"));
         } catch (Exception e) {
+            logger.error("批量标记已读失败", e);
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("标记已读失败: " + e.getMessage()));
         }
@@ -332,9 +221,6 @@ public class MessageController {
     
     /**
      * 删除消息
-     * @param messageId 消息ID
-     * @param httpRequest HTTP请求
-     * @return 操作结果
      */
     @DeleteMapping("/{messageId}")
     public ResponseEntity<ApiResponse<String>> deleteMessage(
@@ -350,15 +236,16 @@ public class MessageController {
             messageService.deleteMessage(messageId, currentUser.getUserId().intValue());
             return ResponseEntity.ok(ApiResponse.success(null, "删除消息成功"));
         } catch (Exception e) {
+            logger.error("删除消息失败", e);
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("删除消息失败: " + e.getMessage()));
         }
     }
     
+    // ===== 工具方法 =====
+    
     /**
      * 从请求中获取当前用户
-     * @param request HTTP请求
-     * @return 当前用户，如果未登录则返回null
      */
     private User getCurrentUser(HttpServletRequest request) {
         try {
@@ -373,14 +260,13 @@ public class MessageController {
             Optional<User> userOpt = userService.findByUsername(username);
             return userOpt.orElse(null);
         } catch (Exception e) {
+            logger.warn("获取当前用户失败: {}", e.getMessage());
             return null;
         }
     }
     
     /**
      * 从请求头提取JWT Token
-     * @param request HTTP请求
-     * @return Bearer Token字符串，若无则为null
      */
     private String extractTokenFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");

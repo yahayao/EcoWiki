@@ -27,7 +27,7 @@ import type {
   PageResponse
 } from '@/types/review';
 
-const API_BASE_URL = '/api/review';
+const API_BASE_URL = '/review';
 
 export class ReviewApiService {
   

@@ -45,6 +45,7 @@ import com.ecowiki.repository.review.ReviewPermissionConfigRepository;
 import com.ecowiki.repository.review.ReviewerAssignmentRepository;
 import com.ecowiki.repository.user.RoleRepository;
 import com.ecowiki.repository.user.UserRepository;
+import com.ecowiki.service.message.MessageService;
 
 @Service
 @Transactional
@@ -531,7 +532,8 @@ public class ArticleReviewService {
     private void sendReviewAssignmentNotification(Long reviewerId, ArticleReview review) {
         try {
             String title = "新的审核任务";
-            messageService.sendMessage(null, reviewerId.intValue(), title);
+            String content = "您有新的文章审核任务需要处理，请及时登录系统查看。";
+            messageService.sendSystemNotification(reviewerId.intValue(), content, title);
         } catch (Exception e) {
             logger.error("发送审核分配通知失败", e);
         }
@@ -543,7 +545,8 @@ public class ArticleReviewService {
     private void sendReviewResultNotification(ArticleReview review, boolean approved) {
         try {
             String title = approved ? "审核通过通知" : "审核拒绝通知";
-            messageService.sendMessage(null, review.getSubmitterId().intValue(), title);
+            String content = approved ? "您的文章已通过审核并发布。" : "您的文章审核未通过，请查看审核意见后重新提交。";
+            messageService.sendSystemNotification(review.getSubmitterId().intValue(), content, title);
         } catch (Exception e) {
             logger.error("发送审核结果通知失败", e);
         }
@@ -556,8 +559,9 @@ public class ArticleReviewService {
         try {
             List<User> adminUsers = getAdminUsers();
             String title = "审核分配失败";
+            String content = "有文章无法分配审核员，请管理员手动处理。";
             for (User admin : adminUsers) {
-                messageService.sendMessage(null, admin.getUserId().intValue(), title);
+                messageService.sendSystemNotification(admin.getUserId().intValue(), content, title);
             }
         } catch (Exception e) {
             logger.error("发送无审核员通知失败", e);

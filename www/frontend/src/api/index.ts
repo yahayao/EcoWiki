@@ -49,7 +49,7 @@ const processQueue = (error: any, token: string | null = null) => {
  * 配置基础URL、超时时间和默认请求头
  */
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api', // 后端API基础地址
+  baseURL: 'http://localhost:8080', // 后端服务器地址，不包含/api因为后端已设置context-path
   timeout: 15000, // 增加请求超时时间：15秒
   headers: {
     'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ const cacheInterceptor = createCacheInterceptor({
     
     return `api_${method}_${url}_${JSON.stringify(filteredParams)}`
   },
-  invalidatePatterns: ['/api/articles', '/api/users', '/api/drafts', '/api/comments']
+  invalidatePatterns: ['/articles', '/users', '/drafts', '/comments']
 })
 
 api.interceptors.request.use(cacheInterceptor.request)
