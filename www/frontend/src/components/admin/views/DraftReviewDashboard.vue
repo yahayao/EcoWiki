@@ -826,8 +826,8 @@ const submitReview = async () => {
     })
     
     const result = await draftApi.reviewDraft(reviewData.value.draft.draftId, {
-      approved: reviewData.value.approved,
-      reviewNotes: reviewData.value.notes
+      action: reviewData.value.approved ? 'approve' : 'reject',
+      comment: reviewData.value.notes
     })
     
     console.log('审核提交成功:', result)
@@ -897,14 +897,15 @@ const getStatusText = (status: string) => {
 /**
  * 格式化日期
  */
-const formatDate = (dateStr: string) => {
+const formatDate = (dateStr?: string) => {
+  if (!dateStr) return '未知时间'
   return new Date(dateStr).toLocaleString('zh-CN')
 }
 
 /**
  * 格式化日期时间 - 更紧凑的格式
  */
-const formatDateTime = (dateStr: string) => {
+const formatDateTime = (dateStr?: string) => {
   if (!dateStr) return '未知时间'
   const date = new Date(dateStr)
   const now = new Date()

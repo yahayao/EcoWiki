@@ -11,8 +11,7 @@
     "preview": "vite preview --host",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
-    "format": "prettier --write src/",
-    "performance": "lighthouse http://localhost:5173 --output html --output-path ./performance-report.html"
+    "format": "prettier --write src/"
   },
   "dependencies": {
     "@jamescoyle/vue-icon": "^0.1.2",

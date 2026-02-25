@@ -13,9 +13,6 @@
  * @lastModified 2025-08-05
  */
 import axios from 'axios'
-import { createCacheInterceptor } from '@/utils/api-cache'
-import { requestOptimizer } from '@/utils/request-optimizer'
-import { setupApiMonitoring } from '@/utils/api-monitor'
 
 // ── snake_case ↔ camelCase 转换工具 ──────────────────────────────────────────
 function toCamel(s: string): string {
@@ -71,7 +68,6 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  // 性能优化配置
   maxRedirects: 3, // 最大重定向次数
   maxContentLength: 50000000, // 50MB 最大内容长度
   maxBodyLength: 50000000,   // 50MB 最大请求体长度
@@ -111,46 +107,6 @@ api.interceptors.request.use(
   }
 )
 
-// 添加缓存拦截器 - 优化配置以减少API调用
-const cacheInterceptor = createCacheInterceptor({
-  ttl: 15 * 60 * 1000, // 增加到15分钟缓存
-  storage: 'memory',
-  shouldCache: (response) => {
-    const url = response.config.url || ''
-    const method = response.config.method?.toUpperCase()
-    
-    // 只缓存 GET 请求且状态码为 200-299 的响应
-    if (method !== 'GET' || response.status < 200 || response.status >= 300) {
-      return false
-    }
-    
-    // 特殊处理：不同类型的数据使用不同的缓存策略
-    if (url.includes('/articles/') && !url.includes('/comments')) {
-      return true // 文章内容缓存
-    }
-    if (url.includes('/categories') || url.includes('/tags')) {
-      return true // 分类和标签长期缓存
-    }
-    if (url.includes('/users/profile') || url.includes('/users/info')) {
-      return true // 用户信息缓存
-    }
-    
-    return response.status >= 200 && response.status < 300
-  },
-  keyGenerator: (config) => {
-    // 自定义缓存键生成，忽略时间戳等动态参数
-    const { method = 'GET', url = '', params } = config
-    const filteredParams = params ? Object.keys(params)
-      .filter(key => !['_t', 'timestamp', 'cache', 'v'].includes(key))
-      .reduce((obj, key) => ({ ...obj, [key]: params[key] }), {}) : {}
-    
-    return `api_${method}_${url}_${JSON.stringify(filteredParams)}`
-  },
-  invalidatePatterns: ['/articles', '/users', '/drafts', '/comments']
-})
-
-api.interceptors.request.use(cacheInterceptor.request)
-
 /**
  * 响应拦截器
  * 统一处理响应错误，包括token自动刷新和认证失败处理
@@ -162,8 +118,7 @@ api.interceptors.response.use(
     if (response.data) {
       response.data = camelizeKeys(response.data)
     }
-    // 应用缓存响应拦截器
-    return cacheInterceptor.response(response)
+    return response
   },
   async (error) => {
     const originalRequest = error.config
@@ -251,9 +206,6 @@ api.interceptors.response.use(
     return Promise.reject(error.response?.data || error)
   }
 )
-
-// 设置API监控
-setupApiMonitoring(api)
 
 export { api }
 

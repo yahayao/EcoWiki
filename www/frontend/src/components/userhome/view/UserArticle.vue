@@ -441,7 +441,7 @@ const viewArticle = async (articleId: number) => {
   try {
     // 通过ID获取文章信息以获得title
     const article = await articleApi.getArticleById(articleId)
-    router.push(`/wiki/${encodeURIComponent(article.title)}`)
+    router.push({ name: 'ArticleDetail', params: { title: article.title } })
   } catch (error: any) {
     console.error('获取文章信息失败:', error)
     toast.error('无法打开文章', '错误')
@@ -452,7 +452,7 @@ const editArticle = async (articleId: number) => {
   try {
     // 通过ID获取文章信息以获得title
     const article = await articleApi.getArticleById(articleId)
-    router.push(`/edit/${encodeURIComponent(article.title)}`)
+    router.push({ name: 'ArticleEdit', params: { title: article.title } })
   } catch (error: any) {
     console.error('获取文章信息失败:', error)
     toast.error('无法编辑文章', '错误')
@@ -582,7 +582,7 @@ const editDraft = async (draftId: number) => {
   try {
     // 通过ID获取草稿信息以获得title
     const draft = await articleApi.getArticleById(draftId)
-    router.push(`/edit/${encodeURIComponent(draft.title)}`)
+    router.push({ name: 'ArticleEdit', params: { title: draft.title } })
   } catch (error: any) {
     console.error('获取草稿信息失败:', error)
     toast.error('无法编辑草稿', '错误')

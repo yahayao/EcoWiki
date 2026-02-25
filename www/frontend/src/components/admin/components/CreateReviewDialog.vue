@@ -92,7 +92,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue';
 import { reviewApi } from '@/api/review';
-import { REVIEW_TYPE_OPTIONS, ReviewType, type CreateReviewRequest, type ApiResponse, type ArticleReview } from '@/types/review';
+import { REVIEW_TYPE_OPTIONS, ReviewType } from '@/types/review';
 
 // Props
 interface Props {
@@ -183,15 +183,14 @@ const handleSubmit = async () => {
   try {
     submitting.value = true;
 
-    const response: ApiResponse<ArticleReview> = await reviewApi.create({
+    const response = await reviewApi.create({
       articleId: form.articleId!,
-      submitterId: form.submitterId,
-      reviewType: form.reviewType as ReviewType,
-      contentSnapshot: form.contentSnapshot || undefined,
-      autoPublish: form.autoPublish
+      title: `审核申请-${form.articleId}`,
+      content: form.contentSnapshot || '审核申请',
+      category: '审核'
     });
 
-    if (response.success) {
+    if (response.code === 200) {
       emit('success');
       handleClose();
     } else {

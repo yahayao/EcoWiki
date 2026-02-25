@@ -71,7 +71,7 @@
             <div v-if="titleError" class="form-error">{{ titleError }}</div>
             <div v-else-if="titleAvailable === false" class="form-error">该标题已存在，请选择其他标题</div>
             <div v-else-if="form.title && titleAvailable === true" class="form-help">
-              URL预览: <code>/wiki/{{ encodeURIComponent(form.title) }}</code>
+              URL预览: <code>/wiki/{{ form.title }}</code>
             </div>
           </div>
 

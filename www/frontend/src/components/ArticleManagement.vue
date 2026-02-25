@@ -186,7 +186,6 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { articleApi, type Article } from '@/api/article'
 import { userApi } from '@/api/user'
-import { debounce } from '@/utils/debounce-throttle'
 import ArticleCard from './ArticleCard.vue'
 
 const router = useRouter()
@@ -356,9 +355,9 @@ const switchTab = (tabKey: string) => {
   loadArticles()
 }
 
-const handleSearch = debounce(() => {
+const handleSearch = () => {
   currentPage.value = 1
-}, 300)
+}
 
 const handleSort = () => {
   currentPage.value = 1

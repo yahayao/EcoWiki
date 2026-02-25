@@ -577,12 +577,12 @@ export class WikiParser {
   private parseLinks(text: string): string {
     // 内部链接（带显示文本）：[[页面名称|显示文本]]
     text = text.replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/g, (match, page, display) => {
-      return `<a href="/wiki/${encodeURIComponent(page)}" class="wiki-link" title="${page}">${display}</a>`
+      return `<a href="/wiki/${page}" class="wiki-link" title="${page}">${display}</a>`
     })
     
     // 内部链接（纯链接）：[[页面名称]]
     text = text.replace(/\[\[([^\]]+)\]\]/g, (match, page) => {
-      return `<a href="/wiki/${encodeURIComponent(page)}" class="wiki-link" title="${page}">${page}</a>`
+      return `<a href="/wiki/${page}" class="wiki-link" title="${page}">${page}</a>`
     })
     
     // 外部链接（带显示文本）：[http://example.com 显示文本]

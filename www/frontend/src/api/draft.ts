@@ -43,13 +43,21 @@ export interface ArticleDraft {
   updatedAt?: string
   /** 提交时间 */
   submittedAt?: string
+  /** 审核时间 */
+  reviewedAt?: string
   // ── 向下兼容别名 ─────────────────────────────────────
   /** @deprecated 使用 authorId */
-  editorUserId?: number
+  editorUserId: number
   /** @deprecated 使用 author */
-  editorUserName?: string
+  editorUserName: string
+  /** 编辑者头像 */
+  editorUserAvatar?: string
+  /** 审核者用户ID */
+  reviewerUserId?: number
+  /** 审核者用户名 */
+  reviewerUserName?: string
   /** @deprecated 使用 status */
-  reviewStatus?: string
+  reviewStatus: string
   /** @deprecated 使用 rejectReason */
   reviewNotes?: string
 }
@@ -117,11 +125,12 @@ function wrapListAsPage<T>(list: T[], page: number, size: number): PageResponse<
 
 /** 规范化草稿字段，补充向下兼容别名 */
 function normalizeDraft(d: ArticleDraft): ArticleDraft {
+  const normalizedStatus = (d.status || '').toString().toUpperCase()
   return {
     ...d,
     editorUserId: d.authorId,
     editorUserName: d.author,
-    reviewStatus: d.status,
+    reviewStatus: normalizedStatus,
     reviewNotes: d.rejectReason,
   }
 }

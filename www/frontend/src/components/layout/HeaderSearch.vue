@@ -251,7 +251,7 @@ const showMoreResults = async () => {
  * 跳转到文章详情页
  */
 const goToArticle = (title: string) => {
-  router.push(`/wiki/${encodeURIComponent(title)}`)
+  router.push({ name: 'ArticleDetail', params: { title } })
   hideDropdown()
   searchTerm.value = ''  // 清空搜索框
 }

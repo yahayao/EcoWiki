@@ -183,7 +183,7 @@ const goToPage = (page: number) => {
 }
 
 const goToArticle = (title: string) => {
-  router.push(`/wiki/${encodeURIComponent(title)}`)
+  router.push({ name: 'ArticleDetail', params: { title } })
 }
 
 const goHome = () => {
