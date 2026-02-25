@@ -8,17 +8,18 @@ T = TypeVar("T")
 
 
 class ApiResponse(BaseModel, Generic[T]):
+    code: int = 200
     success: bool = True
     message: str = "操作成功"
     data: Optional[T] = None
 
     @classmethod
     def ok(cls, data: T = None, message: str = "操作成功") -> "ApiResponse[T]":
-        return cls(success=True, message=message, data=data)
+        return cls(code=200, success=True, message=message, data=data)
 
     @classmethod
     def fail(cls, message: str = "操作失败", data: T = None) -> "ApiResponse[T]":
-        return cls(success=False, message=message, data=data)
+        return cls(code=500, success=False, message=message, data=data)
 
 
 class PageResult(BaseModel, Generic[T]):
