@@ -11,7 +11,6 @@ from database import get_db
 from models.user import User, Role
 from models.article import Article
 from models.comment import Comment
-from models.message import Message
 from schemas.user import UserOut
 from schemas.article import ArticleOut, ArticleListOut, ArticleCreateRequest, ArticleUpdateRequest
 from schemas.common import ApiResponse, PageResult
@@ -29,7 +28,6 @@ def statistics(
     user_count    = db.query(func.count(User.user_id)).scalar()
     article_count = db.query(func.count(Article.article_id)).scalar()
     comment_count = db.query(func.count(Comment.comment_id)).filter(Comment.is_deleted == False).scalar()
-    message_count = db.query(func.count(Message.message_id)).scalar()
     total_views   = db.query(func.sum(Article.views)).scalar() or 0
     total_likes   = db.query(func.sum(Article.likes)).scalar() or 0
 
@@ -37,7 +35,6 @@ def statistics(
         "user_count":    user_count,
         "article_count": article_count,
         "comment_count": comment_count,
-        "message_count": message_count,
         "total_views":   total_views,
         "total_likes":   total_likes,
     })
@@ -367,6 +364,13 @@ def update_role_permissions(role_id: int, body: dict, _: User = Depends(require_
     role.permissions = perms
     db.commit()
     return ApiResponse.ok(message="权限更新成功")
+
+
+@router.get("/role-permissions")
+def list_all_role_permissions(_: User = Depends(require_admin), db: Session = Depends(get_db)):
+    from models.user import role_permissions_table
+    rows = db.execute(role_permissions_table.select()).fetchall()
+    return ApiResponse.ok(data=[{"role_id": r.role_id, "permission_id": r.permission_id} for r in rows])
 
 
 # ─── 权限管理 ─────────────────────────────────────────────────────────────────

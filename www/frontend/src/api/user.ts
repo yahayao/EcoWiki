@@ -1207,7 +1207,7 @@ export const rolePermissionApi = {
    */
   async getRoles(): Promise<{ data: Role[] }> {
     try {
-  const response = await api.get('/api/admin/roles/details')
+      const response = await api.get('/api/admin/roles')
       if (response.data && response.data.code === 200 && response.data.data) {
         return { data: response.data.data }
       } else {
@@ -1332,5 +1332,28 @@ export const rolePermissionApi = {
   async getPermissionAssignmentStats(): Promise<any> {
   const response = await api.get('/api/admin/permissions/assignment-stats')
   return response.data
+  },
+
+  /**
+   * 创建新权限
+   */
+  async createPermission(form: PermissionForm): Promise<Permission> {
+    const response = await api.post('/api/admin/permissions', form)
+    return response.data.data
+  },
+
+  /**
+   * 更新权限
+   */
+  async updatePermission(permissionId: number, form: PermissionForm): Promise<Permission> {
+    const response = await api.put(`/api/admin/permissions/${permissionId}`, form)
+    return response.data.data
+  },
+
+  /**
+   * 删除权限
+   */
+  async deletePermission(permissionId: number): Promise<void> {
+    await api.delete(`/api/admin/permissions/${permissionId}`)
   }
 }

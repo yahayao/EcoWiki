@@ -40,16 +40,8 @@
       @show-admin="showAdminModal"
       @show-forgot-password="showForgotPasswordModal"
       @showUserProfile="showUserProfileModal"
-      @showMessages="showMessagesModal"
       @logout="handleLogout"
     />
-
-    <!-- 消息面板模态框 -->
-    <div v-if="showMessages" class="modal-overlay" @click="closeModals">
-      <div class="message-modal-container" @click.stop>
-        <MessagePanel @close="closeModals" />
-      </div>
-    </div>
   </div>
 </template>
 
@@ -57,7 +49,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuth } from './composables/useAuth'
 import AuthModals from './components/modals/AuthModals.vue'
-import MessagePanel from './components/modals/MessagePanel.vue'
 
 /**
  * 获取认证状态管理功能
@@ -90,11 +81,6 @@ const showAdminSettings = ref(false)
  */
 const showForgotPassword = ref(false)
 
-/**
- * 控制消息面板的显示状态
- */
-const showMessages = ref(false)
-
 // ======================== 模态框控制方法 ========================
 
 /**
@@ -106,7 +92,6 @@ const showLoginModal = () => {
   showRegisterForm.value = false
   showAdminSettings.value = false
   showForgotPassword.value = false
-  showMessages.value = false
 }
 // 显示忘记密码模态框
 const showForgotPasswordModal = () => {
@@ -114,7 +99,6 @@ const showForgotPasswordModal = () => {
   showLoginForm.value = false
   showRegisterForm.value = false
   showAdminSettings.value = false
-  showMessages.value = false
 }
 
 /**
@@ -126,7 +110,6 @@ const showRegisterModal = () => {
   showLoginForm.value = false
   showAdminSettings.value = false
   showForgotPassword.value = false
-  showMessages.value = false
 }
 
 /**
@@ -137,7 +120,6 @@ const showAdminModal = () => {
   showAdminSettings.value = true
   showLoginForm.value = false
   showRegisterForm.value = false
-  showMessages.value = false
 }
 
 const showUserProfileModal = () => {
@@ -147,20 +129,6 @@ const showUserProfileModal = () => {
   showRegisterForm.value = false
   showAdminSettings.value = false
   showForgotPassword.value = false
-  showMessages.value = false
-}
-
-/**
- * 显示消息面板
- * 同时隐藏其他模态框以确保只显示一个
- */
-const showMessagesModal = () => {
-  showMessages.value = true
-  showLoginForm.value = false
-  showRegisterForm.value = false
-  showAdminSettings.value = false
-  showForgotPassword.value = false
-  showUserProfile.value = false
 }
 
 // 切换到注册
@@ -192,7 +160,6 @@ const closeModals = () => {
   showAdminSettings.value = false
   showForgotPassword.value = false
   showUserProfile.value = false
-  showMessages.value = false
 }
 
 // 登出处理
@@ -269,42 +236,4 @@ onUnmounted(() => {
   }
 }
 
-/* 消息模态框样式 */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-}
-
-.message-modal-container {
-  width: 100%;
-  max-width: 900px;
-  max-height: 90vh;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .message-modal-container {
-    margin: 0;
-    border-radius: 0;
-    max-height: 100vh;
-    height: 100vh;
-  }
-  
-  .modal-overlay {
-    padding: 0;
-  }
-}
 </style>

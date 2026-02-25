@@ -376,11 +376,16 @@ const loadArticle = async () => {
     originalArticle.value = article
     articleExists.value = true
     
+    // 将 tags 正规化为字符串（防止后端偶发返回数组）
+    const tagsStr = Array.isArray(article.tags)
+      ? (article.tags as any[]).map((t: any) => t.tagName || t).join(',')
+      : (article.tags || '')
+    
     articleForm.value = {
       title: '', // 不设置标题，因为标题来自路由参数
       content: article.content || '',
       category: article.category || '',
-      tags: article.tags || '',
+      tags: tagsStr,
       author: article.author
     }
   } catch (error) {
@@ -451,8 +456,8 @@ const handleSave = async () => {
       
       toast.success('文章修改已提交审核，请耐心等待管理员审核！')
       
-      // 跳转回文章详情页，并显示审核状态提示
-      await router.push(`/article/${encodeURIComponent(currentTitle.value)}`)
+      // 跳转回文章详情页
+      await router.push(`/wiki/${encodeURIComponent(currentTitle.value)}`)
       return
       
     } else {

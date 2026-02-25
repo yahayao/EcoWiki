@@ -33,6 +33,34 @@ function _transformKeys(obj: any, fn: (k: string) => string): any {
 }
 
 /**
+ * 将文章或文章列表中的 tags 字段从对象数组转换为逗号分隔的字符串
+ * 后端返回的 tags 格式：[{tagId, tagName, color}, ...]
+ * 前端期望格式：'tag1,tag2,tag3'
+ */
+function _normalizeTags(data: any): void {
+  if (!data) return
+  const convertTags = (item: any) => {
+    if (item && Array.isArray(item.tags)) {
+      item.tags = item.tags.map((t: any) => t.tagName || t.tag_name || '').filter(Boolean).join(',')
+    }
+  }
+  // 直接是文章对象
+  if (data.articleId !== undefined || data.article_id !== undefined) {
+    convertTags(data)
+    return
+  }
+  // 分页结果 (PageResult)
+  if (data.content && Array.isArray(data.content)) {
+    data.content.forEach(convertTags)
+    return
+  }
+  // 数组（如 popular/latest 返回的 Article[]）
+  if (Array.isArray(data)) {
+    data.forEach(convertTags)
+  }
+}
+
+/**
  * 文章数据接口定义
  * 定义了文章实体的完整数据结构，与后端Article实体保持一致
  * 
@@ -323,10 +351,14 @@ class ArticleApi {
       },
       (error) => Promise.reject(error)
     )
-    // 响应拦截器：snake_case→camelCase 转换
+    // 响应拦截器：snake_case→camelCase 转换 + tags数组→字符串转换
     this.api.interceptors.response.use(
       (response) => {
         if (response.data) response.data = _transformKeys(response.data, _toCamel)
+        // 将文章数据中的 tags 数组（[{tagId,tagName,color}]）转换为逗号分隔的字符串
+        if (response.data?.data) {
+          _normalizeTags(response.data.data)
+        }
         return response
       },
       (error) => Promise.reject(error)

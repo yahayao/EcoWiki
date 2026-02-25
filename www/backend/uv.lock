@@ -48,7 +48,7 @@ wheels = [
 ]
 
 [[package]]
-name = "backend-python"
+name = "backend"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

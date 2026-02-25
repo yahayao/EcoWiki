@@ -94,7 +94,7 @@
         v-if="article"
         :current-article-id="article.articleId"
         :current-category="article.category"
-        :current-tags="article.tags.split(',')"
+        :current-tags="article.tags ? (typeof article.tags === 'string' ? article.tags.split(',').filter(Boolean) : (article.tags as any)) : []"
         :max-results="6"
         :show-refresh-button="true"
         class="related-section"

@@ -24,7 +24,6 @@
       @showRegister="$emit('show-register')"
       @showAdminSettings="$emit('show-admin')"
       @showUserProfile="$emit('showUserProfile')"
-      @showMessages="$emit('showMessages')"
       @logout="$emit('logout')"
     />
 
@@ -91,7 +90,7 @@ router.beforeEach((to, from, next) => {
  * 组件事件定义
  * 定义经典首页向父组件发送的事件，与其他首页风格保持一致的接口
  */
-defineEmits(['show-login', 'show-register', 'show-admin', 'logout', 'showUserProfile', 'showMessages'])
+defineEmits(['show-login', 'show-register', 'show-admin', 'logout', 'showUserProfile'])
 </script>
 
 <style scoped>

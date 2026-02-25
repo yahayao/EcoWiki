@@ -48,10 +48,6 @@
         <transition name="fade">
           <div v-if="showMenu" class="menu">
             <div @click="$emit('showUserProfile')" class="menu-item">个人主页</div>
-            <div @click="$emit('showMessages')" class="menu-item">
-              <span>消息通知</span>
-              <span v-if="unreadCount > 0" class="unread-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
-            </div>
             <div 
               v-if="hasAdminPermission" 
               @click="$emit('showAdminSettings')" 
@@ -83,11 +79,10 @@
  * 集成全局认证状态，提供动态的用户界面。
  */
 
-import { computed, ref, onMounted, watch, onBeforeUnmount } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../../composables/useAuth'
-import { userApi, USER_GROUPS } from '../../api/user'
-import { messageApi } from '../../api/message'
+import { userApi } from '../../api/user'
 import UserAvatar from '../common/UserAvatar.vue'
 
 /**
@@ -103,8 +98,6 @@ defineEmits<{
   showAdminSettings: []
   /** 显示个人中心界面事件 */
   showUserProfile: []
-  /** 显示消息面板事件 */
-  showMessages: []
   /** 用户登出事件 */
   logout: []
 }>()
@@ -113,7 +106,7 @@ defineEmits<{
  * 全局认证状态管理
  * 获取用户信息、登录状态和头像数据
  */
-const { user, isAuthenticated, userAvatar } = useAuth()
+const { user, isAuthenticated } = useAuth()
 
 /**
  * 路由实例
@@ -124,7 +117,6 @@ const router = useRouter()
  * 响应式数据
  */
 const showMenu = ref(false)
-const unreadCount = ref(0)
 
 /**
  * 导航到创建页面
@@ -153,76 +145,6 @@ const hasAdminPermission = computed(() => {
   return userApi.isAdmin(user.value)
 })
 
-/**
- * 加载未读消息数量
- */
-const loadUnreadCount = async () => {
-  if (!user.value) {
-    console.log('⏹️ 用户未登录，跳过未读消息数量检查')
-    unreadCount.value = 0
-    return
-  }
-  
-  // 检查认证状态
-  const hasRefreshToken = !!localStorage.getItem('refreshToken')
-  if (!hasRefreshToken) {
-    console.warn('⚠️ 警告：用户已登录但没有refresh token，这可能导致API调用失败')
-  }
-  
-  try {
-    console.log('🔄 开始获取未读消息数量...')
-    unreadCount.value = await messageApi.getUnreadCount()
-    console.log('✅ 未读消息数量:', unreadCount.value)
-  } catch (error) {
-    console.error('❌ 获取未读消息数量失败:', error)
-    
-    // 如果是认证错误，不要继续尝试
-    if ((error as any)?.response?.status === 401) {
-      console.warn('🚫 认证失败，停止获取未读消息数量')
-      unreadCount.value = 0
-      return
-    }
-    
-    unreadCount.value = 0
-  }
-}
-
-/**
- * 监听用户登录状态变化
- */
-watch(isAuthenticated, (newValue) => {
-  if (newValue) {
-    loadUnreadCount()
-  } else {
-    unreadCount.value = 0
-  }
-})
-
-/**
- * 组件挂载时加载未读消息数量
- */
-onMounted(() => {
-  if (isAuthenticated.value) {
-    loadUnreadCount()
-  }
-  
-  // 定期更新未读消息数量（每30秒）
-  const unreadCountInterval = setInterval(() => {
-    if (isAuthenticated.value && user.value) {
-      console.log('定时检查未读消息数量...')
-      loadUnreadCount()
-    } else {
-      console.log('用户未登录，跳过未读消息数量检查')
-    }
-  }, 30000)
-  
-  // 组件卸载时清理定时器
-  onBeforeUnmount(() => {
-    if (unreadCountInterval) {
-      clearInterval(unreadCountInterval)
-    }
-  })
-})
 </script>
 
 <style scoped>
@@ -427,22 +349,6 @@ onMounted(() => {
 
 .menu-item:hover {
   background-color: #f5f5f5;
-}
-
-/* 未读消息数量badge */
-.unread-badge {
-  background: #ef4444;
-  color: white;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 10px;
-  min-width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 8px;
 }
 
 /* Vue 过渡动画：淡入淡出 + 向下位移 10px */

@@ -15,19 +15,43 @@
         </div>
       </div>
       <div class="header-actions">
-        <!-- 创建角色按钮，点击显示创建模态框 -->
+        <!-- 创建角色按钮（仅角色管理Tab可见） -->
         <button 
+          v-if="activeTab === 'roles'"
           class="btn btn-primary"
           @click="showCreateRoleModal = true"
         >
           <i class="icon-plus"></i>
           创建角色
         </button>
+        <!-- 新建权限按钮（仅权限管理Tab可见） -->
+        <button
+          v-if="activeTab === 'permissions'"
+          class="btn btn-primary"
+          @click="openCreatePermissionModal"
+        >
+          <i class="icon-plus"></i>
+          新建权限
+        </button>
       </div>
     </div>
 
-    <!-- 主内容区域 -->
-    <div class="main-content">
+    <!-- Tab 导航 -->
+    <div class="tab-nav">
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'roles' }"
+        @click="activeTab = 'roles'"
+      >🛡️ 角色管理</button>
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'permissions' }"
+        @click="activeTab = 'permissions'"
+      >🔑 权限管理</button>
+    </div>
+
+    <!-- 主内容区域（角色管理Tab） -->
+    <div v-if="activeTab === 'roles'" class="main-content">
       <!-- 角色卡片网格展示区域 -->
       <div class="role-cards">
         <!-- 遍历所有角色，生成角色卡片 -->
@@ -163,6 +187,58 @@
       </div>
     </div>
 
+    <!-- 权限管理 Tab -->
+    <div v-if="activeTab === 'permissions'" class="permission-management">
+      <div class="pm-search-bar">
+        <input
+          v-model="permissionSearch"
+          class="pm-search-input"
+          type="text"
+          placeholder="搜索权限名称或描述…"
+        />
+      </div>
+      <div class="pm-table-wrap">
+        <table class="pm-table">
+          <thead>
+            <tr>
+              <th class="col-id">ID</th>
+              <th class="col-name">权限名称</th>
+              <th class="col-desc">描述</th>
+              <th class="col-actions">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="filteredPermissions.length === 0">
+              <td colspan="4" class="pm-empty">暂无权限数据</td>
+            </tr>
+            <tr
+              v-for="perm in filteredPermissions"
+              :key="perm.permissionId"
+              class="pm-row"
+            >
+              <td class="col-id">{{ perm.permissionId }}</td>
+              <td class="col-name">
+                <span class="perm-badge">{{ perm.permissionName }}</span>
+              </td>
+              <td class="col-desc">{{ perm.description || '—' }}</td>
+              <td class="col-actions">
+                <button
+                  class="btn btn-sm btn-secondary"
+                  @click="editPermission(perm)"
+                  title="编辑权限"
+                >✏️ 编辑</button>
+                <button
+                  class="btn btn-sm btn-danger"
+                  @click="confirmDeletePermission(perm)"
+                  title="删除权限"
+                >🗑️ 删除</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- 创建/编辑角色模态框 -->
     <div v-if="showCreateRoleModal || showEditRoleModal" class="modal-overlay" @click="closeModals">
       <div class="modal" @click.stop>
@@ -214,6 +290,44 @@
       </div>
     </div>
 
+    <!-- 创建/编辑权限模态框 -->
+    <div v-if="showPermissionModal" class="modal-overlay" @click="closePermissionModal">
+      <div class="modal" @click.stop>
+        <div class="modal-header">
+          <h3>{{ editingPermission ? '编辑权限' : '新建权限' }}</h3>
+          <button class="modal-close" @click="closePermissionModal"><i class="icon-close"></i></button>
+        </div>
+        <div class="modal-body">
+          <form @submit.prevent="savePermission">
+            <div class="form-group">
+              <label for="permName">权限名称 *</label>
+              <input
+                id="permName"
+                type="text"
+                v-model="permissionForm.permissionName"
+                required
+                placeholder="例如：article:create"
+              />
+              <span class="form-hint">建议格式：模块:动作，例如 user:read、article:delete</span>
+            </div>
+            <div class="form-group">
+              <label for="permDesc">描述</label>
+              <textarea
+                id="permDesc"
+                v-model="permissionForm.description"
+                placeholder="权限功能描述"
+                rows="3"
+              ></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" @click="closePermissionModal">取消</button>
+              <button type="submit" class="btn btn-primary">{{ editingPermission ? '保存' : '创建' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast 消息提示组件 -->
     <Toast 
       v-if="toast.show"
@@ -240,7 +354,7 @@ defineOptions({
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { rolePermissionApi } from '@/api/user'  // 角色权限相关API接口
 import Toast from '../../common/Toast.vue'      // 消息提示组件
-import type { Role, Permission, RolePermission, RoleForm } from '@/types/permission'
+import type { Role, Permission, RolePermission, RoleForm, PermissionForm } from '@/types/permission'
 
 // === 核心数据状态管理 ===
 const roles = ref<Role[]>([])                    // 所有角色列表数据
@@ -251,14 +365,24 @@ const selectedPermissionIds = ref<number[]>([])  // 当前角色已选择的权�
 const originalPermissionIds = ref<number[]>([])  // 原始权限ID数组(用于变更检测)
 
 // === UI状态管理 ===
+const activeTab = ref<'roles' | 'permissions'>('roles') // 当前激活Tab
 const showCreateRoleModal = ref(false)  // 控制创建角色模态框的显示状态
 const showEditRoleModal = ref(false)    // 控制编辑角色模态框的显示状态
 const editingRole = ref<Role | null>(null) // 当前正在编辑的角色对象
+// 权限管理相关状态
+const showPermissionModal = ref(false)          // 控制权限创建/编辑模态框
+const editingPermission = ref<Permission | null>(null) // 当前正在编辑的权限对象
+const permissionSearch = ref('')                // 权限搜索关键词
 
 // === 表单数据管理 ===
 const roleForm = reactive<RoleForm>({
   roleName: '',     // 角色名称
   description: ''   // 角色描述
+})
+// 权限表单数据
+const permissionForm = reactive<PermissionForm>({
+  permissionName: '',
+  description: ''
 })
 
 // === 消息提示状态管理 ===
@@ -305,6 +429,18 @@ const permissionGroups = computed(() => {
     categoryDisplay: getCategoryDisplay(category), // 分组显示名称
     permissions: perms.sort((a, b) => a.permissionName.localeCompare(b.permissionName)) // 权限按名称排序
   }))
+})
+
+/**
+ * 按搜索关键词过滤的权限列表（权限管理Tab用）
+ */
+const filteredPermissions = computed(() => {
+  const kw = permissionSearch.value.trim().toLowerCase()
+  if (!kw) return permissions.value
+  return permissions.value.filter(
+    p => p.permissionName.toLowerCase().includes(kw) ||
+         (p.description || '').toLowerCase().includes(kw)
+  )
 })
 
 // === 工具函数定义 ===
@@ -562,6 +698,75 @@ function showToast(message: string, type: 'success' | 'error' | 'warning' = 'suc
   toast.message = message
   toast.type = type
   toast.show = true
+}
+
+// === 权限管理函数 ===
+
+/** 打开新建权限 Modal */
+function openCreatePermissionModal() {
+  editingPermission.value = null
+  permissionForm.permissionName = ''
+  permissionForm.description = ''
+  showPermissionModal.value = true
+}
+
+/** 打开编辑权限 Modal */
+function editPermission(permission: Permission) {
+  editingPermission.value = permission
+  permissionForm.permissionName = permission.permissionName
+  permissionForm.description = permission.description || ''
+  showPermissionModal.value = true
+}
+
+/** 关闭权限 Modal 并重置表单 */
+function closePermissionModal() {
+  showPermissionModal.value = false
+  editingPermission.value = null
+  permissionForm.permissionName = ''
+  permissionForm.description = ''
+}
+
+/** 保存权限（创建或更新） */
+async function savePermission() {
+  try {
+    if (editingPermission.value) {
+      await rolePermissionApi.updatePermission(editingPermission.value.permissionId, permissionForm)
+      showToast('权限更新成功', 'success')
+    } else {
+      await rolePermissionApi.createPermission({ ...permissionForm })
+      showToast('权限创建成功', 'success')
+    }
+    closePermissionModal()
+    await loadPermissions()
+    // 角色分配区已加载的权限列表同步刷新
+    if (selectedRole.value) {
+      await loadRolePermissions(selectedRole.value.roleId)
+    }
+  } catch (error: any) {
+    console.error('保存权限失败:', error)
+    showToast(error.message || '保存权限失败', 'error')
+  }
+}
+
+/** 确认删除权限 */
+function confirmDeletePermission(permission: Permission) {
+  if (confirm(`确定要删除权限 "${permission.permissionName}" 吗？此操作不可撤销。`)) {
+    performDeletePermission(permission)
+  }
+}
+
+/** 执行删除权限 */
+async function performDeletePermission(permission: Permission) {
+  try {
+    await rolePermissionApi.deletePermission(permission.permissionId)
+    showToast('权限删除成功', 'success')
+    await loadPermissions()
+    // 刷新角色权限关联统计
+    await loadAllRolePermissions()
+  } catch (error: any) {
+    console.error('删除权限失败:', error)
+    showToast(error.message || '删除权限失败', 'error')
+  }
 }
 
 // === 数据加载函数 ===
@@ -1187,5 +1392,135 @@ input[type="checkbox"]:indeterminate::after {
   .modal {
     width: 95vw;
   }
+}
+
+/* === Tab 导航样式 === */
+.tab-nav {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  background: white;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
+  width: fit-content;
+}
+
+.tab-btn {
+  padding: 8px 22px;
+  border: none;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  color: #64748b;
+  background: transparent;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.tab-btn.active {
+  background: #0ea5e9;
+  color: white;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+}
+
+/* === 权限管理面板样式 === */
+.permission-management {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.pm-search-bar {
+  margin-bottom: 20px;
+}
+
+.pm-search-input {
+  width: 100%;
+  max-width: 380px;
+  padding: 9px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.pm-search-input:focus {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.pm-table-wrap {
+  overflow-x: auto;
+}
+
+.pm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.pm-table thead tr {
+  background: #f8f9fa;
+}
+
+.pm-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e9ecef;
+  white-space: nowrap;
+}
+
+.pm-table td {
+  padding: 12px 16px;
+  color: #4b5563;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.pm-row:hover td {
+  background: #f8fafb;
+}
+
+.col-id    { width: 60px; }
+.col-name  { width: 260px; }
+.col-desc  { }
+.col-actions { width: 160px; white-space: nowrap; }
+
+.perm-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 20px;
+  color: #0369a1;
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+}
+
+.col-actions .btn + .btn {
+  margin-left: 8px;
+}
+
+.pm-empty {
+  text-align: center;
+  padding: 40px;
+  color: #9ca3af;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #9ca3af;
 }
 </style>

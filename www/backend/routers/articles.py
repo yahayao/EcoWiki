@@ -17,7 +17,7 @@ from models.tag import Tag
 from models.user import User
 from schemas.article import (
     ArticleOut, ArticleListOut, ArticleCreateRequest, ArticleUpdateRequest,
-    DraftOut, DraftCreateRequest, ReviewRequest, VersionOut,
+    DraftOut, DraftCreateRequest, DraftUpdateRequest, ReviewRequest, VersionOut,
 )
 from schemas.common import ApiResponse, PageResult
 from core.security import get_current_user, get_current_user_optional, require_admin
@@ -131,8 +131,24 @@ def check_title(title: str, db: Session = Depends(get_db)):
 
 
 @router.get("/title/{title}/id")
-def get_id_by_title(title: str, db: Session = Depends(get_db)):
+def get_id_by_title(
+    title: str,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional),
+):
+    # 优先查已发布文章
     article = db.query(Article).filter(Article.title == title, Article.status == "published").first()
+    if not article:
+        # 已登录用户可查找自己的 pending 文章
+        if current_user:
+            article = db.query(Article).filter(
+                Article.title == title,
+                Article.status.in_(["pending", "draft"]),
+                Article.author_id == current_user.user_id,
+            ).first()
+            # 管理员可查任意状态
+            if not article and current_user.role_id == 1:
+                article = db.query(Article).filter(Article.title == title).first()
     if not article:
         raise HTTPException(status_code=404, detail="文章不存在")
     return ApiResponse.ok(data=article.article_id)
@@ -206,6 +222,12 @@ def create_article(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    # 非管理员不能直接发布，强制走审核流程
+    if not (current_user.role_id == 1 or current_user.role_id == 4):
+        article_status = "pending"
+    else:
+        article_status = body.status or "published"
+
     article = Article(
         title=body.title,
         content=body.content,
@@ -213,7 +235,7 @@ def create_article(
         author=current_user.username,
         author_id=current_user.user_id,
         publish_date=datetime.now(),
-        status=body.status or "published",
+        status=article_status,
     )
     # 处理标签
     if body.tag_ids:
@@ -221,13 +243,31 @@ def create_article(
         article.tags = tags
 
     db.add(article)
+    db.flush()  # 获取 article_id
+
+    # 非管理员同步创建待审核草稿，纳入审核队列
+    if article_status == "pending":
+        draft = ArticleDraft(
+            article_id=article.article_id,
+            title=body.title,
+            content=body.content,
+            category=body.category,
+            author=current_user.username,
+            author_id=current_user.user_id,
+            status="pending",
+            submitted_at=datetime.now(),
+        )
+        db.add(draft)
+
     db.commit()
     db.refresh(article)
 
     # 创建第一个版本记录
     _save_version(article, current_user, db, "初始版本")
+    db.commit()
 
-    return ApiResponse.ok(data=ArticleOut.model_validate(article), message="文章创建成功")
+    msg = "文章已提交审核，等待管理员审核" if article_status == "pending" else "文章创建成功"
+    return ApiResponse.ok(data=ArticleOut.model_validate(article), message=msg)
 
 
 # ─── 更新文章 ─────────────────────────────────────────────────────────────────
@@ -240,6 +280,23 @@ def update_article(
 ):
     article = _get_article_or_404(article_id, db)
     _check_article_permission(article, current_user)
+
+    # 非管理员不能直接修改文章，提交更新草稿走审核流程
+    if not (current_user.role_id == 1 or current_user.role_id == 4):
+        draft = ArticleDraft(
+            article_id=article_id,
+            title=body.title if body.title is not None else article.title,
+            content=body.content if body.content is not None else article.content,
+            category=body.category if body.category is not None else article.category,
+            author=current_user.username,
+            author_id=current_user.user_id,
+            status="pending",
+            submitted_at=datetime.now(),
+        )
+        db.add(draft)
+        db.commit()
+        db.refresh(article)
+        return ApiResponse.ok(data=ArticleOut.model_validate(article), message="更新已提交审核，等待管理员审核")
 
     if body.title is not None:
         article.title = body.title
@@ -258,6 +315,7 @@ def update_article(
 
     # 保存版本
     _save_version(article, current_user, db, "编辑更新")
+    db.commit()
 
     return ApiResponse.ok(data=ArticleOut.model_validate(article), message="文章更新成功")
 
@@ -538,15 +596,17 @@ def create_draft(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _get_article_or_404(article_id, db)
+    article = _get_article_or_404(article_id, db)
+    # 标题不允许修改，始终使用原文章标题
     draft = ArticleDraft(
         article_id=article_id,
-        title=body.title,
+        title=article.title,
         content=body.content,
         category=body.category,
         author=current_user.username,
         author_id=current_user.user_id,
-        status="draft",
+        status="pending",
+        submitted_at=datetime.now(),
     )
     db.add(draft)
     db.commit()
@@ -619,13 +679,17 @@ def review_draft(
         draft.status = "approved"
         # 写入正式文章
         if draft.article_id:
+            # 更新现有文章（标题不可修改，保持原标题）
             article = db.query(Article).filter(Article.article_id == draft.article_id).first()
             if article:
-                article.title = draft.title
+                # 不更新 title，保持原标题不变
                 article.content = draft.content
                 article.category = draft.category
                 article.status = "published"
+                db.flush()
+                _save_version(article, reviewer, db, f"审核通过（草稿 #{draft_id}）")
         else:
+            # 创建新文章
             new_article = Article(
                 title=draft.title,
                 content=draft.content,
@@ -636,9 +700,17 @@ def review_draft(
                 status="published",
             )
             db.add(new_article)
+            db.flush()  # 获取 new_article.article_id
+            draft.article_id = new_article.article_id  # 回写草稿的 article_id
+            _save_version(new_article, reviewer, db, "初始版本（审核通过）")
     elif body.action == "reject":
         draft.status = "rejected"
         draft.reject_reason = body.comment
+        # 若关联文章仍处于 pending 状态，将其重置为 draft
+        if draft.article_id:
+            article = db.query(Article).filter(Article.article_id == draft.article_id).first()
+            if article and article.status == "pending":
+                article.status = "draft"
     else:
         raise HTTPException(status_code=400, detail="无效的审核操作")
 
@@ -649,9 +721,19 @@ def review_draft(
         comment=body.comment,
     )
     db.add(review)
-    db.commit()
-    db.refresh(draft)
-    return ApiResponse.ok(data=DraftOut.model_validate(draft), message="审核完成")
+
+    if body.action == "approve":
+        # 先 flush 使 review 落库，再获取草稿快照，然后将草稿 + 审核记录全部删除
+        db.flush()
+        draft_snapshot = DraftOut.model_validate(draft)
+        db.query(ArticleReview).filter(ArticleReview.draft_id == draft_id).delete(synchronize_session=False)
+        db.delete(draft)
+        db.commit()
+        return ApiResponse.ok(data=draft_snapshot, message="审核通过，文章已发布，草稿已清除")
+    else:
+        db.commit()
+        db.refresh(draft)
+        return ApiResponse.ok(data=DraftOut.model_validate(draft), message="审核完成")
 
 
 @router.get("/drafts/all", response_model=ApiResponse[List[DraftOut]])
@@ -695,9 +777,41 @@ def delete_draft(
         raise HTTPException(status_code=404, detail="草稿不存在")
     if draft.author_id != current_user.user_id and current_user.role_id != 1:
         raise HTTPException(status_code=403, detail="无权删除此草稿")
+    # 先删除关联审核记录，再删除草稿，避免 FK 约束报错
+    db.query(ArticleReview).filter(ArticleReview.draft_id == draft_id).delete(synchronize_session=False)
     db.delete(draft)
     db.commit()
     return ApiResponse.ok(data="删除成功", message="草稿已删除")
+
+
+@router.put("/drafts/{draft_id}", response_model=ApiResponse[DraftOut])
+def update_draft(
+    draft_id: int,
+    body: DraftUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """更新被拒稿的草稿内容并重新提交审核（仅限 rejected / draft 状态）"""
+    draft = db.query(ArticleDraft).filter(ArticleDraft.draft_id == draft_id).first()
+    if not draft:
+        raise HTTPException(status_code=404, detail="草稿不存在")
+    if draft.author_id != current_user.user_id and current_user.role_id != 1:
+        raise HTTPException(status_code=403, detail="无权修改此草稿")
+    if draft.status == "pending":
+        raise HTTPException(status_code=400, detail="草稿正在审核中，审核结束前不允许修改")
+    if draft.status == "approved":
+        raise HTTPException(status_code=400, detail="草稿已通过审核，无法再次修改")
+
+    if body.content is not None:
+        draft.content = body.content
+    if body.category is not None:
+        draft.category = body.category
+    draft.status = "pending"
+    draft.submitted_at = datetime.now()
+    draft.reject_reason = None   # 清除上次拒绝原因
+    db.commit()
+    db.refresh(draft)
+    return ApiResponse.ok(data=DraftOut.model_validate(draft), message="草稿已重新提交审核")
 
 
 # ─── 内部工具函数 ──────────────────────────────────────────────────────────────

@@ -90,6 +90,12 @@ class DraftCreateRequest(BaseModel):
     article_id: Optional[int] = None
 
 
+class DraftUpdateRequest(BaseModel):
+    """更新草稿内容并重新提交审核（仅限 rejected/draft 状态）"""
+    content: Optional[str] = None
+    category: Optional[str] = None
+
+
 class ReviewRequest(BaseModel):
     action: str     # approve / reject
     comment: Optional[str] = None

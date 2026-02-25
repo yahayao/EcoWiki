@@ -189,24 +189,37 @@
       </div>
       
       <div v-else-if="activeTab === 'drafts'" class="article-grid">
-        <div v-for="draft in draftArticles" :key="draft.id" class="article-card">
-          <div class="card-header">
-            <div class="article-status draft">
-              <svg viewBox="0 0 24 24" class="status-icon">
-                <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
-              </svg>
-              草稿
-            </div>
+        <div v-for="draft in draftArticles" :key="draft.draftId" class="article-card draft-card">
+          <!-- 状态徽标：右上角绝对定位 -->
+          <div class="draft-status-badge" :class="`status-${draft.status}`">
+            <svg v-if="draft.status === 'pending'" viewBox="0 0 24 24" class="status-icon">
+              <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z"/>
+            </svg>
+            <svg v-else-if="draft.status === 'rejected'" viewBox="0 0 24 24" class="status-icon">
+              <path d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+            </svg>
+            <svg v-else viewBox="0 0 24 24" class="status-icon">
+              <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
+            </svg>
+            {{ getDraftStatusLabel(draft.status) }}
           </div>
-          <div class="card-content">
+
+          <div class="card-content" style="padding-top: 48px;">
             <h4 class="article-title">{{ draft.title }}</h4>
+            <!-- 拒稿原因提示 -->
+            <div v-if="draft.status === 'rejected' && draft.rejectReason" class="reject-reason-box">
+              <svg viewBox="0 0 24 24" class="reject-icon">
+                <path d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+              </svg>
+              <span>拒绝原因：{{ draft.rejectReason }}</span>
+            </div>
             <p class="article-excerpt">{{ draft.excerpt }}</p>
             <div class="article-meta">
               <span class="meta-item">
                 <svg viewBox="0 0 24 24" class="meta-icon">
                   <path d="M9,10V12H7V10H9M13,10V12H11V10H13M17,10V12H15V10H17M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5A2,2 0 0,1 5,3H6V1H8V3H16V1H18V3H19M19,19V8H5V19H19M19,5H5V6H19V5Z"/>
                 </svg>
-                最后保存于 {{ draft.lastSaved }}
+                保存于 {{ draft.lastSaved }}
               </span>
               <span class="meta-item">
                 <svg viewBox="0 0 24 24" class="meta-icon">
@@ -216,14 +229,25 @@
               </span>
             </div>
           </div>
+
           <div class="card-actions">
-            <button class="action-btn primary" @click="editDraft(draft.articleId || draft.id)">
-              <svg viewBox="0 0 24 24" class="icon">
-                <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
-              </svg>
-              继续编辑
-            </button>
-            <button class="action-btn danger" @click="deleteDraft(draft.articleId || draft.id)">
+            <template v-if="draft.status === 'pending'">
+              <button class="action-btn disabled-btn" disabled>
+                <svg viewBox="0 0 24 24" class="icon">
+                  <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z"/>
+                </svg>
+                审核中
+              </button>
+            </template>
+            <template v-else>
+              <button class="action-btn primary" @click="editDraft(draft.draftId)">
+                <svg viewBox="0 0 24 24" class="icon">
+                  <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
+                </svg>
+                {{ draft.status === 'rejected' ? '重新编辑' : '继续编辑' }}
+              </button>
+            </template>
+            <button class="action-btn danger" @click="deleteDraft(draft.draftId)">
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
               </svg>
@@ -295,6 +319,36 @@
       </div>
     </div>
   </div>
+
+  <!-- 草稿重新编辑 Modal -->
+  <div v-if="editingDraft" class="draft-edit-overlay" @click.self="closeDraftEditor">
+    <div class="draft-edit-modal">
+      <div class="modal-header">
+        <h3 class="modal-title">重新编辑草稿</h3>
+        <button class="modal-close" @click="closeDraftEditor">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-article-title">{{ editingDraft.title }}</div>
+        <div v-if="editingDraft.rejectReason" class="modal-reject-reason">
+          <strong>原拒绝原因：</strong>{{ editingDraft.rejectReason }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">分类</label>
+          <input v-model="editForm.category" type="text" class="form-input" placeholder="请输入文章分类" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">内容</label>
+          <textarea v-model="editForm.content" class="form-textarea" rows="14" placeholder="请输入文章内容" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="action-btn secondary" @click="closeDraftEditor">取消</button>
+        <button class="action-btn primary" :disabled="savingDraftEdit" @click="submitDraftEdit">
+          {{ savingDraftEdit ? '提交中...' : '保存并重新提交审核' }}
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -302,6 +356,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { userApi } from '@/api/user'
 import { articleApi } from '@/api/article'
+import { draftApi, type ArticleDraft } from '@/api/draft'
 import toast from '@/utils/toast'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 
@@ -325,10 +380,13 @@ const articleStats = ref({
   totalLikes: 0
 })
 
+// 草稿总数（独立维护，避免依赖 articles 表的 status='draft' 统计）
+const draftTotalCount = ref(0)
+
 // 统计数据计算属性
 const favoriteCount = computed(() => articleStats.value.favoriteArticles)
 const createdCount = computed(() => articleStats.value.publishedArticles)
-const draftCount = computed(() => articleStats.value.draftArticles)
+const draftCount = computed(() => draftTotalCount.value)
 const likedCount = computed(() => articleStats.value.likedArticles)
 
 // 格式化日期
@@ -397,12 +455,14 @@ const loadCreatedArticles = async () => {
 const loadDraftArticles = async () => {
   try {
     loading.value = true
-    const result = await userApi.getUserArticles(0, 20, 'draft')
-    draftArticles.value = result.content.map((article: any) => ({
-      ...article,
-      lastSaved: formatDate(article.updatedAt || article.createdAt),
-      excerpt: article.content ? article.content.substring(0, 100) + '...' : '暂无摘要'
+    const result = await draftApi.getMyDrafts(0, 20)
+    draftArticles.value = result.content.map((draft: ArticleDraft) => ({
+      ...draft,
+      lastSaved: formatDate((draft.updatedAt || draft.createdAt || draft.submittedAt) ?? ''),
+      excerpt: draft.content ? draft.content.substring(0, 100) + '...' : '暂无摘要',
+      wordCount: draft.content ? draft.content.length : 0,
     }))
+    draftTotalCount.value = result.totalElements
   } catch (error: any) {
     console.error('加载草稿文章失败:', error)
     toast.error('加载草稿文章失败', '错误')
@@ -522,11 +582,10 @@ const deleteDraft = async (draftId: number) => {
   
   try {
     loading.value = true
-    await articleApi.deleteArticle(draftId)
+    await draftApi.deleteDraft(draftId)
     toast.success('草稿已删除', '操作成功')
-    // 重新加载草稿列表和统计数据
+    // 重新加载草稿列表
     await loadDraftArticles()
-    await loadArticleStats()
   } catch (error: any) {
     console.error('删除草稿失败:', error)
     toast.error(error.message || '删除草稿失败', '错误')
@@ -575,17 +634,54 @@ const onTabChange = async (newTab: string) => {
 onMounted(async () => {
   await loadArticleStats()
   await loadFavoriteArticles() // 默认加载收藏文章
+  // 预加载草稿数量
+  await loadDraftArticles()
 })
 
 // 草稿编辑方法
-const editDraft = async (draftId: number) => {
+const editingDraft = ref<any>(null)
+const editForm = ref({ content: '', category: '' })
+const savingDraftEdit = ref(false)
+
+const getDraftStatusLabel = (status: string): string => {
+  const map: Record<string, string> = { pending: '审核中', rejected: '已拒绝', draft: '草稿', approved: '已通过' }
+  return map[status] || '草稿'
+}
+
+const editDraft = (draftId: number) => {
+  const draft = draftArticles.value.find((d: any) => d.draftId === draftId)
+  if (!draft) {
+    toast.error('找不到该草稿', '错误')
+    return
+  }
+  if (draft.status === 'pending') {
+    toast.warning('草稿正在审核中，审核结束前不可修改', '提示')
+    return
+  }
+  editingDraft.value = draft
+  editForm.value = { content: draft.content || '', category: draft.category || '' }
+}
+
+const closeDraftEditor = () => {
+  editingDraft.value = null
+  editForm.value = { content: '', category: '' }
+}
+
+const submitDraftEdit = async () => {
+  if (!editingDraft.value) return
   try {
-    // 通过ID获取草稿信息以获得title
-    const draft = await articleApi.getArticleById(draftId)
-    router.push({ name: 'ArticleEdit', params: { title: draft.title } })
+    savingDraftEdit.value = true
+    await draftApi.updateDraft(editingDraft.value.draftId, {
+      content: editForm.value.content,
+      category: editForm.value.category,
+    })
+    toast.success('草稿已重新提交审核', '操作成功')
+    closeDraftEditor()
+    await loadDraftArticles()
   } catch (error: any) {
-    console.error('获取草稿信息失败:', error)
-    toast.error('无法编辑草稿', '错误')
+    toast.error(error.message || '提交失败', '错误')
+  } finally {
+    savingDraftEdit.value = false
   }
 }
 </script>
@@ -1054,5 +1150,258 @@ const editDraft = async (draftId: number) => {
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
+}
+
+/* ── 草稿卡片状态徽标 ── */
+.draft-card {
+  position: relative;
+}
+
+.draft-status-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  z-index: 2;
+}
+
+.draft-status-badge .status-icon {
+  width: 13px;
+  height: 13px;
+  fill: currentColor;
+}
+
+.draft-status-badge.status-pending {
+  background: #fffbeb;
+  color: #d69e2e;
+  border: 1px solid #fbd38d;
+}
+
+.draft-status-badge.status-rejected {
+  background: #fff5f5;
+  color: #c53030;
+  border: 1px solid #feb2b2;
+}
+
+.draft-status-badge.status-draft {
+  background: #ebf8ff;
+  color: #2b6cb0;
+  border: 1px solid #bee3f8;
+}
+
+.draft-status-badge.status-approved {
+  background: #f0fff4;
+  color: #276749;
+  border: 1px solid #9ae6b4;
+}
+
+/* 拒绝原因提示框 */
+.reject-reason-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #c53030;
+  line-height: 1.5;
+}
+
+.reject-icon {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* 审核中禁用按钮 */
+.action-btn.disabled-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: not-allowed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #f7fafc;
+  color: #a0aec0;
+}
+
+.action-btn.disabled-btn .icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* ── 草稿编辑 Modal ── */
+.draft-edit-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.draft-edit-modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 720px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f7fafc;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  color: #4a5568;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.modal-close:hover {
+  background: #edf2f7;
+}
+
+.modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-article-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: #f7fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.modal-reject-reason {
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #c53030;
+  line-height: 1.5;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4a5568;
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1a202c;
+  background: white;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1a202c;
+  background: white;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.6;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  border-top: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.modal-footer .action-btn {
+  flex: 0;
+  min-width: 120px;
+}
+
+.modal-footer .action-btn.primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 </style>

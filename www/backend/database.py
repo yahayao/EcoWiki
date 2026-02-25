@@ -42,11 +42,11 @@ def ensure_database() -> None:
                     )
                 )
                 conn.commit()
-                print(f"  [DB] 数据库 `{db_name}` 不存在，已自动创建 ✅")
+                print(f"  [DB] 数据库 `{db_name}` 不存在，已自动创建 [OK] ")
             else:
-                print(f"  [DB] 数据库 `{db_name}` 已存在 ✅")
+                print(f"  [DB] 数据库 `{db_name}` 已存在 [OK] ")
     except OperationalError as exc:
-        print(f"  [DB] ❌ 无法连接 MySQL 服务器: {exc}")
+        print(f"  [DB] [ERROR] 无法连接数据库服务器: {exc}")
         sys.exit(1)
     finally:
         server_engine.dispose()

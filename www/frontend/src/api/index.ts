@@ -213,7 +213,6 @@ export { api }
 export { articleApi } from './article'
 export { userApi } from './user' 
 export { TagApi } from './tag'
-export { messageApi } from './message'
 export { commentApi } from './comment'
 export { draftApi } from './draft'
 

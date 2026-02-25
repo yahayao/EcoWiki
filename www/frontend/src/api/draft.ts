@@ -284,6 +284,22 @@ export const draftApi = {
   },
 
   /**
+   * 更新被拒稿的草稿内容并重新提交审核
+   * PUT /api/articles/drafts/{draftId}
+   * 仅限 rejected 或 draft 状态的草稿，pending 状态不可修改
+   */
+  async updateDraft(draftId: number, data: { content?: string; category?: string }): Promise<ArticleDraft> {
+    const response = await api.put<ApiResponse<ArticleDraft>>(
+      `/api/articles/drafts/${draftId}`,
+      { content: data.content, category: data.category }
+    )
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message || '更新草稿失败')
+    }
+    return normalizeDraft(response.data.data)
+  },
+
+  /**
    * 获取所有草稿列表（管理员）
    * GET /api/articles/drafts/all
    */

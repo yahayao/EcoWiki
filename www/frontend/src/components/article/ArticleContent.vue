@@ -398,7 +398,10 @@ const parsedContent = computed(() => {
 
 const articleTags = computed(() => {
   if (!props.article.tags) return []
-  return props.article.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+  if (Array.isArray(props.article.tags)) {
+    return (props.article.tags as any[]).map((t: any) => (t.tagName || t.tag_name || t || '').toString().trim()).filter(Boolean)
+  }
+  return (props.article.tags as string).split(',').map((tag: string) => tag.trim()).filter(Boolean)
 })
 
 const estimatedReadTime = computed(() => {
