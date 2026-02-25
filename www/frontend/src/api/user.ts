@@ -585,11 +585,24 @@ export const userApi = {
       })
 
       if (response.data.code === 200 && response.data.data) {
-        const authData = response.data.data
+        const d = response.data.data as any
+        // 后端返回扁平对象 {user_id, username, email, role_id, avatar_url, token, token_type}
+        // 经过 index.ts camelCase 转换后变为 {userId, username, email, roleId, avatarUrl, token, tokenType}
+        const user: UserResponse = d.user ?? {
+          userId: d.userId ?? d.user_id,
+          username: d.username,
+          email: d.email,
+          fullName: d.fullName ?? d.full_name,
+          avatarUrl: d.avatarUrl ?? d.avatar_url,
+          userGroup: d.roleId === 1 || d.role_id === 1 ? 'admin' : 'user',
+          active: true,
+          createdAt: d.createdAt ?? d.created_at ?? new Date().toISOString(),
+          updatedAt: d.updatedAt ?? d.updated_at ?? new Date().toISOString(),
+        }
         return {
-          user: authData.user,
-          token: authData.token,
-          refreshToken: authData.refreshToken
+          user,
+          token: d.token,
+          refreshToken: d.refreshToken ?? d.token,
         }
       }
 
@@ -626,11 +639,22 @@ export const userApi = {
       })
 
       if (response.data.code === 200 && response.data.data) {
-        const authData = response.data.data
+        const d = response.data.data as any
+        const user: UserResponse = d.user ?? {
+          userId: d.userId ?? d.user_id,
+          username: d.username,
+          email: d.email,
+          fullName: d.fullName ?? d.full_name,
+          avatarUrl: d.avatarUrl ?? d.avatar_url,
+          userGroup: d.roleId === 1 || d.role_id === 1 ? 'admin' : 'user',
+          active: true,
+          createdAt: d.createdAt ?? new Date().toISOString(),
+          updatedAt: d.updatedAt ?? new Date().toISOString(),
+        }
         return {
-          user: authData.user,
-          token: authData.token,
-          refreshToken: authData.refreshToken
+          user,
+          token: d.token,
+          refreshToken: d.refreshToken ?? d.token,
         }
       }
 
@@ -668,11 +692,22 @@ export const userApi = {
       })
 
       if (response.data.code === 200 && response.data.data) {
-        const authData = response.data.data
+        const d = response.data.data as any
+        const user: UserResponse = d.user ?? {
+          userId: d.userId ?? d.user_id,
+          username: d.username,
+          email: d.email,
+          fullName: d.fullName ?? d.full_name,
+          avatarUrl: d.avatarUrl ?? d.avatar_url,
+          userGroup: d.roleId === 1 || d.role_id === 1 ? 'admin' : 'user',
+          active: true,
+          createdAt: d.createdAt ?? new Date().toISOString(),
+          updatedAt: d.updatedAt ?? new Date().toISOString(),
+        }
         return {
-          user: authData.user,
-          token: authData.token,
-          refreshToken: authData.refreshToken
+          user,
+          token: d.token,
+          refreshToken: d.refreshToken ?? d.token,
         }
       }
 
@@ -860,7 +895,7 @@ export const userApi = {
         fileSize: avatarFile.size,
         fileType: avatarFile.type
       })
-      const response = await api.post('/api/profile/avatar', formData, {
+      const response = await api.post('/api/upload/avatar', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -888,7 +923,10 @@ export const userApi = {
     confirmPassword: string
   }): Promise<void> => {
     try {
-      const response = await api.post('/api/auth/change-password', passwordData)
+      const response = await api.put('/api/auth/change-password', {
+        old_password: passwordData.currentPassword,
+        new_password: passwordData.newPassword,
+      })
 
       if (response.data.code !== 200) {
         throw new Error(response.data.message || '修改密码失败')
@@ -909,7 +947,7 @@ export const userApi = {
     securityAnswer?: string
   }): Promise<void> => {
     try {
-      const response = await api.put('/api/auth/security', securityData)
+      const response = await api.put('/api/auth/profile', securityData)
 
       if (response.data.code !== 200) {
         throw new Error(response.data.message || '更新安全设置失败')
@@ -933,7 +971,7 @@ export const userApi = {
     totalLikes: number
   }> => {
     try {
-  const response = await api.get('/api/user/article-stats')
+  const response = await api.get('/api/users/me/article-stats')
 
       if (response.data.code === 200 && response.data.data) {
         return response.data.data
@@ -960,7 +998,7 @@ export const userApi = {
     number: number
   }> => {
     try {
-  const response = await api.get('/api/user/favorite-articles', {
+  const response = await api.get('/api/users/me/favorites', {
         params: { page, size }
       })
 
@@ -995,7 +1033,7 @@ export const userApi = {
         params.status = status
       }
 
-  const response = await api.get('/api/user/articles', {
+  const response = await api.get('/api/users/me/articles', {
         params
       })
 
@@ -1024,7 +1062,7 @@ export const userApi = {
     number: number
   }> => {
     try {
-  const response = await api.get('/api/user/liked-articles', {
+  const response = await api.get('/api/users/me/likes', {
         params: { page, size }
       })
 
@@ -1054,7 +1092,7 @@ export const userApi = {
     contributionCalendar: any[]
   }> => {
     try {
-      const response = await api.get('/api/auth/contributions')
+      const response = await api.get('/api/users/me/contributions')
 
       if (response.data.code === 200 && response.data.data) {
         return response.data.data

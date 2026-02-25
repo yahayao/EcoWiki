@@ -21,6 +21,17 @@ import axios from 'axios'
  */
 const BASE_URL = '/api'
 
+// ── key 转换工具（与 index.ts 保持一致） ─────────────────────────────────────
+function _toCamel(s: string) { return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase()) }
+function _toSnake(s: string) { return s.replace(/([A-Z])/g, c => `_${c.toLowerCase()}`) }
+function _transformKeys(obj: any, fn: (k: string) => string): any {
+  if (Array.isArray(obj)) return obj.map(v => _transformKeys(v, fn))
+  if (obj !== null && typeof obj === 'object' && !(obj instanceof File) && !(obj instanceof FormData)) {
+    return Object.fromEntries(Object.entries(obj).map(([k, v]) => [fn(k), _transformKeys(v, fn)]))
+  }
+  return obj
+}
+
 /**
  * 文章数据接口定义
  * 定义了文章实体的完整数据结构，与后端Article实体保持一致
@@ -295,18 +306,30 @@ class ArticleApi {
   })
 
   constructor() {
-    // 配置请求拦截器，自动添加JWT token
+    // 请求拦截器：添加 JWT token + camelCase→snake_case 转换
     this.api.interceptors.request.use(
       (config) => {
         const token = localStorage.getItem('token')
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
         }
+        if (config.data && !(config.data instanceof FormData) && !(config.data instanceof Blob)) {
+          config.data = _transformKeys(config.data, _toSnake)
+        }
+        if (config.params) {
+          config.params = _transformKeys(config.params, _toSnake)
+        }
         return config
       },
-      (error) => {
-        return Promise.reject(error)
-      }
+      (error) => Promise.reject(error)
+    )
+    // 响应拦截器：snake_case→camelCase 转换
+    this.api.interceptors.response.use(
+      (response) => {
+        if (response.data) response.data = _transformKeys(response.data, _toCamel)
+        return response
+      },
+      (error) => Promise.reject(error)
     )
   }
 
@@ -358,13 +381,13 @@ class ArticleApi {
    * ```
    */
   async checkTitleExists(title: string): Promise<boolean> {
-    const response = await this.api.get<ApiResponse<boolean>>('/articles/check-title', {
+    const response = await this.api.get<ApiResponse<{exists: boolean}>>('/articles/check-title', {
       params: { title }
     })
     if (response.data.code !== 200) {
       throw new Error(response.data.message)
     }
-    return response.data.data
+    return (response.data.data as any)?.exists ?? false
   }
 
   /**
@@ -392,8 +415,14 @@ class ArticleApi {
     sortBy = 'publishDate',
     sortDir = 'desc'
   ): Promise<PageResponse<Article>> {
+    // 后端使用单个 sort 参数：newest/oldest/views/likes
+    const sortMap: Record<string, string> = {
+      'publishDate-desc': 'newest', 'publishDate-asc': 'oldest',
+      'views-desc': 'views', 'likes-desc': 'likes',
+    }
+    const sort = sortMap[`${sortBy}-${sortDir}`] ?? 'newest'
     const response = await this.api.get<ApiResponse<PageResponse<Article>>>('/articles', {
-      params: { page, size, sortBy, sortDir }
+      params: { page, size, sort }
     })
     if (response.data.code !== 200) {
       throw new Error(response.data.message)
@@ -520,8 +549,8 @@ class ArticleApi {
    * ```
    */
   async getArticlesByCategory(category: string, page = 0, size = 10): Promise<PageResponse<Article>> {
-    const response = await this.api.get<ApiResponse<PageResponse<Article>>>(`/articles/category/${category}`, {
-      params: { page, size }
+    const response = await this.api.get<ApiResponse<PageResponse<Article>>>('/articles', {
+      params: { page, size, category }
     })
     if (response.data.code !== 200) {
       throw new Error(response.data.message)
@@ -545,11 +574,13 @@ class ArticleApi {
    * ```
    */
   async getArticlesByAuthor(author: string): Promise<Article[]> {
-    const response = await this.api.get<ApiResponse<Article[]>>(`/articles/author/${author}`)
+    const response = await this.api.get<ApiResponse<PageResponse<Article>>>('/articles', {
+      params: { author, size: 100 }
+    })
     if (response.data.code !== 200) {
       throw new Error(response.data.message)
     }
-    return response.data.data
+    return (response.data.data as any).content ?? response.data.data
   }
 
   /**
@@ -570,8 +601,8 @@ class ArticleApi {
    * ```
    */
   async getArticlesByTag(tag: string, page = 0, size = 10): Promise<PageResponse<Article>> {
-    const response = await this.api.get<ApiResponse<PageResponse<Article>>>(`/articles/tag/${tag}`, {
-      params: { page, size }
+    const response = await this.api.get<ApiResponse<PageResponse<Article>>>('/articles', {
+      params: { page, size, tags: tag }
     })
     if (response.data.code !== 200) {
       throw new Error(response.data.message)
@@ -667,7 +698,8 @@ class ArticleApi {
    * ```
    */
   async unlikeArticle(id: number): Promise<void> {
-    const response = await this.api.delete<ApiResponse<void>>(`/articles/${id}/like`)
+    // 后端点赞是 toggle：再次 POST 即取消点赞
+    const response = await this.api.post<ApiResponse<void>>(`/articles/${id}/like`)
     if (response.data.code !== 200) {
       throw new Error(response.data.message)
     }
@@ -711,7 +743,8 @@ class ArticleApi {
    * ```
    */
   async unfavoriteArticle(id: number): Promise<void> {
-    const response = await this.api.delete<ApiResponse<void>>(`/articles/${id}/favorite`)
+    // 后端收藏是 toggle：再次 POST 即取消收藏
+    const response = await this.api.post<ApiResponse<void>>(`/articles/${id}/favorite`)
     if (response.data.code !== 200) {
       throw new Error(response.data.message)
     }
@@ -794,6 +827,17 @@ class ArticleApi {
    */
   async publishArticle(id: number): Promise<Article> {
     const response = await this.api.put<ApiResponse<Article>>(`/articles/${id}/publish`)
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message)
+    }
+    return response.data.data
+  }
+
+  /**
+   * 切换文章状态（通用更新状态接口）
+   */
+  async setArticleStatus(id: number, status: string): Promise<Article> {
+    const response = await this.api.put<ApiResponse<Article>>(`/articles/${id}`, { status })
     if (response.data.code !== 200) {
       throw new Error(response.data.message)
     }
@@ -956,13 +1000,20 @@ class ArticleApi {
    * @returns {Promise<VersionHistoryResponse>} 版本历史数据
    */
   async getArticleVersions(articleId: number, page = 0, size = 20): Promise<VersionHistoryResponse> {
-    const response = await this.api.get<ApiResponse<VersionHistoryResponse>>(`/articles/${articleId}/versions`, {
-      params: { page, size }
-    })
+    const response = await this.api.get<ApiResponse<any>>(`/articles/${articleId}/versions`)
     if (response.data.code !== 200) {
       throw new Error(response.data.message)
     }
-    return response.data.data
+    // 后端返回版本列表数组，封装成 VersionHistoryResponse 格式
+    const rawList: any[] = Array.isArray(response.data.data) ? response.data.data : []
+    const sliced = rawList.slice(page * size, page * size + size)
+    return {
+      versions: sliced,
+      totalElements: rawList.length,
+      totalPages: Math.ceil(rawList.length / size),
+      currentPage: page,
+      size,
+    }
   }
 
   /**
@@ -973,11 +1024,12 @@ class ArticleApi {
    * @returns {Promise<VersionContentResponse>} 版本内容
    */
   async getVersionContent(articleId: number, versionNumber: number): Promise<VersionContentResponse> {
-    const response = await this.api.get<ApiResponse<VersionContentResponse>>(`/articles/${articleId}/versions/${versionNumber}`)
+    const response = await this.api.get<ApiResponse<any>>(`/articles/${articleId}/versions/${versionNumber}`)
     if (response.data.code !== 200) {
       throw new Error(response.data.message)
     }
-    return response.data.data
+    const v = response.data.data
+    return { content: v.content ?? '', versionNumber: v.versionNumber }
   }
 
   /**
@@ -987,11 +1039,12 @@ class ArticleApi {
    * @returns {Promise<VersionContentResponse>} 最新版本内容
    */
   async getLatestVersionContent(articleId: number): Promise<VersionContentResponse> {
-    const response = await this.api.get<ApiResponse<VersionContentResponse>>(`/articles/${articleId}/versions/latest`)
+    const response = await this.api.get<ApiResponse<any>>(`/articles/${articleId}/versions/latest`)
     if (response.data.code !== 200) {
       throw new Error(response.data.message)
     }
-    return response.data.data
+    const v = response.data.data
+    return { content: v.content ?? '', versionNumber: v.versionNumber }
   }
 
   /**
@@ -1032,9 +1085,7 @@ class ArticleApi {
    * @returns {Promise<ArticleVersion>} 恢复后创建的新版本
    */
   async restoreToVersion(articleId: number, versionNumber: number, author: string): Promise<ArticleVersion> {
-    const response = await this.api.post<ApiResponse<ArticleVersion>>(`/articles/${articleId}/versions/${versionNumber}/restore`, {
-      author
-    })
+    const response = await this.api.post<ApiResponse<ArticleVersion>>(`/articles/${articleId}/versions/${versionNumber}/restore`, {})
     if (response.data.code !== 200) {
       throw new Error(response.data.message)
     }

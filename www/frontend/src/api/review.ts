@@ -1,296 +1,346 @@
 /**
  * 文章审核API模块
  * 
- * 功能包括：
- * - 创建审核请求
- * - 分配审核员
- * - 处理审核结果
- * - 获取审核统计信息
- * - 查询审核历史记录
+ * 说明：后端审核功能通过文章草稿系统实现。
+ * 所有审核操作均重定向到 /api/articles/drafts/* 端点。
+ * 
+ * 新架构下审核流程：
+ *   1. 用户提交草稿（submitNewArticle / submitArticleEdit）
+ *   2. 管理员查看待审核草稿（getPendingDrafts）
+ *   3. 管理员审核草稿（reviewDraft: {action: 'approve'|'reject', comment}）
  * 
  * @author EcoWiki开发团队
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2025-07-01
  * @lastModified 2025-08-05
  */
 
+import { api } from './index'
+import type { ArticleDraft, ReviewDraftRequest, PageResponse } from './draft'
 
-import axios from 'axios';
-import type {
-  ArticleReview,
-  ReviewDetail,
-  ReviewStatistics,
-  CreateReviewRequest,
-  AssignReviewerRequest,
-  ProcessReviewRequest,
-  ApiResponse,
-  PageResponse
-} from '@/types/review';
+// ─── 类型定义（保留向下兼容） ──────────────────────────────────────────────────
 
-const API_BASE_URL = '/review';
+export interface ArticleReview {
+  /** 草稿ID（对应原 reviewId） */
+  reviewId: number
+  /** 文章ID */
+  articleId?: number
+  /** 标题 */
+  title: string
+  /** 作者 */
+  author: string
+  /** 审核状态 */
+  status: 'pending' | 'approved' | 'rejected' | string
+  /** 拒绝原因 */
+  rejectReason?: string
+  /** 创建时间 */
+  createdAt?: string
+  /** 提交时间 */
+  submittedAt?: string
+}
+
+export interface ReviewStatistics {
+  totalReviews: number
+  pendingCount: number
+  approvedCount: number
+  rejectedCount: number
+}
+
+export interface CreateReviewRequest {
+  /** 文章标题 */
+  title: string
+  /** 文章内容 */
+  content: string
+  /** 文章分类 */
+  category?: string
+  /** 关联文章ID（编辑时提供） */
+  articleId?: number
+}
+
+export interface AssignReviewerRequest {
+  reviewerId: number
+}
+
+export interface ProcessReviewRequest {
+  action: 'approve' | 'reject'
+  comment?: string
+}
+
+export interface ApiResponse<T = any> {
+  code: number
+  message: string
+  data: T
+}
+
+export interface PageResponse2<T> {
+  content: T[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
+  first: boolean
+  last: boolean
+}
+
+// ─── 适配工具 ──────────────────────────────────────────────────────────────────
+
+/** 将 ArticleDraft 转为向下兼容的 ArticleReview 格式 */
+function draftToReview(draft: ArticleDraft): ArticleReview {
+  return {
+    reviewId: draft.draftId,
+    articleId: draft.articleId ?? undefined,
+    title: draft.title,
+    author: draft.author,
+    status: draft.status === 'pending' ? 'pending'
+          : draft.status === 'approved' ? 'approved'
+          : draft.status === 'rejected' ? 'rejected'
+          : draft.status,
+    rejectReason: draft.rejectReason,
+    createdAt: draft.createdAt,
+    submittedAt: draft.submittedAt,
+  }
+}
+
+// ─── ReviewApiService ──────────────────────────────────────────────────────────
 
 export class ReviewApiService {
-  
   /**
-   * 创建审核申请
-   * @param request 创建审核请求参数
-   * @returns 创建的审核记录
+   * 创建审核申请（提交新草稿）
+   * POST /api/articles/drafts
    */
   static async createReview(request: CreateReviewRequest): Promise<ApiResponse<ArticleReview>> {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/create`, request);
-      return response.data;
-    } catch (error) {
-      console.error('创建审核申请失败:', error);
-      throw error;
+    const response = await api.post<ApiResponse<ArticleDraft>>(
+      '/api/articles/drafts',
+      {
+        title: request.title,
+        content: request.content,
+        category: request.category,
+        article_id: request.articleId ?? null,
+      }
+    )
+    return {
+      code: response.data.code,
+      message: response.data.message,
+      data: draftToReview(response.data.data),
     }
   }
 
   /**
-   * 分配审核员
-   * @param reviewId 审核ID
-   * @param request 分配审核员请求参数
-   * @returns 分配结果
+   * 分配审核员（暂不支持，后端无此端点，返回成功占位）
    */
   static async assignReviewer(
-    reviewId: number, 
-    request: AssignReviewerRequest
+    _reviewId: number,
+    _request: AssignReviewerRequest
   ): Promise<ApiResponse> {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/${reviewId}/assign`, request);
-      return response.data;
-    } catch (error) {
-      console.error('分配审核员失败:', error);
-      throw error;
-    }
+    console.warn('[reviewApi] assignReviewer: 后端不支持此操作，已忽略')
+    return { code: 200, message: '操作已忽略（后端不支持分配审核员）', data: null }
   }
 
   /**
    * 处理审核
-   * @param reviewId 审核ID
-   * @param request 处理审核请求参数
-   * @returns 审核结果
+   * POST /api/articles/drafts/{draftId}/review
    */
   static async processReview(
-    reviewId: number, 
+    reviewId: number,
     request: ProcessReviewRequest
   ): Promise<ApiResponse<ArticleReview>> {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/${reviewId}/process`, request);
-      return response.data;
-    } catch (error) {
-      console.error('处理审核失败:', error);
-      throw error;
+    const response = await api.post<ApiResponse<ArticleDraft>>(
+      `/api/articles/drafts/${reviewId}/review`,
+      { action: request.action, comment: request.comment ?? '' }
+    )
+    return {
+      code: response.data.code,
+      message: response.data.message,
+      data: draftToReview(response.data.data),
     }
   }
 
   /**
    * 获取审核详情
-   * @param reviewId 审核ID
-   * @returns 审核详情
+   * GET /api/articles/drafts/{draftId}
    */
-  static async getReviewDetail(reviewId: number): Promise<ApiResponse<ReviewDetail>> {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/${reviewId}`);
-      return response.data;
-    } catch (error) {
-      console.error('获取审核详情失败:', error);
-      throw error;
+  static async getReviewDetail(reviewId: number): Promise<ApiResponse<ArticleReview>> {
+    const response = await api.get<ApiResponse<ArticleDraft>>(
+      `/api/articles/drafts/${reviewId}`
+    )
+    return {
+      code: response.data.code,
+      message: response.data.message,
+      data: draftToReview(response.data.data),
     }
   }
 
   /**
-   * 获取用户待审核列表
-   * @param reviewerId 审核员ID
-   * @param page 页码
-   * @param size 页大小
-   * @returns 待审核列表
+   * 获取用户待审核列表（返回当前用户的全部草稿）
+   * GET /api/articles/drafts/my
    */
   static async getPendingReviews(
-    reviewerId: number, 
-    page = 0, 
+    _reviewerId: number,
+    page = 0,
     size = 10
-  ): Promise<ApiResponse<PageResponse<ArticleReview>>> {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/pending/${reviewerId}`, {
-        params: { page, size }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('获取待审核列表失败:', error);
-      throw error;
+  ): Promise<ApiResponse<PageResponse2<ArticleReview>>> {
+    const response = await api.get<ApiResponse<ArticleDraft[]>>(
+      '/api/articles/drafts/my'
+    )
+    const drafts = (response.data.data || []).filter(d => d.status === 'pending')
+    const start = page * size
+    const paged: PageResponse2<ArticleReview> = {
+      content: drafts.slice(start, start + size).map(draftToReview),
+      totalElements: drafts.length,
+      totalPages: Math.ceil(drafts.length / size) || 1,
+      number: page,
+      size,
+      first: page === 0,
+      last: start + size >= drafts.length,
     }
+    return { code: 200, message: 'ok', data: paged }
   }
 
   /**
    * 获取所有待审核列表（管理员）
-   * @param page 页码
-   * @param size 页大小
-   * @returns 待审核列表
+   * GET /api/articles/drafts/pending
    */
   static async getAllPendingReviews(
-    page = 0, 
+    page = 0,
     size = 10
-  ): Promise<ApiResponse<PageResponse<ArticleReview>>> {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/pending`, {
-        params: { page, size }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('获取所有待审核列表失败:', error);
-      throw error;
+  ): Promise<ApiResponse<PageResponse2<ArticleReview>>> {
+    const response = await api.get<ApiResponse<ArticleDraft[]>>(
+      '/api/articles/drafts/pending'
+    )
+    const drafts = response.data.data || []
+    const start = page * size
+    const paged: PageResponse2<ArticleReview> = {
+      content: drafts.slice(start, start + size).map(draftToReview),
+      totalElements: drafts.length,
+      totalPages: Math.ceil(drafts.length / size) || 1,
+      number: page,
+      size,
+      first: page === 0,
+      last: start + size >= drafts.length,
     }
+    return { code: 200, message: 'ok', data: paged }
   }
 
   /**
-   * 获取审核统计
-   * @param reviewerId 审核员ID
-   * @param days 统计天数
-   * @returns 统计信息
+   * 获取审核统计（从草稿数据汇总）
    */
   static async getReviewStatistics(
-    reviewerId: number, 
-    days = 30
+    _reviewerId: number,
+    _days = 30
   ): Promise<ApiResponse<ReviewStatistics>> {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/statistics/${reviewerId}`, {
-        params: { days }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('获取审核统计失败:', error);
-      throw error;
+    const [myRes, pendingRes] = await Promise.all([
+      api.get<ApiResponse<ArticleDraft[]>>('/api/articles/drafts/my'),
+      api.get<ApiResponse<ArticleDraft[]>>('/api/articles/drafts/pending').catch(() => ({ data: { data: [] } })),
+    ])
+    const myDrafts = myRes.data.data || []
+    const allPending = (pendingRes as any).data.data || []
+    return {
+      code: 200,
+      message: 'ok',
+      data: {
+        totalReviews: myDrafts.length,
+        pendingCount: allPending.length,
+        approvedCount: myDrafts.filter((d: ArticleDraft) => d.status === 'approved').length,
+        rejectedCount: myDrafts.filter((d: ArticleDraft) => d.status === 'rejected').length,
+      },
     }
   }
 
   /**
    * 批量操作审核
-   * @param reviewIds 审核ID列表
-   * @param action 操作类型 ('approve' | 'reject' | 'cancel')
-   * @param reason 操作原因
-   * @returns 操作结果
    */
   static async batchProcessReviews(
-    reviewIds: number[], 
+    reviewIds: number[],
     action: 'approve' | 'reject' | 'cancel',
     reason?: string
   ): Promise<ApiResponse> {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/batch`, {
-        reviewIds,
-        action,
-        reason
-      });
-      return response.data;
-    } catch (error) {
-      console.error('批量操作审核失败:', error);
-      throw error;
+    if (action === 'cancel') {
+      console.warn('[reviewApi] batchProcessReviews cancel: 后端不支持取消操作')
+      return { code: 200, message: '暂不支持批量取消', data: null }
+    }
+    const results = await Promise.allSettled(
+      reviewIds.map(id =>
+        api.post(`/api/articles/drafts/${id}/review`, { action, comment: reason ?? '' })
+      )
+    )
+    const failed = results.filter(r => r.status === 'rejected').length
+    return {
+      code: failed === 0 ? 200 : 207,
+      message: `批量处理完成，成功 ${reviewIds.length - failed}，失败 ${failed}`,
+      data: null,
     }
   }
 
-  /**
-   * 搜索审核记录
-   * @param params 搜索参数
-   * @returns 搜索结果
-   */
+  /** 搜索：降级为查询全部草稿 */
   static async searchReviews(params: {
-    keyword?: string;
-    status?: string;
-    reviewType?: string;
-    submitterId?: number;
-    reviewerId?: number;
-    startDate?: string;
-    endDate?: string;
-    page?: number;
-    size?: number;
-  }): Promise<ApiResponse<PageResponse<ArticleReview>>> {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/search`, { params });
-      return response.data;
-    } catch (error) {
-      console.error('搜索审核记录失败:', error);
-      throw error;
+    keyword?: string
+    status?: string
+    page?: number
+    size?: number
+    [key: string]: any
+  }): Promise<ApiResponse<PageResponse2<ArticleReview>>> {
+    const url = params.status
+      ? `/api/articles/drafts/all?status=${encodeURIComponent(params.status)}`
+      : '/api/articles/drafts/all'
+    const response = await api.get<ApiResponse<ArticleDraft[]>>(url)
+    let drafts = response.data.data || []
+    if (params.keyword) {
+      const kw = params.keyword.toLowerCase()
+      drafts = drafts.filter(d =>
+        d.title?.toLowerCase().includes(kw) || d.author?.toLowerCase().includes(kw)
+      )
+    }
+    const page = params.page ?? 0
+    const size = params.size ?? 10
+    const start = page * size
+    return {
+      code: 200,
+      message: 'ok',
+      data: {
+        content: drafts.slice(start, start + size).map(draftToReview),
+        totalElements: drafts.length,
+        totalPages: Math.ceil(drafts.length / size) || 1,
+        number: page,
+        size,
+        first: page === 0,
+        last: start + size >= drafts.length,
+      },
     }
   }
 
-  /**
-   * 导出审核数据
-   * @param params 导出参数
-   * @returns 导出文件
-   */
-  static async exportReviews(params: {
-    startDate?: string;
-    endDate?: string;
-    status?: string;
-    reviewType?: string;
-    format?: 'xlsx' | 'csv';
-  }): Promise<Blob> {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/export`, {
-        params,
-        responseType: 'blob'
-      });
-      return response.data;
-    } catch (error) {
-      console.error('导出审核数据失败:', error);
-      throw error;
-    }
+  /** 导出：不支持，返回空 Blob */
+  static async exportReviews(_params: any): Promise<Blob> {
+    console.warn('[reviewApi] exportReviews: 后端不支持导出功能')
+    return new Blob([''], { type: 'application/octet-stream' })
   }
 
-  /**
-   * 获取审核配置
-   * @returns 审核配置信息
-   */
+  /** 获取审核配置 */
   static async getReviewConfig(): Promise<ApiResponse> {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/config`);
-      return response.data;
-    } catch (error) {
-      console.error('获取审核配置失败:', error);
-      throw error;
-    }
+    return { code: 200, message: 'ok', data: {} }
   }
 
-  /**
-   * 更新审核配置
-   * @param config 配置参数
-   * @returns 更新结果
-   */
-  static async updateReviewConfig(config: any): Promise<ApiResponse> {
-    try {
-      const response = await axios.put(`${API_BASE_URL}/config`, config);
-      return response.data;
-    } catch (error) {
-      console.error('更新审核配置失败:', error);
-      throw error;
-    }
+  /** 更新审核配置 */
+  static async updateReviewConfig(_config: any): Promise<ApiResponse> {
+    console.warn('[reviewApi] updateReviewConfig: 后端不支持此功能')
+    return { code: 200, message: '暂不支持审核配置', data: null }
   }
 }
 
-/**
- * 审核 API 工具函数
- */
-export const reviewApi = {
-  // 基础操作
-  create: ReviewApiService.createReview,
-  assign: ReviewApiService.assignReviewer,
-  process: ReviewApiService.processReview,
-  getDetail: ReviewApiService.getReviewDetail,
-  
-  // 查询操作
-  getPending: ReviewApiService.getPendingReviews,
-  getAllPending: ReviewApiService.getAllPendingReviews,
-  getStatistics: ReviewApiService.getReviewStatistics,
-  search: ReviewApiService.searchReviews,
-  
-  // 批量操作
-  batchProcess: ReviewApiService.batchProcessReviews,
-  export: ReviewApiService.exportReviews,
-  
-  // 配置管理
-  getConfig: ReviewApiService.getReviewConfig,
-  updateConfig: ReviewApiService.updateReviewConfig
-};
+// ─── reviewApi 快捷方式 ──────────────────────────────────────────────────────
 
-export default reviewApi;
+export const reviewApi = {
+  create: ReviewApiService.createReview.bind(ReviewApiService),
+  assign: ReviewApiService.assignReviewer.bind(ReviewApiService),
+  process: ReviewApiService.processReview.bind(ReviewApiService),
+  getDetail: ReviewApiService.getReviewDetail.bind(ReviewApiService),
+  getPending: ReviewApiService.getPendingReviews.bind(ReviewApiService),
+  getAllPending: ReviewApiService.getAllPendingReviews.bind(ReviewApiService),
+  getStatistics: ReviewApiService.getReviewStatistics.bind(ReviewApiService),
+  search: ReviewApiService.searchReviews.bind(ReviewApiService),
+  batchProcess: ReviewApiService.batchProcessReviews.bind(ReviewApiService),
+  export: ReviewApiService.exportReviews.bind(ReviewApiService),
+  getConfig: ReviewApiService.getReviewConfig.bind(ReviewApiService),
+  updateConfig: ReviewApiService.updateReviewConfig.bind(ReviewApiService),
+}
+
+export default reviewApi

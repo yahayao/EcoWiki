@@ -181,11 +181,12 @@ export const messageApi = {
    * @returns 未读消息数量
    */
   async getUnreadCount(): Promise<number> {
-    const response = await api.get<ApiResponse<number>>('/api/messages/unread/count')
+    const response = await api.get<ApiResponse<number | { count: number }>>('/api/messages/unread/count')
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '获取未读数量失败')
     }
-    return response.data.data
+    const d = response.data.data as any
+    return typeof d === 'number' ? d : (d?.count ?? 0)
   },
 
   /**

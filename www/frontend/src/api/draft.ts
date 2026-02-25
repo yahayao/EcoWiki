@@ -8,7 +8,7 @@
  * - 提供管理员审核功能的API封装
  * 
  * @author EcoWiki开发团队
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2025-07-01
  * @lastModified 2025-08-05
  */
@@ -16,49 +16,52 @@
 import { api } from './index'
 
 /**
- * 文章草稿数据接口
+ * 文章草稿数据接口（与后端 DraftOut 对齐，字段经过 snake_case→camelCase 转换）
  */
 export interface ArticleDraft {
   /** 草稿ID */
   draftId: number
   /** 关联的文章ID（编辑现有文章时有值，新建文章时为null） */
-  articleId?: number
+  articleId?: number | null
+  /** 编辑者（作者）用户名 */
+  author: string
   /** 编辑者用户ID */
-  editorUserId: number
-  /** 编辑者用户名 */
-  editorUserName?: string
-  /** 编辑者头像URL */
-  editorUserAvatar?: string
+  authorId: number
   /** 文章标题 */
   title: string
   /** 文章内容 */
   content: string
   /** 文章分类 */
   category?: string
-  /** 文章标签 */
-  tags?: string
-  /** 审核状态 */
-  reviewStatus: 'PENDING' | 'APPROVED' | 'REJECTED'
+  /** 草稿状态：draft | pending | approved | rejected */
+  status: 'draft' | 'pending' | 'approved' | 'rejected' | string
+  /** 拒绝原因（被拒绝时） */
+  rejectReason?: string
+  /** 创建时间 */
+  createdAt?: string
+  /** 更新时间 */
+  updatedAt?: string
   /** 提交时间 */
-  submittedAt: string
-  /** 审核时间 */
-  reviewedAt?: string
-  /** 审核者用户ID */
-  reviewerUserId?: number
-  /** 审核者用户名 */
-  reviewerUserName?: string
-  /** 审核备注 */
+  submittedAt?: string
+  // ── 向下兼容别名 ─────────────────────────────────────
+  /** @deprecated 使用 authorId */
+  editorUserId?: number
+  /** @deprecated 使用 author */
+  editorUserName?: string
+  /** @deprecated 使用 status */
+  reviewStatus?: string
+  /** @deprecated 使用 rejectReason */
   reviewNotes?: string
 }
 
 /**
- * 审核草稿请求
+ * 审核草稿请求（与后端 ReviewRequest 对齐）
  */
 export interface ReviewDraftRequest {
-  /** 审核结果：true为通过，false为拒绝 */
-  approved: boolean
-  /** 审核备注 */
-  reviewNotes?: string
+  /** 审核操作：approve | reject */
+  action: 'approve' | 'reject'
+  /** 审核备注 / 拒绝原因 */
+  comment?: string
 }
 
 /**
@@ -85,7 +88,7 @@ interface ApiResponse<T> {
 }
 
 /**
- * 草稿提交结果
+ * 草稿提交结果（向下兼容，实际返回 ArticleDraft）
  */
 export interface DraftSubmissionResult {
   /** 草稿ID */
@@ -93,159 +96,196 @@ export interface DraftSubmissionResult {
   /** 状态 */
   status: string
   /** 消息 */
-  message: string
+  message?: string
 }
 
+// ─── 内部工具 ──────────────────────────────────────────────────────────────────
+
+/** 将后端返回的草稿列表包装成 PageResponse 格式（后端不分页，统一适配） */
+function wrapListAsPage<T>(list: T[], page: number, size: number): PageResponse<T> {
+  const start = page * size
+  return {
+    content: list.slice(start, start + size),
+    totalElements: list.length,
+    totalPages: Math.ceil(list.length / size) || 1,
+    number: page,
+    size,
+    first: page === 0,
+    last: start + size >= list.length,
+  }
+}
+
+/** 规范化草稿字段，补充向下兼容别名 */
+function normalizeDraft(d: ArticleDraft): ArticleDraft {
+  return {
+    ...d,
+    editorUserId: d.authorId,
+    editorUserName: d.author,
+    reviewStatus: d.status,
+    reviewNotes: d.rejectReason,
+  }
+}
+
+// ─── API对象 ───────────────────────────────────────────────────────────────────
+
 /**
- * 文章草稿API类
+ * 文章草稿API
  */
 export const draftApi = {
   /**
-   * 提交新文章草稿
-   * @param request 文章创建请求
-   * @returns 提交结果
+   * 提交新文章草稿（新建文章，等待审核）
+   * POST /api/articles/drafts
    */
   async submitNewArticle(request: {
     title: string
-    author: string
+    author?: string
     content: string
     category: string
     tags?: string
-  }): Promise<DraftSubmissionResult> {
-    const response = await api.post<ApiResponse<DraftSubmissionResult>>('/api/drafts/submit-new', request)
+    articleId?: number | null
+  }): Promise<ArticleDraft> {
+    const response = await api.post<ApiResponse<ArticleDraft>>(
+      '/api/articles/drafts',
+      {
+        title: request.title,
+        content: request.content,
+        category: request.category,
+        article_id: request.articleId ?? null,
+      }
+    )
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '提交新文章草稿失败')
     }
-    return response.data.data
+    return normalizeDraft(response.data.data)
   },
 
   /**
-   * 提交文章编辑草稿
-   * @param articleId 文章ID
-   * @param request 文章更新请求
-   * @returns 提交结果
+   * 提交文章编辑草稿（修改现有文章，等待审核）
+   * POST /api/articles/{articleId}/drafts
    */
   async submitArticleEdit(articleId: number, request: {
     title: string
     content: string
     category: string
     tags?: string
-  }): Promise<DraftSubmissionResult> {
-    const response = await api.post<ApiResponse<DraftSubmissionResult>>(
-      `/api/drafts/submit-edit/${articleId}`, 
-      request
+  }): Promise<ArticleDraft> {
+    const response = await api.post<ApiResponse<ArticleDraft>>(
+      `/api/articles/${articleId}/drafts`,
+      {
+        title: request.title,
+        content: request.content,
+        category: request.category,
+      }
     )
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '提交文章编辑草稿失败')
     }
-    return response.data.data
+    return normalizeDraft(response.data.data)
   },
 
   /**
    * 审核草稿（仅管理员）
-   * @param draftId 草稿ID
-   * @param request 审核请求
-   * @returns 审核结果
+   * POST /api/articles/drafts/{draftId}/review
    */
   async reviewDraft(draftId: number, request: ReviewDraftRequest): Promise<ArticleDraft> {
-    const response = await api.put<ApiResponse<ArticleDraft>>(`/api/drafts/review/${draftId}`, request)
+    const response = await api.post<ApiResponse<ArticleDraft>>(
+      `/api/articles/drafts/${draftId}/review`,
+      { action: request.action, comment: request.comment ?? '' }
+    )
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '审核草稿失败')
     }
-    return response.data.data
+    return normalizeDraft(response.data.data)
   },
 
   /**
    * 获取待审核草稿列表（仅管理员）
-   * @param page 页码
-   * @param size 每页大小
-   * @returns 待审核草稿列表
+   * GET /api/articles/drafts/pending
    */
   async getPendingDrafts(page = 0, size = 10): Promise<PageResponse<ArticleDraft>> {
-    const response = await api.get<ApiResponse<PageResponse<ArticleDraft>>>(
-      `/api/drafts/pending?page=${page}&size=${size}`
+    const response = await api.get<ApiResponse<ArticleDraft[]>>(
+      '/api/articles/drafts/pending'
     )
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '获取待审核草稿列表失败')
     }
-    return response.data.data
+    const list = (response.data.data || []).map(normalizeDraft)
+    return wrapListAsPage(list, page, size)
   },
 
   /**
    * 获取用户的草稿列表
-   * @param page 页码
-   * @param size 每页大小
-   * @returns 用户的草稿列表
+   * GET /api/articles/drafts/my
    */
   async getMyDrafts(page = 0, size = 10): Promise<PageResponse<ArticleDraft>> {
-    const response = await api.get<ApiResponse<PageResponse<ArticleDraft>>>(
-      `/api/drafts/my-drafts?page=${page}&size=${size}`
+    const response = await api.get<ApiResponse<ArticleDraft[]>>(
+      '/api/articles/drafts/my'
     )
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '获取用户草稿列表失败')
     }
-    return response.data.data
+    const list = (response.data.data || []).map(normalizeDraft)
+    return wrapListAsPage(list, page, size)
   },
 
   /**
-   * 根据状态获取草稿列表（仅管理员）
-   * @param status 审核状态
-   * @param page 页码
-   * @param size 每页大小
-   * @returns 指定状态的草稿列表
+   * 根据状态获取草稿列表（管理员）
+   * GET /api/articles/drafts/all?status=
    */
   async getDraftsByStatus(
-    status: 'PENDING' | 'APPROVED' | 'REJECTED', 
-    page = 0, 
+    status: 'pending' | 'approved' | 'rejected' | 'draft' | string,
+    page = 0,
     size = 10
   ): Promise<PageResponse<ArticleDraft>> {
-    const response = await api.get<ApiResponse<PageResponse<ArticleDraft>>>(
-      `/api/drafts/by-status?status=${status}&page=${page}&size=${size}`
+    const response = await api.get<ApiResponse<ArticleDraft[]>>(
+      `/api/articles/drafts/all?status=${encodeURIComponent(status)}`
     )
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '获取草稿列表失败')
     }
-    return response.data.data
+    const list = (response.data.data || []).map(normalizeDraft)
+    return wrapListAsPage(list, page, size)
   },
 
   /**
    * 获取草稿详情
-   * @param draftId 草稿ID
-   * @returns 草稿详情
+   * GET /api/articles/drafts/{draftId}
    */
   async getDraftById(draftId: number): Promise<ArticleDraft> {
-    const response = await api.get<ApiResponse<ArticleDraft>>(`/api/drafts/${draftId}`)
+    const response = await api.get<ApiResponse<ArticleDraft>>(
+      `/api/articles/drafts/${draftId}`
+    )
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '获取草稿详情失败')
     }
-    return response.data.data
+    return normalizeDraft(response.data.data)
   },
 
   /**
    * 删除草稿
-   * @param draftId 草稿ID
-   * @returns 删除结果
+   * DELETE /api/articles/drafts/{draftId}
    */
   async deleteDraft(draftId: number): Promise<void> {
-    const response = await api.delete<ApiResponse<void>>(`/api/drafts/${draftId}`)
+    const response = await api.delete<ApiResponse<string>>(
+      `/api/articles/drafts/${draftId}`
+    )
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '删除草稿失败')
     }
   },
 
   /**
-   * 获取所有草稿列表（仅管理员）
-   * @param page 页码
-   * @param size 每页大小
-   * @returns 所有草稿列表
+   * 获取所有草稿列表（管理员）
+   * GET /api/articles/drafts/all
    */
   async getAllDrafts(page = 0, size = 10): Promise<PageResponse<ArticleDraft>> {
-    const response = await api.get<ApiResponse<PageResponse<ArticleDraft>>>(
-      `/api/drafts/all?page=${page}&size=${size}`
+    const response = await api.get<ApiResponse<ArticleDraft[]>>(
+      '/api/articles/drafts/all'
     )
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '获取所有草稿列表失败')
     }
-    return response.data.data
-  }
+    const list = (response.data.data || []).map(normalizeDraft)
+    return wrapListAsPage(list, page, size)
+  },
 }

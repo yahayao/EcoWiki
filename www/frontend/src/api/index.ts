@@ -17,6 +17,23 @@ import { createCacheInterceptor } from '@/utils/api-cache'
 import { requestOptimizer } from '@/utils/request-optimizer'
 import { setupApiMonitoring } from '@/utils/api-monitor'
 
+// ── snake_case ↔ camelCase 转换工具 ──────────────────────────────────────────
+function toCamel(s: string): string {
+  return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase())
+}
+function toSnake(s: string): string {
+  return s.replace(/([A-Z])/g, c => `_${c.toLowerCase()}`)
+}
+function transformKeys(obj: any, fn: (k: string) => string): any {
+  if (Array.isArray(obj)) return obj.map(v => transformKeys(v, fn))
+  if (obj !== null && typeof obj === 'object' && !(obj instanceof File) && !(obj instanceof FormData) && !(obj instanceof Blob)) {
+    return Object.fromEntries(Object.entries(obj).map(([k, v]) => [fn(k), transformKeys(v, fn)]))
+  }
+  return obj
+}
+export const camelizeKeys = (obj: any) => transformKeys(obj, toCamel)
+export const snakerizeKeys = (obj: any) => transformKeys(obj, toSnake)
+
 
 // token刷新相关状态
 let isRefreshing = false
@@ -63,12 +80,22 @@ const api = axios.create({
 /**
  * 请求拦截器
  * 在每个请求发送前自动添加JWT认证头和请求去重
+ * 同时将请求 body 中的 camelCase 字段转为 snake_case
  */
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    }
+
+    // camelCase → snake_case（仅 JSON 请求体）
+    if (config.data && !(config.data instanceof FormData) && !(config.data instanceof Blob)) {
+      config.data = snakerizeKeys(config.data)
+    }
+    // 查询参数同样转换
+    if (config.params) {
+      config.params = snakerizeKeys(config.params)
     }
     
     // 添加请求时间戳以便去重分析
@@ -127,9 +154,14 @@ api.interceptors.request.use(cacheInterceptor.request)
 /**
  * 响应拦截器
  * 统一处理响应错误，包括token自动刷新和认证失败处理
+ * 同时将响应数据的 snake_case 字段转为 camelCase
  */
 api.interceptors.response.use(
   (response) => {
+    // snake_case → camelCase 响应数据转换
+    if (response.data) {
+      response.data = camelizeKeys(response.data)
+    }
     // 应用缓存响应拦截器
     return cacheInterceptor.response(response)
   },

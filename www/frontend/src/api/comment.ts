@@ -131,30 +131,45 @@ export interface ApiResponse<T> {
 
 /**
  * 点赞结果接口
+ * 后端返回 { liked, likes }
  */
 export interface LikeResult {
   liked: boolean
-  likeCount: number
+  likes: number
+  likeCount?: number   // 兼容旧字段
 }
 
 /**
  * 评论统计接口
  */
 export interface CommentStats {
-  totalComments: number
-  topLevelComments: number
+  total: number
+  totalComments?: number   // 兼容字段
+  topLevelComments?: number
+}
+
+// ── 将后端 snake_case 返回映射为前端 Comment 格式 ──────────────────────────────
+function _normalizeComment(raw: any): Comment {
+  return {
+    id:          raw.commentId ?? raw.comment_id ?? raw.id,
+    articleId:   raw.articleId ?? raw.article_id,
+    author:      raw.author,
+    content:     raw.content,
+    createdAt:   raw.createdAt ?? raw.created_at,
+    updatedAt:   raw.updatedAt ?? raw.updated_at,
+    likes:       raw.likes ?? 0,
+    isLiked:     raw.likedByCurrent ?? raw.liked_by_current ?? raw.isLiked ?? false,
+    parentId:    raw.parentId ?? raw.parent_id,
+    userAvatar:  raw.avatarUrl ?? raw.avatar_url ?? raw.userAvatar,
+    userId:      raw.authorId ?? raw.author_id ?? raw.userId,
+    replies:     (raw.replies ?? []).map(_normalizeComment),
+  }
 }
 
 /**
  * 评论API类
  */
 export const commentApi = {
-  /**
-   * 获取文章评论列表
-   * @param articleId 文章ID
-   * @param params 查询参数
-   * @returns 评论分页列表
-   */
   async getComments(articleId: number, params: CommentQueryParams = {}): Promise<PageResponse<Comment>> {
     const { page = 0, size = 20, sort = 'newest' } = params
     const response = await api.get<ApiResponse<PageResponse<Comment>>>(
@@ -163,7 +178,11 @@ export const commentApi = {
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '获取评论失败')
     }
-    return response.data.data
+    const page_data = response.data.data as any
+    return {
+      ...page_data,
+      content: (page_data.content ?? []).map(_normalizeComment),
+    }
   },
 
   /**
@@ -176,7 +195,7 @@ export const commentApi = {
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '发表评论失败')
     }
-    return response.data.data
+    return _normalizeComment(response.data.data)
   },
 
   /**
@@ -228,7 +247,7 @@ export const commentApi = {
    * @returns 删除结果
    */
   async deleteReply(replyId: number): Promise<void> {
-    const response = await api.delete<ApiResponse<string>>(`/api/comments/reply/${replyId}`)
+    const response = await api.delete<ApiResponse<string>>(`/api/comments/${replyId}`)
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '删除回复失败')
     }
@@ -246,6 +265,11 @@ export const commentApi = {
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '获取评论统计失败')
     }
-    return response.data.data
+    const d = response.data.data as any
+    return {
+      total: d.total ?? d.totalComments ?? 0,
+      totalComments: d.total ?? d.totalComments ?? 0,
+      topLevelComments: d.topLevelComments ?? d.total ?? 0,
+    }
   }
 }
