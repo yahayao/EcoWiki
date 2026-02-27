@@ -146,9 +146,9 @@ api.interceptors.response.use(
         }
 
         console.log('开始刷新token...')
-        // 使用单独的axios实例来避免拦截器循环（原生axios不经过snakerize，需手动用snake_case）
+        // 使用单独的axios实例来避免拦截器循环
         const refreshResponse = await axios.post('http://localhost:8080/api/auth/refresh', {
-          refresh_token: refreshToken
+          refreshToken
         }, {
           headers: {
             'Content-Type': 'application/json',
@@ -156,9 +156,7 @@ api.interceptors.response.use(
         })
 
         if (refreshResponse.data.code === 200 && refreshResponse.data.data) {
-          // 后端返回 snake_case（此处使用原生 axios，无 camelCase 转换）
-          const newToken = refreshResponse.data.data.token
-          const newRefreshToken = refreshResponse.data.data.refresh_token
+          const { token: newToken, refreshToken: newRefreshToken } = refreshResponse.data.data
           
           console.log('Token刷新成功')
           // 更新本地存储
@@ -188,8 +186,15 @@ api.interceptors.response.use(
             (refreshError as any)?.response?.status === 401) {
           
           console.warn('清除认证数据并准备重新登录')
-          // 派发事件，通知 App.vue 清除内存状态并跳转，避免页面仍显示登录状态
-          window.dispatchEvent(new CustomEvent('ecowiki-auth-expired'))
+          // 清除本地存储的认证信息
+          localStorage.removeItem('token')
+          localStorage.removeItem('refreshToken')
+          localStorage.removeItem('user')
+          
+          // 延迟刷新页面，给用户看到错误信息的机会
+          setTimeout(() => {
+            window.location.reload()
+          }, 100000)
         }
         
         return Promise.reject(refreshError)
@@ -206,12 +211,14 @@ export { api }
 
 // 导出各模块API
 export { articleApi } from './article'
-export { userApi } from './user' 
+export { userApi } from './user'
 export { TagApi } from './tag'
 export { commentApi } from './comment'
 export { draftApi } from './draft'
+export { messageApi } from './message'
 
 // 导出主要类型接口
 export type { Article, ArticleVersion, CreateVersionRequest } from './article'
 export type { Comment, Reply, CreateCommentRequest } from './comment'
 export type { ArticleDraft, ReviewDraftRequest, DraftSubmissionResult } from './draft'
+export type { Message, SendMessageRequest } from './message'
