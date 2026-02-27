@@ -48,42 +48,73 @@ const token = ref<string | null>(null)
 // ======================== 状态初始化 ========================
 
 /**
+ * 本地解析 JWT payload，无需验证签名
+ * 仅用于读取 exp 字段判断是否过期
+ */
+const parseJwtExp = (jwtToken: string): number | null => {
+  try {
+    const payload = jwtToken.split('.')[1]
+    const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')))
+    return typeof decoded.exp === 'number' ? decoded.exp : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 检查 JWT 是否已过期
+ * @param jwtToken JWT 字符串
+ * @returns true 表示已过期或无法解析
+ */
+const isTokenExpired = (jwtToken: string): boolean => {
+  const exp = parseJwtExp(jwtToken)
+  if (exp === null) return true
+  // exp 是秒级时间戳，留 10 秒缓冲
+  return Date.now() / 1000 > exp - 10
+}
+
+/**
  * 从localStorage恢复用户认证状态
- * 
- * 在应用启动时调用，从本地存储中恢复用户的登录状态。
- * 如果恢复失败，会自动清理无效的认证数据。
+ *
+ * 启动时调用，本地校验 token 有效期：
+ * - access token 未过期 → 直接恢复
+ * - access token 过期但 refresh token 有效 → 恢复（首次 API 调用会无感刷新）
+ * - access token 和 refresh token 均过期/缺失 → 清除，以未登录状态启动
  */
 const initializeAuth = () => {
   const savedToken = localStorage.getItem('token')
   const savedUser = localStorage.getItem('user')
   const savedRefreshToken = localStorage.getItem('refreshToken')
-  
-  console.log('🔄 初始化认证状态...')
-  console.log('localStorage中的token:', !!savedToken)
-  console.log('localStorage中的user:', !!savedUser) 
-  console.log('localStorage中的refreshToken:', !!savedRefreshToken)
-  
-  if (savedToken && savedUser) {
-    try {
-      token.value = savedToken
-      user.value = JSON.parse(savedUser)
-      console.log('✅ 恢复用户认证状态:', user.value?.username, user.value?.userGroup)
-      
-      // 检查refresh token状态
-      if (savedRefreshToken) {
-        console.log('✅ 发现已保存的refresh token')
-      } else {
-        console.warn('⚠️ 警告：用户已登录但没有refresh token，可能导致自动续期失败')
-      }
-    } catch (error) {
-      console.error('❌ 恢复用户状态失败:', error)
-      // 只清除损坏的用户数据，保留token以便尝试refresh
-      localStorage.removeItem('user')
-      user.value = null
-      // 不要清除token和refreshToken，让API拦截器处理
-    }
-  } else {
+
+  if (!savedToken || !savedUser) {
     console.log('ℹ️ 没有找到已保存的认证信息')
+    return
+  }
+
+  const accessExpired = isTokenExpired(savedToken)
+  const refreshExpired = savedRefreshToken ? isTokenExpired(savedRefreshToken) : true
+
+  if (accessExpired && refreshExpired) {
+    // 双 token 均已过期，直接以未登录状态启动
+    console.log('⏰ token 已过期，清除认证数据')
+    localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('user')
+    return
+  }
+
+  try {
+    token.value = savedToken
+    user.value = JSON.parse(savedUser)
+    if (accessExpired) {
+      console.log('⚠️ access token 已过期，等待首次 API 调用自动续期:', user.value?.username)
+    } else {
+      console.log('✅ 恢复用户认证状态:', user.value?.username)
+    }
+  } catch (error) {
+    console.error('❌ 恢复用户状态失败:', error)
+    localStorage.removeItem('user')
+    user.value = null
   }
 }
 

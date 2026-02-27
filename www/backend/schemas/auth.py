@@ -50,3 +50,7 @@ class TokenResponse(BaseModel):
     user_id: int
     role_id: Optional[int] = None
     avatar_url: Optional[str] = None
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str

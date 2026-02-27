@@ -10,12 +10,14 @@ from models.user import User
 from schemas.auth import (
     LoginRequest, RegisterRequest, TokenResponse,
     ResetPasswordRequest, ChangePasswordRequest,
+    RefreshTokenRequest,
 )
 from schemas.user import UserOut, UpdateProfileRequest
 from schemas.common import ApiResponse
 from core.security import (
     hash_password, verify_password,
-    create_access_token, get_current_user,
+    create_access_token, create_refresh_token,
+    decode_token, get_current_user,
 )
 
 router = APIRouter(prefix="/auth", tags=["认证"])
@@ -42,14 +44,16 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
     db.refresh(user)
 
     token = create_access_token(user.username)
+    refresh = create_refresh_token(user.username)
     return ApiResponse.ok(
         data={
-            "user_id":    user.user_id,
-            "username":   user.username,
-            "email":      user.email,
-            "role_id":    user.role_id,
-            "token":      token,
-            "token_type": "Bearer",
+            "user_id":       user.user_id,
+            "username":      user.username,
+            "email":         user.email,
+            "role_id":       user.role_id,
+            "token":         token,
+            "token_type":    "Bearer",
+            "refresh_token": refresh,
         },
         message="注册成功",
     )
@@ -72,15 +76,17 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
     db.commit()
 
     token = create_access_token(user.username)
+    refresh = create_refresh_token(user.username)
     return ApiResponse.ok(
         data={
-            "user_id":    user.user_id,
-            "username":   user.username,
-            "email":      user.email,
-            "role_id":    user.role_id,
-            "avatar_url": user.avatar_url,
-            "token":      token,
-            "token_type": "Bearer",
+            "user_id":       user.user_id,
+            "username":      user.username,
+            "email":         user.email,
+            "role_id":       user.role_id,
+            "avatar_url":    user.avatar_url,
+            "token":         token,
+            "token_type":    "Bearer",
+            "refresh_token": refresh,
         },
         message="登录成功",
     )
@@ -179,6 +185,28 @@ def update_security_settings(
     db.commit()
     db.refresh(current_user)
     return ApiResponse.ok(data=UserOut.model_validate(current_user), message="安全设置更新成功")
+
+
+# ── Token 刷新 ──────────────────────────────────────────────────────────────
+@router.post("/refresh")
+def refresh_token(body: RefreshTokenRequest, db: Session = Depends(get_db)):
+    from models.user import User
+    username = decode_token(body.refresh_token)
+    if username is None:
+        raise HTTPException(status_code=401, detail="refresh_token 无效或已过期")
+    user = db.query(User).filter(User.username == username).first()
+    if not user or not user.active:
+        raise HTTPException(status_code=401, detail="用户不存在或已被禁用")
+    new_access = create_access_token(user.username)
+    new_refresh = create_refresh_token(user.username)
+    return ApiResponse.ok(
+        data={
+            "token":         new_access,
+            "refresh_token": new_refresh,
+            "token_type":    "Bearer",
+        },
+        message="Token 刷新成功",
+    )
 
 
 # ── 重置密码（通过密保）──────────────────────────────────────────────────────

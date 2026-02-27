@@ -47,6 +47,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuth } from './composables/useAuth'
 import AuthModals from './components/modals/AuthModals.vue'
 
@@ -55,6 +56,7 @@ import AuthModals from './components/modals/AuthModals.vue'
  * 使用组合式函数来管理用户认证状态
  */
 const { clearUser } = useAuth()
+const router = useRouter()
 
 // ======================== 响应式状态 ========================
 
@@ -172,14 +174,23 @@ const handleCloseAdminModal = () => {
   showAdminSettings.value = false
 }
 
+// token 过期强制退出处理
+const handleAuthExpired = () => {
+  clearUser()
+  closeModals()
+  router.push('/')
+}
+
 // 组件挂载时添加事件监听器
 onMounted(() => {
   window.addEventListener('close-admin-modal', handleCloseAdminModal)
+  window.addEventListener('ecowiki-auth-expired', handleAuthExpired)
 })
 
 // 组件卸载时移除事件监听器
 onUnmounted(() => {
   window.removeEventListener('close-admin-modal', handleCloseAdminModal)
+  window.removeEventListener('ecowiki-auth-expired', handleAuthExpired)
 })
 </script>
 
