@@ -109,14 +109,6 @@
           <div class="nav-group">
             <h3 class="nav-group-title">权限管理</h3>
             <ul class="nav-list">
-              <li class="nav-item" :class="{ active: activeSection === 'permissions' }" @click="setActiveSection('permissions')">
-                <div class="nav-item-content">
-                  <svg viewBox="0 0 24 24" class="nav-icon">
-                    <path d="M12,1L21,5V11C21,16.55 17.16,21.74 12,23C6.84,21.74 3,16.55 3,11V5L12,1M12,7C10.89,7 10,7.89 10,9A2,2 0 0,0 12,11A2,2 0 0,0 14,9C14,7.89 13.11,7 12,7Z" />
-                  </svg>
-                  <span class="nav-text">权限管理</span>
-                </div>
-              </li>
               <li class="nav-item" :class="{ active: activeSection === 'roles' }" @click="setActiveSection('roles')">
                 <div class="nav-item-content">
                   <svg viewBox="0 0 24 24" class="nav-icon">
@@ -137,7 +129,6 @@
         <ArticleManagement v-show="activeSection === 'articles'" ref="articleManagementRef" />
         <DraftReviewDashboard v-show="activeSection === 'drafts'" ref="draftReviewDashboardRef" />
         <UserList v-show="activeSection === 'users'" ref="userListRef" />
-        <PermissionManagement v-show="activeSection === 'permissions'" ref="permissionManagementRef" />
         <RolePermissionAssignment v-show="activeSection === 'roles'" ref="rolePermissionAssignmentRef" />
       </div>
     </div>
@@ -169,7 +160,6 @@ import toast from '../../utils/toast'  // 消息提示工具
 import SystemSettings from './views/SystemSettings.vue'  // 系统设置页面
 import ArticleManagement from './views/ArticleManagement.vue'  // 文章管理页面
 import UserList from './views/UserList.vue'  // 用户列表页面
-import PermissionManagement from './views/PermissionManagement.vue'  // 权限管理页面
 import RolePermissionAssignment from './views/RolePermissionAssignment.vue'  // 角色权限分配页面
 import DraftReviewDashboard from './views/DraftReviewDashboard.vue'  // 草稿审核页面
 
@@ -189,7 +179,6 @@ const systemSettingsRef = ref<any>(null)
 const articleManagementRef = ref<any>(null)
 const draftReviewDashboardRef = ref<any>(null)
 const userListRef = ref<any>(null)
-const permissionManagementRef = ref<any>(null)
 const rolePermissionAssignmentRef = ref<any>(null)
 
 // 根据当前路由计算当前激活的导航部分
@@ -199,7 +188,6 @@ const activeSection = computed(() => {
   if (path.includes('/admin/articles')) return 'articles'
   if (path.includes('/admin/drafts')) return 'drafts'
   if (path.includes('/admin/users')) return 'users'
-  if (path.includes('/admin/permissions')) return 'permissions'
   if (path.includes('/admin/role-permissions')) return 'roles'
   return 'settings' // 默认
 })
@@ -223,9 +211,6 @@ const setActiveSection = (section: string) => {
       break
     case 'users':
       routePath += 'users'
-      break
-    case 'permissions':
-      routePath += 'permissions'
       break
     case 'roles':
       routePath += 'role-permissions'
@@ -267,11 +252,6 @@ const refreshSettings = () => {
     case 'users':
       if (userListRef.value && typeof userListRef.value.loadUsers === 'function') {
         userListRef.value.loadUsers()
-      }
-      break
-    case 'permissions':
-      if (permissionManagementRef.value && typeof permissionManagementRef.value.refreshData === 'function') {
-        permissionManagementRef.value.refreshData()
       }
       break
     case 'roles':
