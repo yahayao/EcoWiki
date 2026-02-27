@@ -32,6 +32,7 @@ const ArticleDetail = () => import('../views/ArticleDetail.vue')
 const ArticleEdit = () => import('../views/ArticleEdit.vue')
 const ArticleHistory = () => import('../views/ArticleHistory.vue')
 const CreatePage = () => import('../views/CreatePage.vue')
+const Messages   = () => import('../views/Messages.vue')
 
 // 懒加载用户个人资料组件
 const UserProfile = () => import('../components/userhome/UserProfile.vue')
@@ -63,6 +64,7 @@ const routes = [
   { path: '/wiki/:title/history', name: 'ArticleHistory', component: ArticleHistory },
   { path: '/edit/:title', name: 'ArticleEdit', component: ArticleEdit },
   { path: '/create', name: 'CreatePage', component: CreatePage },
+  { path: '/messages', name: 'Messages', component: Messages },
   
   {
     path: '/UserProfile',
@@ -127,6 +129,15 @@ router.beforeEach((to, from, next) => {
     const { isAuthenticated } = useAuth()
     if (!isAuthenticated.value) {
       // 未登录用户重定向到首页
+      next('/')
+      return
+    }
+  }
+
+  // 检查消息中心权限
+  if (to.name === 'Messages') {
+    const { isAuthenticated } = useAuth()
+    if (!isAuthenticated.value) {
       next('/')
       return
     }

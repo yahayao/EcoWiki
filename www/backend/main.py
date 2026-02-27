@@ -23,9 +23,10 @@ import models.user      # noqa: F401
 import models.tag       # noqa: F401
 import models.article   # noqa: F401
 import models.comment   # noqa: F401
+import models.message   # noqa: F401
 
 # ── 导入路由 ──────────────────────────────────────────────────────────────────
-from routers import auth, articles, comments, admin, tags, upload, users
+from routers import auth, articles, comments, admin, tags, upload, users, messages
 
 # ── 创建 FastAPI 应用 ─────────────────────────────────────────────────────────
 app = FastAPI(
@@ -61,6 +62,7 @@ app.include_router(admin.router,    prefix=PREFIX)
 app.include_router(tags.router,     prefix=PREFIX)
 app.include_router(upload.router,   prefix=PREFIX)
 app.include_router(users.router,    prefix=PREFIX)
+app.include_router(messages.router, prefix=PREFIX)
 
 
 # ── 全局异常处理 ──────────────────────────────────────────────────────────────
@@ -224,6 +226,72 @@ def _seed_rbac_data() -> None:
 
 
 
+def _seed_messages() -> None:
+    """插入示例消息数据（幂等：messages 表有数据时跳过）"""
+    from database import SessionLocal
+    from models.message import Message, MessageStatus
+    from models.user import User
+
+    db = SessionLocal()
+    try:
+        if db.query(Message).count() > 0:
+            return
+
+        users = db.query(User).filter(User.active == True).limit(5).all()
+        if not users:
+            return
+
+        u1 = users[0]
+        u2 = users[1] if len(users) >= 2 else None
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        msgs: List[Message] = []
+
+        msgs += [
+            Message(sender_user_id=None, recipient_user_id=u1.user_id,
+                    subject="欢迎来到 EcoWiki",
+                    content="欢迎！您的账户已创建成功，快来探索文章并开始贡献吧。",
+                    message_type="SYSTEM", priority=1, status=MessageStatus.UNREAD,
+                    send_time=now - timedelta(days=3)),
+            Message(sender_user_id=None, recipient_user_id=u1.user_id,
+                    subject="文章审核已完成",
+                    content="您提交的文章已通过审核，现已对外公开。感谢您的贡献！",
+                    message_type="REVIEW", priority=2, status=MessageStatus.UNREAD,
+                    send_time=now - timedelta(hours=6)),
+            Message(sender_user_id=None, recipient_user_id=u1.user_id,
+                    subject="安全提醒",
+                    content="检测到您的账户在新设备登录，若非本人操作请立即修改密码。",
+                    message_type="SYSTEM", priority=3, status=MessageStatus.READ,
+                    send_time=now - timedelta(days=1), read_time=now - timedelta(hours=20)),
+        ]
+        if u2:
+            msgs += [
+                Message(sender_user_id=u2.user_id, recipient_user_id=u1.user_id,
+                        subject="关于您的文章",
+                        content=f"你好 {u1.username}，我阅读了您的文章，想请问一下数据来源的参考文献？",
+                        message_type="USER", priority=1, status=MessageStatus.UNREAD,
+                        send_time=now - timedelta(hours=2)),
+                Message(sender_user_id=u1.user_id, recipient_user_id=u2.user_id,
+                        subject="Re: 关于您的文章",
+                        content=f"你好 {u2.username}，数据来自联合国环境规划署 2023 年全球环境调查报告，可在 unep.org 查阅。",
+                        message_type="USER", priority=1, status=MessageStatus.READ,
+                        send_time=now - timedelta(hours=1), read_time=now - timedelta(minutes=45)),
+                Message(sender_user_id=u2.user_id, recipient_user_id=u1.user_id,
+                        subject="合作邀请",
+                        content=f"嗨 {u1.username}，想邀请您联合撰写一篇城市生物多样性的文章，有兴趣吗？",
+                        message_type="USER", priority=1, status=MessageStatus.UNREAD,
+                        send_time=now - timedelta(minutes=30)),
+            ]
+
+        for msg in msgs:
+            db.add(msg)
+        db.commit()
+        unread = sum(1 for m in msgs if m.recipient_user_id == u1.user_id and m.status == MessageStatus.UNREAD)
+        print(f"  [Init] 示例消息初始化完成 [OK] (共 {len(msgs)} 条，{u1.username} 未读 {unread} 条)")
+    finally:
+        db.close()
+
+
 def _sync_user_role_relations() -> None:
     """将 user.role_id 同步到 user_roles 关联表（幂等）"""
     from database import SessionLocal
@@ -273,6 +341,9 @@ def on_startup():
 
     # 5. 同步用户角色关系表
     _sync_user_role_relations()
+
+    # 6. 初始化示例消息数据
+    _seed_messages()
 
     print(f"   API 文档: {settings.server_base_url}/api/docs")
     print("-" * 50)

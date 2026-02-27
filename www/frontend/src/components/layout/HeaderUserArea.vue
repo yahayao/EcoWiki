@@ -33,6 +33,14 @@
 
     <!-- 已登录状态 - 显示用户信息和操作按钮 -->
     <template v-if="isAuthenticated">
+      <!-- 消息铃铛入口 -->
+      <button class="bell-btn" @click="router.push('/messages')" title="消息中心">
+        <svg viewBox="0 0 24 24" class="bell-icon">
+          <path d="M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22M18,16V11C18,7.93 16.36,5.36 13.5,4.68V4A1.5,1.5 0 0,0 12,2.5A1.5,1.5 0 0,0 10.5,4V4.68C7.63,5.36 6,7.92 6,11V16L4,18V19H20V18L18,16Z"/>
+        </svg>
+        <span v-if="unreadCount > 0" class="bell-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+      </button>
+
       <!-- 用户信息展示 -->
        <div class="user-menu-wrapper" @mouseenter="showMenu = true" @mouseleave="showMenu = false">
         <div class="user-info">
@@ -79,10 +87,11 @@
  * 集成全局认证状态，提供动态的用户界面。
  */
 
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../../composables/useAuth'
 import { userApi } from '../../api/user'
+import { messageApi } from '../../api/message'
 import UserAvatar from '../common/UserAvatar.vue'
 
 /**
@@ -140,10 +149,34 @@ const navigateToCreatePage = () => {
  */
 const hasAdminPermission = computed(() => {
   if (!user.value) return false
-  
+
   // 使用官方的权限检查函数，确保只有管理员和超级管理员可以看到设置
   return userApi.isAdmin(user.value)
 })
+
+// ── 未读消息计数 + 轮询 ─────────────────────────────────────────────────────
+const unreadCount = ref(0)
+
+async function fetchUnreadCount() {
+  if (!isAuthenticated.value) return
+  try {
+    const res = await messageApi.getUnreadCount()
+    unreadCount.value = res.data.data.count
+  } catch {
+    // 忽略网络错误
+  }
+}
+
+let pollTimer: ReturnType<typeof setInterval>
+
+onMounted(() => {
+  fetchUnreadCount()
+  pollTimer = setInterval(fetchUnreadCount, 30_000)
+})
+
+onUnmounted(() => clearInterval(pollTimer))
+
+watch(isAuthenticated, (val) => { if (val) fetchUnreadCount() })
 
 </script>
 
@@ -361,5 +394,47 @@ const hasAdminPermission = computed(() => {
 .fade-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+}
+
+/* ── 消息铃铛 ─────────────────────────────────────────────────────────────── */
+.bell-btn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.bell-btn:hover { background: rgba(255, 255, 255, 0.28); }
+
+.bell-icon {
+  width: 20px;
+  height: 20px;
+  fill: #fff;
+}
+
+.bell-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 </style>
