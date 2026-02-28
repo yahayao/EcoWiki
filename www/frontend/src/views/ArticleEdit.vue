@@ -147,6 +147,7 @@ import { wikiParser } from '../utils/wikiParser'
 import toast from '../utils/toast'
 import { useAuth } from '../composables/useAuth'
 import { useEditorOperations } from '../composables/useEditorOperations'
+import { set } from '@vueuse/core'
 
 // ======================== 路由和认证 ========================
 
@@ -464,8 +465,8 @@ const handleSave = async () => {
       
       toast.success('文章修改已提交审核，请耐心等待管理员审核！')
       
-      // 跳转回文章详情页
-      await router.push(`/wiki/${encodeURIComponent(currentTitle.value)}`)
+      // 跳转回进入编辑页面前的页面
+      router.back()
       return
       
     } else {
@@ -485,10 +486,10 @@ const handleSave = async () => {
       
       toast.success('新文章已提交审核，请等待管理员审核！')
       
-      // 导航到首页或个人页面
+      // 导航到个人页面草稿列表
       setTimeout(() => {
-        router.push('/')
-      }, 100)
+        router.push('/UserProfile/Article?tab=drafts')
+      }, 1000)
     }
   } catch (error) {
     console.error('保存失败:', error)

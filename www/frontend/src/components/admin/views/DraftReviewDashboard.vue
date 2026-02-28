@@ -1413,8 +1413,8 @@ defineExpose({
 }
 
 .status-badge.pending {
-  background: linear-gradient(135deg, #fed7d7, #fbb6ce);
-  color: #c53030;
+  background: linear-gradient(135deg, #f6ad55, #fbd38d);
+  color: white;
 }
 
 .status-badge.approved {

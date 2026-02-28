@@ -135,13 +135,19 @@ def delete_user(
 def set_role(
     user_id: int,
     body: dict,
-    _: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
+    if user_id == admin.user_id:
+        raise HTTPException(status_code=403, detail="不能修改自己的角色")
     user = db.query(User).filter(User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
-    user.role_id = body.get("role_id")
+    new_role_id = body.get("role_id")
+    # superadmin（role_id=4）只能由 superadmin 自己分配
+    if new_role_id == 4 and admin.role_id != 4:
+        raise HTTPException(status_code=403, detail="只有 superadmin 才能分配 superadmin 角色")
+    user.role_id = new_role_id
     db.commit()
     return ApiResponse.ok(message="角色分配成功")
 
@@ -150,16 +156,22 @@ def set_role(
 def set_user_group(
     user_id: int,
     body: dict,
-    _: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    """通过 userGroup 字符串设置角色（admin=1, user=2, moderator=3）"""
+    """通过 userGroup 字符串设置角色（admin=1, user=2, moderator=3, superadmin=4）"""
+    if user_id == admin.user_id:
+        raise HTTPException(status_code=403, detail="不能修改自己的角色")
     user = db.query(User).filter(User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
-    group_map = {"admin": 1, "superadmin": 1, "user": 2, "moderator": 3}
+    group_map = {"admin": 1, "user": 2, "moderator": 3, "superadmin": 4}
     user_group = body.get("user_group") or body.get("userGroup")
-    user.role_id = group_map.get(user_group, 2)
+    new_role_id = group_map.get(user_group, 2)
+    # superadmin 角色只能由 superadmin 分配
+    if new_role_id == 4 and admin.role_id != 4:
+        raise HTTPException(status_code=403, detail="只有 superadmin 才能分配 superadmin 角色")
+    user.role_id = new_role_id
     db.commit()
     return ApiResponse.ok(message="角色分配成功")
 

@@ -95,3 +95,43 @@ def require_admin(current_user=Depends(get_current_user)):
             status_code=status.HTTP_403_FORBIDDEN, detail="权限不足，需要管理员权限"
         )
     return current_user
+
+
+def require_permission(permission_name: str):
+    """
+    工厂函数：返回一个 FastAPI 依赖，检查当前用户的角色是否拥有指定权限。
+    用法：reviewer: User = Depends(require_permission("审核文章"))
+    """
+    def _dependency(
+        current_user=Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+        from models.user import Role  # 避免循环导入
+
+        if not current_user.role_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"权限不足，需要「{permission_name}」权限",
+            )
+        role = db.query(Role).filter(Role.role_id == current_user.role_id).first()
+        if role is None or not any(p.permission_name == permission_name for p in role.permissions):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"权限不足，需要「{permission_name}」权限",
+            )
+        return current_user
+
+    # 让 FastAPI 能正确生成文档和缓存依赖
+    _dependency.__name__ = f"require_permission_{permission_name}"
+    return _dependency
+
+
+def user_has_permission(user, db: Session, permission_name: str) -> bool:
+    """检查用户的角色是否拥有指定权限（可在任意 router 中复用）"""
+    from models.user import Role  # 避免循环导入
+    if not user or not user.role_id:
+        return False
+    role = db.query(Role).filter(Role.role_id == user.role_id).first()
+    if role is None:
+        return False
+    return any(p.permission_name == permission_name for p in role.permissions)
