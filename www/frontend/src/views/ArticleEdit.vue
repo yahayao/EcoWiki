@@ -84,10 +84,12 @@
           v-model:category="articleForm.category"
           :display-tags="displayTags"
           :saving="saving"
+          :saving-draft="savingDraft"
           :can-save="canSave"
           :is-edit-mode="isEditMode"
           :show-preview="showPreview"
           @save="handleSave"
+          @save-draft="handleSaveDraft"
           @toggle-preview="togglePreview"
           @cancel="goBack"
         />
@@ -176,6 +178,12 @@ const loading = ref(true)
  * 控制保存操作时的loading状态和按钮禁用
  */
 const saving = ref(false)
+
+/**
+ * 保存草稿状态
+ * 控制「保存草稿」操作时的loading状态和按钮禁用
+ */
+const savingDraft = ref(false)
 
 /**
  * 预览模式开关
@@ -491,6 +499,37 @@ const handleSave = async () => {
   }
 }
 
+const handleSaveDraft = async () => {
+  if (!articleForm.value.content.trim() || !currentTitle.value) {
+    toast.warning('请填写标题和内容')
+    return
+  }
+
+  // 提取分类作为标签
+  wikiParser.clearExtractedCategories()
+  wikiParser.parseToHtml(articleForm.value.content)
+  const extractedCategories = wikiParser.getExtractedCategories()
+  articleForm.value.tags = extractedCategories.join(', ')
+
+  try {
+    savingDraft.value = true
+    await draftApi.saveDraftOnly({
+      title: currentTitle.value,
+      content: articleForm.value.content.trim(),
+      category: articleForm.value.category.trim(),
+      articleId: isEditMode.value ? (originalArticle.value?.articleId ?? null) : null,
+    })
+    saveSuccessful.value = true
+    toast.success('草稿已保存！')
+    await router.push('/UserProfile/Article?tab=drafts')
+  } catch (error) {
+    console.error('保存草稿失败:', error)
+    toast.warning('保存草稿失败，请重试')
+  } finally {
+    savingDraft.value = false
+  }
+}
+
 const togglePreview = () => {
   showPreview.value = !showPreview.value
 }
@@ -518,15 +557,14 @@ const hasUnsavedChanges = computed(() => {
   
   return (
     articleForm.value.content !== (originalArticle.value.content || '') ||
-    articleForm.value.category !== (originalArticle.value.category || '') ||
-    articleForm.value.tags !== (originalArticle.value.tags || '')
+    articleForm.value.category !== (originalArticle.value.category || '')
   )
 })
 
 // 路由守卫
 onBeforeRouteLeave((to, from, next) => {
   // 如果保存成功或者正在保存，直接允许离开
-  if (saveSuccessful.value || saving.value) {
+  if (saveSuccessful.value || saving.value || savingDraft.value) {
     next()
     return
   }
@@ -616,7 +654,7 @@ onUnmounted(() => {
 // 处理浏览器 beforeunload 事件（刷新页面、关闭标签页等）
 const handleBeforeUnload = (event: BeforeUnloadEvent) => {
   // 如果保存成功或者正在保存，不阻止页面离开
-  if (saveSuccessful.value || saving.value) {
+  if (saveSuccessful.value || saving.value || savingDraft.value) {
     return
   }
   

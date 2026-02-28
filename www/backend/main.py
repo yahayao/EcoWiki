@@ -3,7 +3,7 @@ EcoWiki Python 后端
 FastAPI + SQLAlchemy + MySQL
 
 启动命令：
-    uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+    uv python -m main --port 8080 --reload
 """
 import os
 import sys
