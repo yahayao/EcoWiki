@@ -52,7 +52,7 @@ const processQueue = (error: any, token: string | null = null) => {
  * 配置基础URL、超时时间和默认请求头
  */
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api', // 后端API基础地址
+  baseURL: '/api', // 后端API基础地址
   timeout: 15000, // 增加请求超时时间：15秒
   headers: {
     'Content-Type': 'application/json',
@@ -72,6 +72,7 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+      console.log('添加了')
     }
     
     // 添加请求时间戳以便去重分析
@@ -163,7 +164,7 @@ api.interceptors.response.use(
 
         console.log('开始刷新token...')
         // 使用单独的axios实例来避免拦截器循环
-        const refreshResponse = await axios.post('http://localhost:8080/api/auth/refresh', {
+        const refreshResponse = await axios.post('/api/auth/refresh', {
           refreshToken
         }, {
           headers: {

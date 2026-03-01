@@ -38,7 +38,7 @@ import type {
 // === API配置 ===
 
 /** 后端API服务的基础地址 */
-const API_BASE_URL = 'http://localhost:8080/api'
+const API_BASE_URL = '/api'
 
 /**
  * 独立的API客户端实例
@@ -855,23 +855,23 @@ export const userApi = {
    * 用户登出
    */
   logout: async (): Promise<void> => {
-    try {
-      try {
-        await api.post('/auth/logout')
-      } catch (error) {
+    console.log('离谱')
+    api.post('/auth/logout')
+      .then(()=>{
+        console.log("退出成功")
+        return true
+      })
+      .catch (error =>{
         console.warn('后端登出接口调用失败，但仍清除本地数据')
-      }
-
-      localStorage.removeItem('token')
-      localStorage.removeItem('refreshToken')
-      localStorage.removeItem('user')
-    } catch (error: any) {
-      console.error('登出失败:', error)
-      localStorage.removeItem('token')
-      localStorage.removeItem('refreshToken')
-      localStorage.removeItem('user')
-      throw new Error('登出失败')
-    }
+        console.error('登出失败:', error)
+        return false
+      })
+      .finally(() =>{
+        localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('user')
+      }) 
+      // const logoutresult = api.post('/auth/logout')
   },
 
   /**

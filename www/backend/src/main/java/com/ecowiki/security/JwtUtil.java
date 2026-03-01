@@ -4,8 +4,12 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
@@ -62,9 +66,13 @@ import io.jsonwebtoken.security.Keys;
  */
 @Component
 public class JwtUtil {
-    
+
+    private static final String BLACKLIST_PREFIX = "jwt:blacklist:";
     private static final int JWT_EXPIRATION_MS = 86400000; // 24小时
     private static final int REFRESH_TOKEN_EXPIRATION_MS = 604800000; // 7天
+
+    @Autowired
+    private RedisTemplate<Object, Object> redisTemplate;
     
     // 动态生成的安全密钥，每次应用启动时重新生成
     private final Key signingKey;
@@ -107,7 +115,13 @@ public class JwtUtil {
     private Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
-    
+
+    // 获取 token 剩余有效时间（毫秒）
+    public long getRemainingTime(String token) {
+        Date expiration = extractExpiration(token);
+        return expiration.getTime() - System.currentTimeMillis();
+    }
+
     // 为用户生成token
     public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
@@ -121,8 +135,10 @@ public class JwtUtil {
         return createToken(claims, username, REFRESH_TOKEN_EXPIRATION_MS);
     }
     
-    // 创建token
+    // 创建token,含jti唯一标识
     private String createToken(Map<String, Object> claims, String subject, int expiration) {
+        String jti = UUID.randomUUID().toString();
+        claims.put("jti", jti);
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
@@ -130,6 +146,11 @@ public class JwtUtil {
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    // 从 token 中获取 jti
+    public String getJtiFromToken(String token) {
+        return extractClaim(token, claims -> claims.get("jti", String.class));
     }
     
     // 验证token
@@ -165,4 +186,21 @@ public class JwtUtil {
         String username = extractUsername(refreshToken);
         return generateToken(username);
     }
+
+    // 将 token 加入黑名单
+    public void addToBlacklist(String token) {
+        String jti = getJtiFromToken(token);
+        long remainingTime = getRemainingTime(token);
+        if (remainingTime > 0) {
+            redisTemplate.opsForValue()
+                    .set(BLACKLIST_PREFIX + jti, "blacklisted", remainingTime, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    // 检查 token 是否在黑名单中
+    public boolean isBlacklisted(String token) {
+        String jti = getJtiFromToken(token);
+        return redisTemplate.hasKey(BLACKLIST_PREFIX + jti);
+    }
+
 }

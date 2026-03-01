@@ -1,11 +1,13 @@
 package com.ecowiki.controller.auth;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
+import com.ecowiki.util.Ip2RegionService;
+import com.ecowiki.util.IpUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -85,7 +87,6 @@ import jakarta.validation.Valid;
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")  // 允许任意前端跨域访问
 @Validated  // 启用请求参数验证
 public class AuthController {
-    
     /**
      * 用户服务
      * 处理用户相关的业务逻辑
@@ -99,7 +100,14 @@ public class AuthController {
      */
     @Autowired
     private JwtUtil jwtUtil;
-    
+
+    @Autowired
+    private Ip2RegionService ip2RegionService; // 注入工具类
+
+
+    private static final String BLACKLIST_PREFIX = "jwt:blacklist:";
+
+
     /**
      * 检查用户名可用性
      * 
@@ -152,12 +160,49 @@ public class AuthController {
                 .body(ApiResponse.error(e.getMessage()));
         }
     }
+
+    @PostMapping("/auth/logout")
+    public void logoutUser(@NonNull HttpServletRequest request) {
+        Enumeration<String> headerNames = request.getHeaderNames();
+
+        final String authorizationHeader = request.getHeader("Authorization");
+        // 提取JWT token
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            String jwt = authorizationHeader.substring(7);
+            try {
+                //判断黑名单内存在
+                if (!jwtUtil.isBlacklisted(jwt)) {
+                    jwtUtil.addToBlacklist(jwt);
+                }
+            } catch (Exception e) {
+                //logger.warn("JWT Token解析失败: " + e.getMessage());
+            }
+        }
+    }
     
     @PostMapping("/auth/login")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> loginUser(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> loginUser(@Valid @RequestBody LoginRequest request, HttpServletRequest httpServletRequest) {
         try {
             User user = userService.authenticateUser(request);
-            
+            // 2. 获取客户端IP和位置
+            String ip = IpUtil.getClientIp(httpServletRequest);
+            String userAgent = httpServletRequest.getHeader("User-Agent");
+            System.out.println("User-Agent:"+userAgent);
+            System.out.println("ip:"+ip);
+            String region = ip2RegionService.getRegion(ip);
+            System.out.println("region:"+region);
+            Ip2RegionService.RegionInfo regionInfo = ip2RegionService.getRegionInfo(ip);
+//
+//            Map<String, Object> map = new HashMap<>();
+//            map.put("ip", ip);
+//            map.put("region", region);
+//            map.put("country", regionInfo.getCountry());
+//            map.put("province", regionInfo.getProvince());
+//            map.put("city", regionInfo.getCity());
+//            map.put("isp", regionInfo.getIsp());
+//            map.put("countryCode", regionInfo.getCountryCode());
+//            return map;
+
             // 生成JWT token
             String token = jwtUtil.generateToken(user.getUsername());
             String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());

@@ -166,22 +166,26 @@ const setUser = (userData: UserResponse, authToken: string, refreshToken?: strin
  */
 const clearUser = (clearSavedCredentials = false) => {
   const username = user.value?.username || 'unknown'
+  userApi.logout().then(() => {
+    user.value = null
+    token.value = null
+  }) 
   
-  user.value = null
-  token.value = null
+  // user.value = null
+  // token.value = null
   
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
-  localStorage.removeItem('refreshToken')
+  // localStorage.removeItem('token')
+  // localStorage.removeItem('user')
+  // localStorage.removeItem('refreshToken')
   
-  // 可选择是否清除保存的登录信息
-  if (clearSavedCredentials) {
-    localStorage.removeItem('rememberMe')
-    localStorage.removeItem('savedLoginField')
-    localStorage.removeItem('savedPassword')
-  }
+  // // 可选择是否清除保存的登录信息
+  // if (clearSavedCredentials) {
+  //   localStorage.removeItem('rememberMe')
+  //   localStorage.removeItem('savedLoginField')
+  //   localStorage.removeItem('savedPassword')
+  // }
   
-  console.log('清除用户认证状态:', username)
+  // console.log('清除用户认证状态:', username)
 }
 
 // 检查是否已登录
