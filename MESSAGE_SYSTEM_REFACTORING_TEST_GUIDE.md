@@ -1,366 +1,120 @@
-# EcoWiki 消息系统重构测试指南
+﻿# EcoWiki 消息模块测试指南（Python 版）
 
-## 概述
-本文档提供重构后消息系统的测试指南，帮助验证新功能和性能改进。
-
-## 版本信息
-- **系统版本**: 2.0.0
-- **重构日期**: 2025-09-14
-- **主要改进**: 类型安全、性能优化、功能增强
-
----
-
-## 1. 数据库升级测试
-
-### 1.1 运行数据库升级脚本
+## 1. 测试前准备
+### 启动后端
 ```bash
-# 进入项目目录
-cd d:\Desktop\Code\EcoWiki\www\backend
-
-# 连接MySQL数据库
-mysql -u root -p ecowiki
-
-# 执行升级脚本
-source src/main/resources/db/migration/message_system_upgrade_v2.sql
+cd www/backend
+uvicorn main:app --host 0.0.0.0 --port 8080 --reload
 ```
 
-### 1.2 验证数据库结构
-```sql
--- 检查新增字段
-DESCRIBE messages;
-
--- 验证索引创建
-SHOW INDEX FROM messages;
-
--- 检查数据迁移情况
-SELECT 
-    COUNT(*) as total_messages,
-    COUNT(CASE WHEN status = 'UNREAD' THEN 1 END) as unread_count,
-    COUNT(CASE WHEN message_type = 'SYSTEM_NOTIFICATION' THEN 1 END) as system_notifications
-FROM messages;
-
--- 查看升级通知消息
-SELECT * FROM messages WHERE subject = '消息系统升级通知' LIMIT 5;
+### 启动前端
+```bash
+cd www/frontend
+pnpm install
+pnpm dev
 ```
 
----
+### 获取 Token
+在登录接口成功后，复制 `Bearer` Token，用于后续 `Authorization` 请求头。
 
-## 2. API接口测试
+## 2. API 冒烟测试
+以下示例均基于：`http://localhost:8080`。
 
-### 2.1 启动后端服务
+### 2.1 发送消息
 ```bash
-cd d:\Desktop\Code\EcoWiki\www\backend
-mvn spring-boot:run
-```
-
-### 2.2 测试发送消息接口
-
-#### 基本消息发送
-```bash
-curl -X POST http://localhost:8080/api/v2/messages/send \
+curl -X POST "http://localhost:8080/api/messages" \
   -H "Content-Type: application/json" \
-  -H "Cookie: JSESSIONID=你的会话ID" \
+  -H "Authorization: Bearer <TOKEN>" \
   -d '{
-    "recipientUserId": 2,
-    "content": "这是重构后的消息系统测试",
-    "subject": "系统测试",
-    "messageType": "USER_PRIVATE",
-    "priority": 2
+    "recipient_user_id": 2,
+    "subject": "测试消息",
+    "content": "这是 FastAPI 消息接口测试",
+    "message_type": "USER",
+    "priority": 1
   }'
 ```
 
-#### 系统通知发送
+### 2.2 收件箱分页
 ```bash
-curl -X POST http://localhost:8080/api/v2/messages/system-notification \
+curl -X GET "http://localhost:8080/api/messages?page=0&size=20" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+### 2.3 发件箱分页
+```bash
+curl -X GET "http://localhost:8080/api/messages/sent?page=0&size=20" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+### 2.4 未读数
+```bash
+curl -X GET "http://localhost:8080/api/messages/unread/count" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+### 2.5 未读列表
+```bash
+curl -X GET "http://localhost:8080/api/messages/unread" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+### 2.6 标记已读
+```bash
+curl -X PUT "http://localhost:8080/api/messages/1/read" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+### 2.7 全部已读
+```bash
+curl -X PUT "http://localhost:8080/api/messages/read-all" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+### 2.8 删除消息（软删除）
+```bash
+curl -X DELETE "http://localhost:8080/api/messages/1" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+### 2.9 群发消息
+```bash
+curl -X POST "http://localhost:8080/api/messages/broadcast" \
   -H "Content-Type: application/json" \
-  -H "Cookie: JSESSIONID=你的会话ID" \
+  -H "Authorization: Bearer <TOKEN>" \
   -d '{
-    "recipientUserId": 2,
-    "content": "重要系统通知：消息系统已升级",
-    "subject": "系统升级通知",
-    "priority": 4,
-    "expireHours": 72,
-    "metadata": {
-      "notificationType": "UPGRADE",
-      "version": "2.0.0"
-    }
+    "recipient_user_ids": [2, 3],
+    "subject": "群发通知",
+    "content": "请查收测试通知"
   }'
 ```
 
-#### 群发消息
-```bash
-curl -X POST http://localhost:8080/api/v2/messages/broadcast \
-  -H "Content-Type: application/json" \
-  -H "Cookie: JSESSIONID=你的会话ID" \
-  -d '{
-    "recipientUserIds": [2, 3, 4],
-    "content": "群发测试消息",
-    "subject": "重要通知",
-    "messageType": "ANNOUNCEMENT",
-    "priority": 3
-  }'
-```
+## 3. 前端联动测试
+1. 登录后进入首页，确认头部铃铛显示未读角标。
+2. 悬停铃铛，确认出现未读预览列表（最多 5 条）。
+3. 点击“查看全部消息”，跳转 `/messages`。
+4. 在消息中心执行“单条已读、全部已读、删除”，确认与角标同步。
+5. 在“撰写消息”中发送后，切换到“已发送”确认可见。
 
-### 2.3 测试消息查询接口
+## 4. 回归检查清单
+- [ ] 未登录访问消息接口返回 401
+- [ ] 只能读取自己的收件消息
+- [ ] 只能操作自己可见的消息（已读/删除）
+- [ ] 删除后消息状态为 `DELETED`，而非物理删除
+- [ ] `/received` 与 `/send` 兼容端点可用
+- [ ] `msg_type=SYSTEM` 过滤正确
+- [ ] 未读数在读消息后减少
+- [ ] 铃铛轮询（30 秒）能刷新计数
 
-#### 获取收到的消息
-```bash
-curl -X GET "http://localhost:8080/api/v2/messages/received?page=0&size=10" \
-  -H "Cookie: JSESSIONID=你的会话ID"
-```
+## 5. 注意点（已处理/待优化）
+### 已处理
+1. 历史 Java 路径与接口名已全部替换为 Python 真实路径。
+2. 会话认证示例已统一为 `Bearer Token`。
+3. 接口示例已统一为 `/api/messages` 命名空间。
+4. `broadcast` 已切换为强类型请求模型。
+5. `unread/count` 已移除调试打印。
 
-#### 按类型查询消息
-```bash
-curl -X GET "http://localhost:8080/api/v2/messages/by-type/SYSTEM_NOTIFICATION?page=0&size=5" \
-  -H "Cookie: JSESSIONID=你的会话ID"
-```
+### 待优化（非阻塞）
+1. 发送页可补充用户名检索，减少对收件人 ID 的依赖。
 
-#### 获取未读消息数量
-```bash
-curl -X GET "http://localhost:8080/api/v2/messages/unread-count" \
-  -H "Cookie: JSESSIONID=你的会话ID"
-```
-
-#### 获取对话记录
-```bash
-curl -X GET "http://localhost:8080/api/v2/messages/conversation/2?page=0&size=20" \
-  -H "Cookie: JSESSIONID=你的会话ID"
-```
-
-### 2.4 测试消息操作接口
-
-#### 标记单条消息已读
-```bash
-curl -X PUT "http://localhost:8080/api/v2/messages/1/mark-read" \
-  -H "Cookie: JSESSIONID=你的会话ID"
-```
-
-#### 批量标记已读
-```bash
-curl -X PUT "http://localhost:8080/api/v2/messages/batch-mark-read" \
-  -H "Content-Type: application/json" \
-  -H "Cookie: JSESSIONID=你的会话ID" \
-  -d '[1, 2, 3]'
-```
-
-#### 全部标记已读
-```bash
-curl -X PUT "http://localhost:8080/api/v2/messages/mark-all-read" \
-  -H "Cookie: JSESSIONID=你的会话ID"
-```
-
-#### 撤回消息
-```bash
-curl -X PUT "http://localhost:8080/api/v2/messages/1/recall" \
-  -H "Cookie: JSESSIONID=你的会话ID"
-```
-
-#### 删除消息
-```bash
-curl -X DELETE "http://localhost:8080/api/v2/messages/1" \
-  -H "Cookie: JSESSIONID=你的会话ID"
-```
-
----
-
-## 3. 性能测试
-
-### 3.1 批量消息性能测试
-```bash
-# 创建测试脚本
-cat > test_batch_messages.sh << 'EOF'
-#!/bin/bash
-JSESSIONID="你的会话ID"
-BASE_URL="http://localhost:8080/api/v2/messages"
-
-echo "开始批量发送测试..."
-start_time=$(date +%s)
-
-for i in {1..100}; do
-  curl -s -X POST "$BASE_URL/send" \
-    -H "Content-Type: application/json" \
-    -H "Cookie: JSESSIONID=$JSESSIONID" \
-    -d "{\"recipientUserId\": 2, \"content\": \"批量测试消息 #$i\", \"messageType\": \"USER_PRIVATE\"}" > /dev/null
-  if [ $((i % 10)) -eq 0 ]; then
-    echo "已发送 $i 条消息..."
-  fi
-done
-
-end_time=$(date +%s)
-duration=$((end_time - start_time))
-echo "批量发送完成，耗时: ${duration}秒"
-EOF
-
-chmod +x test_batch_messages.sh
-./test_batch_messages.sh
-```
-
-### 3.2 查询性能测试
-```bash
-# 测试分页查询性能
-echo "测试分页查询性能..."
-time curl -s "http://localhost:8080/api/v2/messages/received?page=0&size=50" \
-  -H "Cookie: JSESSIONID=你的会话ID" > /dev/null
-
-# 测试未读消息统计性能
-echo "测试未读消息统计性能..."
-time curl -s "http://localhost:8080/api/v2/messages/unread-count" \
-  -H "Cookie: JSESSIONID=你的会话ID" > /dev/null
-```
-
----
-
-## 4. 功能验证清单
-
-### 4.1 核心功能验证
-- [ ] 用户登录系统
-- [ ] 发送私人消息
-- [ ] 发送系统通知
-- [ ] 群发消息功能
-- [ ] 查看收到的消息
-- [ ] 查看发送的消息
-- [ ] 按类型筛选消息
-- [ ] 按状态筛选消息
-- [ ] 查看对话记录
-- [ ] 标记消息已读
-- [ ] 批量操作消息
-- [ ] 撤回消息功能
-- [ ] 删除消息功能
-- [ ] 未读消息统计
-- [ ] 消息搜索功能
-
-### 4.2 新功能验证
-- [ ] 消息类型枚举（USER_PRIVATE, SYSTEM_NOTIFICATION等）
-- [ ] 消息优先级（1-4级别）
-- [ ] 消息过期机制
-- [ ] 消息元数据支持
-- [ ] 软删除和撤回
-- [ ] 消息状态转换
-- [ ] 自动清理过期消息
-- [ ] 消息统计和分析
-- [ ] 批量标记已读
-- [ ] 高优先级消息提醒
-
-### 4.3 性能验证
-- [ ] 分页查询响应时间 < 200ms
-- [ ] 未读消息统计响应时间 < 100ms
-- [ ] 批量操作支持（100条以内）
-- [ ] 数据库索引优化效果
-- [ ] N+1查询问题解决
-- [ ] 用户信息缓存效果
-
----
-
-## 5. 错误处理测试
-
-### 5.1 权限验证测试
-```bash
-# 测试未登录访问
-curl -X GET "http://localhost:8080/api/v2/messages/received" 
-# 预期：401 Unauthorized
-
-# 测试访问他人消息
-curl -X PUT "http://localhost:8080/api/v2/messages/999/mark-read" \
-  -H "Cookie: JSESSIONID=你的会话ID"
-# 预期：403 Forbidden 或 404 Not Found
-```
-
-### 5.2 参数验证测试
-```bash
-# 测试无效的接收者ID
-curl -X POST http://localhost:8080/api/v2/messages/send \
-  -H "Content-Type: application/json" \
-  -H "Cookie: JSESSIONID=你的会话ID" \
-  -d '{"recipientUserId": -1, "content": "测试"}'
-# 预期：400 Bad Request
-
-# 测试空消息内容
-curl -X POST http://localhost:8080/api/v2/messages/send \
-  -H "Content-Type: application/json" \
-  -H "Cookie: JSESSIONID=你的会话ID" \
-  -d '{"recipientUserId": 2, "content": ""}'
-# 预期：400 Bad Request
-```
-
-### 5.3 业务逻辑测试
-```bash
-# 测试撤回超时的消息（假设消息ID 1是很久之前的消息）
-curl -X PUT "http://localhost:8080/api/v2/messages/1/recall" \
-  -H "Cookie: JSESSIONID=你的会话ID"
-# 预期：400 Bad Request（撤回时间已过期）
-
-# 测试删除不存在的消息
-curl -X DELETE "http://localhost:8080/api/v2/messages/99999" \
-  -H "Cookie: JSESSIONID=你的会话ID"
-# 预期：404 Not Found
-```
-
----
-
-## 6. 兼容性测试
-
-### 6.1 与前端的兼容性
-- [ ] 检查现有MessagePanel.vue组件是否正常工作
-- [ ] 验证API响应格式兼容性
-- [ ] 测试消息显示和交互功能
-
-### 6.2 与数据库的兼容性
-- [ ] 验证现有数据完整性
-- [ ] 检查索引性能提升
-- [ ] 确认触发器和存储过程正常工作
-
----
-
-## 7. 后续优化建议
-
-### 7.1 前端集成
-1. 更新MessagePanel.vue以支持新的消息类型
-2. 添加消息优先级显示
-3. 实现消息过期提醒
-4. 优化批量操作界面
-
-### 7.2 系统监控
-1. 添加消息发送量监控
-2. 实现消息处理性能监控
-3. 添加错误率统计
-4. 设置消息积压报警
-
-### 7.3 功能扩展
-1. 消息模板系统
-2. 消息推送集成
-3. 消息审核机制
-4. 消息分析报表
-
----
-
-## 8. 问题排查
-
-### 8.1 常见问题
-1. **编译错误**: 检查依赖和导入
-2. **数据库连接**: 确认数据库服务运行
-3. **权限问题**: 验证用户登录状态
-4. **性能问题**: 检查数据库索引
-
-### 8.2 日志查看
-```bash
-# 查看应用日志
-tail -f d:\Desktop\Code\EcoWiki\www\backend\logs\ecowiki-error.log
-
-# 查看数据库慢查询日志（如果启用）
-# 在MySQL中执行：
-# SET GLOBAL slow_query_log = 'ON';
-# SET GLOBAL long_query_time = 1;
-```
-
----
-
-## 结论
-
-重构后的消息系统提供了：
-- ✅ 更好的类型安全性
-- ✅ 增强的功能特性  
-- ✅ 优化的性能表现
-- ✅ 完善的错误处理
-- ✅ 向后兼容性
-
-按照本指南进行测试，确保系统稳定运行后即可投入生产使用。
+## 6. 结论
+当前消息模块可进行完整联调与回归，文档已与 Python 实现对齐。
