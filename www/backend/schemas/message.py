@@ -31,3 +31,11 @@ class MessageCreateRequest(BaseModel):
     content:           str
     message_type:      str = "USER"
     priority:          int = 1
+
+
+class BroadcastMessageRequest(BaseModel):
+    recipient_user_ids: list[int]
+    content: str
+    subject: Optional[str] = None
+    message_type: str = "USER"
+    priority: int = 1

@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.message import Message, MessageStatus
 from models.user import User
-from schemas.message import MessageOut, MessageCreateRequest
+from schemas.message import MessageOut, MessageCreateRequest, BroadcastMessageRequest
 from schemas.common import ApiResponse, PageResult
 from core.security import get_current_user
 
@@ -252,23 +252,22 @@ def unread_messages(
 # ─── 群发消息 ─────────────────────────────────────────────────────────────────
 @router.post("/broadcast", response_model=ApiResponse[List[MessageOut]])
 def broadcast_message(
-    body: dict,
+    body: BroadcastMessageRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    recipient_ids = body.get("recipient_user_ids") or body.get("recipientUserIds") or []
-    content = body.get("content", "")
-    subject = body.get("subject")
     created = []
-    for rid in recipient_ids:
+    for rid in body.recipient_user_ids:
         recipient = db.query(User).filter(User.user_id == rid).first()
         if not recipient:
             continue
         msg = Message(
             recipient_user_id=rid,
             sender_user_id=current_user.user_id,
-            content=content,
-            subject=subject,
+            content=body.content,
+            subject=body.subject,
+            message_type=body.message_type,
+            priority=body.priority,
         )
         db.add(msg)
         created.append(msg)
