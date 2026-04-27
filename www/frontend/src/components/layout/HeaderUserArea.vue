@@ -34,12 +34,38 @@
     <!-- 已登录状态 - 显示用户信息和操作按钮 -->
     <template v-if="isAuthenticated">
       <!-- 消息铃铛入口 -->
-      <button class="bell-btn" @click="router.push('/messages')" title="消息中心">
-        <svg viewBox="0 0 24 24" class="bell-icon">
-          <path d="M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22M18,16V11C18,7.93 16.36,5.36 13.5,4.68V4A1.5,1.5 0 0,0 12,2.5A1.5,1.5 0 0,0 10.5,4V4.68C7.63,5.36 6,7.92 6,11V16L4,18V19H20V18L18,16Z"/>
-        </svg>
-        <span v-if="unreadCount > 0" class="bell-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
-      </button>
+      <div class="bell-menu-wrapper" @mouseenter="openBellMenu" @mouseleave="showBellMenu = false">
+        <button class="bell-btn" @click="router.push('/messages')" title="消息中心">
+          <svg viewBox="0 0 24 24" class="bell-icon">
+            <path d="M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22M18,16V11C18,7.93 16.36,5.36 13.5,4.68V4A1.5,1.5 0 0,0 12,2.5A1.5,1.5 0 0,0 10.5,4V4.68C7.63,5.36 6,7.92 6,11V16L4,18V19H20V18L18,16Z"/>
+          </svg>
+          <span v-if="unreadCount > 0" class="bell-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+        </button>
+        <transition name="fade">
+          <div v-if="showBellMenu" class="bell-dropdown">
+            <div class="bell-dropdown-header">
+              <span>收件箱</span>
+              <span v-if="unreadCount > 0" class="bell-dropdown-count">{{ unreadCount }}条未读</span>
+            </div>
+            <div v-if="bellMessages.length === 0" class="bell-dropdown-empty">暂无未读消息</div>
+            <template v-else>
+              <div
+                v-for="msg in bellMessages.slice(0, 5)"
+                :key="msg.messageId"
+                class="bell-dropdown-item"
+                @click="router.push('/messages')"
+              >
+                <div class="bell-dropdown-subject">{{ msg.subject || msg.content.slice(0, 20) }}</div>
+                <div class="bell-dropdown-meta">
+                  <span class="bell-dropdown-sender">{{ msg.senderUsername || '系统' }}</span>
+                  <span class="bell-dropdown-time">{{ formatMsgTime(msg.sendTime) }}</span>
+                </div>
+              </div>
+            </template>
+            <div class="bell-dropdown-footer" @click="router.push('/messages')">查看全部消息</div>
+          </div>
+        </transition>
+      </div>
 
       <!-- 用户信息展示 -->
        <div class="user-menu-wrapper" @mouseenter="showMenu = true" @mouseleave="showMenu = false">
@@ -91,7 +117,7 @@ import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../../composables/useAuth'
 import { userApi } from '../../api/user'
-import { messageApi } from '../../api/message'
+import { messageApi, type Message } from '../../api/message'
 import UserAvatar from '../common/UserAvatar.vue'
 
 /**
@@ -177,6 +203,29 @@ onMounted(() => {
 onUnmounted(() => clearInterval(pollTimer))
 
 watch(isAuthenticated, (val) => { if (val) fetchUnreadCount() })
+
+// ── 铃铛悬停下拉面板 ─────────────────────────────────────────────────────────
+const showBellMenu = ref(false)
+const bellMessages = ref<Message[]>([])
+
+async function openBellMenu() {
+  showBellMenu.value = true
+  if (!isAuthenticated.value) return
+  try {
+    const res = await messageApi.getUnreadList()
+    bellMessages.value = res.data.data
+  } catch {
+    // 忽略网络错误
+  }
+}
+
+function formatMsgTime(timeStr: string): string {
+  const diff = Math.floor((Date.now() - new Date(timeStr).getTime()) / 1000)
+  if (diff < 60) return '刚刚'
+  if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`
+  return `${Math.floor(diff / 86400)}天前`
+}
 
 </script>
 
@@ -396,7 +445,102 @@ watch(isAuthenticated, (val) => { if (val) fetchUnreadCount() })
   transform: translateY(-10px);
 }
 
-/* ── 消息铃铛 ─────────────────────────────────────────────────────────────── */
+/* ── 铃铛悬停下拉面板 ─────────────────────────────────────────────────────── */
+.bell-menu-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.bell-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 280px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.bell-dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.bell-dropdown-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: #ef4444;
+  background: #fee2e2;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.bell-dropdown-empty {
+  padding: 20px 14px;
+  font-size: 13px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.bell-dropdown-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #f9fafb;
+  transition: background 0.15s;
+}
+
+.bell-dropdown-item:hover {
+  background: #f9fafb;
+}
+
+.bell-dropdown-subject {
+  font-size: 13px;
+  color: #111827;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bell-dropdown-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 3px;
+}
+
+.bell-dropdown-sender {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.bell-dropdown-time {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.bell-dropdown-footer {
+  padding: 9px 14px;
+  font-size: 12px;
+  color: #667eea;
+  text-align: center;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.bell-dropdown-footer:hover {
+  background: #f5f3ff;
+}
 .bell-btn {
   position: relative;
   width: 36px;
