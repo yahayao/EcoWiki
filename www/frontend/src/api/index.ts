@@ -194,7 +194,7 @@ api.interceptors.response.use(
           // 延迟刷新页面，给用户看到错误信息的机会
           setTimeout(() => {
             window.location.reload()
-          }, 100000)
+          }, 2000)
         }
         
         return Promise.reject(refreshError)

@@ -18,7 +18,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { adminApi, type UserResponse, type UserGroup, type RoleResponse } from '../api/user'
-import toast from '../utils/toast'
+import { useToastStore } from './toastStore'
 
 /**
  * 管理员用户状态管理Store定义
@@ -37,10 +37,12 @@ export const useAdminUserStore = defineStore('adminUser', () => {
   /** 加载状态标识 */
   const loading = ref(false)
   
-  /** 错误信息存储 */
-  const error = ref('')
-  
-  /** 
+ /** 错误信息存储 */
+ const error = ref('')
+  /** Toast 通知服务（响应式 Pinia 版） */
+  const toast = useToastStore()
+ 
+ /** 
    * 待处理的用户变更暂存
    * 键为用户ID，值为需要更新的用户属性
    * 支持批量操作，用户可以先进行多个修改，最后统一提交

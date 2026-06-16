@@ -1,4 +1,4 @@
-<!--
+﻿<!--
 /**
  * 头部用户区域组件
  * 
@@ -39,18 +39,18 @@
           <svg viewBox="0 0 24 24" class="bell-icon">
             <path d="M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22M18,16V11C18,7.93 16.36,5.36 13.5,4.68V4A1.5,1.5 0 0,0 12,2.5A1.5,1.5 0 0,0 10.5,4V4.68C7.63,5.36 6,7.92 6,11V16L4,18V19H20V18L18,16Z"/>
           </svg>
-          <span v-if="unreadCount > 0" class="bell-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+          <span v-if="messageStore.unreadCount > 0" class="bell-badge">{{ messageStore.unreadCount > 99 ? '99+' : messageStore.unreadCount }}</span>
         </button>
         <transition name="fade">
           <div v-if="showBellMenu" class="bell-dropdown">
             <div class="bell-dropdown-header">
               <span>收件箱</span>
-              <span v-if="unreadCount > 0" class="bell-dropdown-count">{{ unreadCount }}条未读</span>
+              <span v-if="messageStore.unreadCount > 0" class="bell-dropdown-count">{{ messageStore.unreadCount }}条未读</span>
             </div>
-            <div v-if="bellMessages.length === 0" class="bell-dropdown-empty">暂无未读消息</div>
+            <div v-if="messageStore.inbox.length === 0" class="bell-dropdown-empty">暂无未读消息</div>
             <template v-else>
               <div
-                v-for="msg in bellMessages.slice(0, 5)"
+                v-for="msg in messageStore.inbox.slice(0, 5)"
                 :key="msg.messageId"
                 class="bell-dropdown-item"
                 @click="router.push('/messages')"
@@ -113,11 +113,11 @@
  * 集成全局认证状态，提供动态的用户界面。
  */
 
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../../composables/useAuth'
 import { userApi } from '../../api/user'
-import { messageApi, type Message } from '../../api/message'
+import { useMessageStore } from '../../stores/messageStore'
 import UserAvatar from '../common/UserAvatar.vue'
 
 /**
@@ -180,43 +180,24 @@ const hasAdminPermission = computed(() => {
   return userApi.isAdmin(user.value)
 })
 
-// ── 未读消息计数 + 轮询 ─────────────────────────────────────────────────────
-const unreadCount = ref(0)
-
-async function fetchUnreadCount() {
-  if (!isAuthenticated.value) return
-  try {
-    const res = await messageApi.getUnreadCount()
-    unreadCount.value = res.data.data.count
-  } catch {
-    // 忽略网络错误
-  }
-}
-
-let pollTimer: ReturnType<typeof setInterval>
+// ── 未读消息计数 + 轮询（委托 messageStore） ──────────────────────────────
+const messageStore = useMessageStore()
 
 onMounted(() => {
-  fetchUnreadCount()
-  pollTimer = setInterval(fetchUnreadCount, 30_000)
+  messageStore.startPolling(30_000)
 })
 
-onUnmounted(() => clearInterval(pollTimer))
+onUnmounted(() => {
+  messageStore.stopPolling()
+})
 
-watch(isAuthenticated, (val) => { if (val) fetchUnreadCount() })
-
-// ── 铃铛悬停下拉面板 ─────────────────────────────────────────────────────────
+// ── 铃铛悬停下拉面板（委托 messageStore） ──────────────────────────────────
 const showBellMenu = ref(false)
-const bellMessages = ref<Message[]>([])
 
 async function openBellMenu() {
   showBellMenu.value = true
   if (!isAuthenticated.value) return
-  try {
-    const res = await messageApi.getUnreadList()
-    bellMessages.value = res.data.data
-  } catch {
-    // 忽略网络错误
-  }
+  messageStore.fetchInbox()
 }
 
 function formatMsgTime(timeStr: string): string {
@@ -582,3 +563,4 @@ function formatMsgTime(timeStr: string): string {
   line-height: 1;
 }
 </style>
+
