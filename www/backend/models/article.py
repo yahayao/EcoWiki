@@ -59,24 +59,32 @@ class ArticleDraft(Base):
     created_at    = Column(DateTime, default=datetime.now)
     updated_at    = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     submitted_at  = Column(DateTime)
+    # 审核追溯字段
+    reviewer_id   = Column(BigInteger, ForeignKey("user.user_id"), nullable=True)
+    reviewed_at   = Column(DateTime, nullable=True)
 
     article       = relationship("Article", foreign_keys=[article_id])
     author_user   = relationship("User",    foreign_keys=[author_id])
+    reviewer_user = relationship("User",    foreign_keys=[reviewer_id])
 
 
 class ArticleReview(Base):
-    """文章审核记录，映射 `article_reviews` 表"""
+    """
+    审核队列表（article_reviews）。
+    - 草稿提交审核时插入一条记录（submitter_id / submitted_at）
+    - 管理员审核完成（通过/拒绝）后删除该记录
+    - 审核结果保存在 article_drafts 表的 reviewer_id / reviewed_at / status / reject_reason 字段
+    """
     __tablename__ = "article_reviews"
 
     review_id    = Column(BigInteger, primary_key=True, autoincrement=True)
-    draft_id     = Column(BigInteger, ForeignKey("article_drafts.draft_id"))
-    reviewer_id  = Column(BigInteger, ForeignKey("user.user_id"))
-    action       = Column(String(20))   # approve / reject
-    comment      = Column(Text)
-    reviewed_at  = Column(DateTime, default=datetime.now)
+    # 一条草稿最多同时有一条待审记录
+    draft_id     = Column(BigInteger, ForeignKey("article_drafts.draft_id"), unique=True, nullable=False)
+    submitter_id = Column(BigInteger, ForeignKey("user.user_id"), nullable=False)
+    submitted_at = Column(DateTime, default=datetime.now, nullable=False)
 
     draft        = relationship("ArticleDraft", foreign_keys=[draft_id])
-    reviewer     = relationship("User",         foreign_keys=[reviewer_id])
+    submitter    = relationship("User",         foreign_keys=[submitter_id])
 
 
 class ArticleVersion(Base):

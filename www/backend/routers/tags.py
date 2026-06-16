@@ -11,7 +11,7 @@ from models.tag import Tag
 from models.article import Article
 from schemas.article import TagOut
 from schemas.common import ApiResponse
-from core.security import get_current_user, require_admin
+from core.security import get_current_user, require_admin, require_permission
 from models.user import User
 
 router = APIRouter(prefix="/tags", tags=["标签"])
@@ -109,7 +109,7 @@ def get_tag(tag_id: int, db: Session = Depends(get_db)):
 @router.post("", response_model=ApiResponse[TagOut])
 def create_tag(
     body: dict,
-    _: User = Depends(require_admin),
+    _: User = Depends(require_permission("管理标签")),
     db: Session = Depends(get_db),
 ):
     tag_name = body.get("tag_name")
@@ -129,7 +129,7 @@ def create_tag(
 def update_tag(
     tag_id: int,
     body: dict,
-    _: User = Depends(require_admin),
+    _: User = Depends(require_permission("管理标签")),
     db: Session = Depends(get_db),
 ):
     tag = db.query(Tag).filter(Tag.tag_id == tag_id).first()
@@ -146,7 +146,7 @@ def update_tag(
 
 @router.delete("/unused")
 def delete_unused_tags(
-    _: User = Depends(require_admin),
+    _: User = Depends(require_permission("管理标签")),
     db: Session = Depends(get_db),
 ):
     """删除未使用的标签（暂时删除所有未关联文章的标签）"""
@@ -163,7 +163,7 @@ def delete_unused_tags(
 @router.delete("/{tag_id}")
 def delete_tag(
     tag_id: int,
-    _: User = Depends(require_admin),
+    _: User = Depends(require_permission("管理标签")),
     db: Session = Depends(get_db),
 ):
     tag = db.query(Tag).filter(Tag.tag_id == tag_id).first()

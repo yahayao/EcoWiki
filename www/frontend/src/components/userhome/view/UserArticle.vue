@@ -239,12 +239,26 @@
                 审核中
               </button>
             </template>
+            <template v-else-if="draft.status === 'draft'">
+              <button class="action-btn submit" @click="submitDraftFromList(draft.draftId)">
+                <svg viewBox="0 0 24 24" class="icon">
+                  <path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/>
+                </svg>
+                提交审核
+              </button>
+              <button class="action-btn primary" @click="editDraft(draft.draftId)">
+                <svg viewBox="0 0 24 24" class="icon">
+                  <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
+                </svg>
+                继续编辑
+              </button>
+            </template>
             <template v-else>
               <button class="action-btn primary" @click="editDraft(draft.draftId)">
                 <svg viewBox="0 0 24 24" class="icon">
                   <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
                 </svg>
-                {{ draft.status === 'rejected' ? '重新编辑' : '继续编辑' }}
+                重新编辑
               </button>
             </template>
             <button class="action-btn danger" @click="deleteDraft(draft.draftId)">
@@ -320,40 +334,11 @@
     </div>
   </div>
 
-  <!-- 草稿重新编辑 Modal -->
-  <div v-if="editingDraft" class="draft-edit-overlay" @click.self="closeDraftEditor">
-    <div class="draft-edit-modal">
-      <div class="modal-header">
-        <h3 class="modal-title">重新编辑草稿</h3>
-        <button class="modal-close" @click="closeDraftEditor">×</button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-article-title">{{ editingDraft.title }}</div>
-        <div v-if="editingDraft.rejectReason" class="modal-reject-reason">
-          <strong>原拒绝原因：</strong>{{ editingDraft.rejectReason }}
-        </div>
-        <div class="form-group">
-          <label class="form-label">分类</label>
-          <input v-model="editForm.category" type="text" class="form-input" placeholder="请输入文章分类" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">内容</label>
-          <textarea v-model="editForm.content" class="form-textarea" rows="14" placeholder="请输入文章内容" />
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="action-btn secondary" @click="closeDraftEditor">取消</button>
-        <button class="action-btn primary" :disabled="savingDraftEdit" @click="submitDraftEdit">
-          {{ savingDraftEdit ? '提交中...' : '保存并重新提交审核' }}
-        </button>
-      </div>
-    </div>
-  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { userApi } from '@/api/user'
 import { articleApi } from '@/api/article'
 import { draftApi, type ArticleDraft } from '@/api/draft'
@@ -361,8 +346,9 @@ import toast from '@/utils/toast'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 
 const router = useRouter()
+const route = useRoute()
 
-const activeTab = ref('favorites')
+const activeTab = ref((route.query.tab as string) || 'favorites')
 
 // 数据状态
 const favoriteArticles = ref<any[]>([])
@@ -639,10 +625,6 @@ onMounted(async () => {
 })
 
 // 草稿编辑方法
-const editingDraft = ref<any>(null)
-const editForm = ref({ content: '', category: '' })
-const savingDraftEdit = ref(false)
-
 const getDraftStatusLabel = (status: string): string => {
   const map: Record<string, string> = { pending: '审核中', rejected: '已拒绝', draft: '草稿', approved: '已通过' }
   return map[status] || '草稿'
@@ -658,30 +640,19 @@ const editDraft = (draftId: number) => {
     toast.warning('草稿正在审核中，审核结束前不可修改', '提示')
     return
   }
-  editingDraft.value = draft
-  editForm.value = { content: draft.content || '', category: draft.category || '' }
+  router.push({ name: 'ArticleEdit', params: { title: draft.title } })
 }
 
-const closeDraftEditor = () => {
-  editingDraft.value = null
-  editForm.value = { content: '', category: '' }
-}
-
-const submitDraftEdit = async () => {
-  if (!editingDraft.value) return
+const submitDraftFromList = async (draftId: number) => {
   try {
-    savingDraftEdit.value = true
-    await draftApi.updateDraft(editingDraft.value.draftId, {
-      content: editForm.value.content,
-      category: editForm.value.category,
-    })
-    toast.success('草稿已重新提交审核', '操作成功')
-    closeDraftEditor()
+    loading.value = true
+    await draftApi.submitDraftForReview(draftId)
+    toast.success('已提交审核，请耐心等待管理员审核', '提交成功')
     await loadDraftArticles()
   } catch (error: any) {
     toast.error(error.message || '提交失败', '错误')
   } finally {
-    savingDraftEdit.value = false
+    loading.value = false
   }
 }
 </script>
@@ -1052,6 +1023,16 @@ const submitDraftEdit = async () => {
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
+.action-btn.submit {
+  background: linear-gradient(135deg, #38b2ac 0%, #2c7a7b 100%);
+  color: white;
+}
+
+.action-btn.submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(56, 178, 172, 0.35);
+}
+
 .action-btn.secondary {
   background: #f7fafc;
   color: #4a5568;
@@ -1248,160 +1229,4 @@ const submitDraftEdit = async () => {
   fill: currentColor;
 }
 
-/* ── 草稿编辑 Modal ── */
-.draft-edit-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 24px;
-}
-
-.draft-edit-modal {
-  background: white;
-  border-radius: 16px;
-  width: 100%;
-  max-width: 720px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e2e8f0;
-  flex-shrink: 0;
-}
-
-.modal-title {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #1a202c;
-}
-
-.modal-close {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: #f7fafc;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 18px;
-  color: #4a5568;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-
-.modal-close:hover {
-  background: #edf2f7;
-}
-
-.modal-body {
-  padding: 20px 24px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.modal-article-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 12px;
-  padding: 10px 14px;
-  background: #f7fafc;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-}
-
-.modal-reject-reason {
-  background: #fff5f5;
-  border: 1px solid #fed7d7;
-  border-radius: 8px;
-  padding: 10px 14px;
-  margin-bottom: 16px;
-  font-size: 13px;
-  color: #c53030;
-  line-height: 1.5;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-label {
-  display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #4a5568;
-  margin-bottom: 6px;
-}
-
-.form-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #1a202c;
-  background: white;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
-}
-
-.form-textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #1a202c;
-  background: white;
-  resize: vertical;
-  font-family: inherit;
-  line-height: 1.6;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
-}
-
-.form-textarea:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
-}
-
-.modal-footer {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  padding: 16px 24px;
-  border-top: 1px solid #e2e8f0;
-  flex-shrink: 0;
-}
-
-.modal-footer .action-btn {
-  flex: 0;
-  min-width: 120px;
-}
-
-.modal-footer .action-btn.primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
 </style>

@@ -1413,8 +1413,8 @@ defineExpose({
 }
 
 .status-badge.pending {
-  background: linear-gradient(135deg, #fed7d7, #fbb6ce);
-  color: #c53030;
+  background: linear-gradient(135deg, #fbd38d, #f6ad55);
+  color: white;
 }
 
 .status-badge.approved {
@@ -1727,8 +1727,8 @@ defineExpose({
 }
 
 .status-badge.pending {
-  background: linear-gradient(135deg, #fed7d7, #fbb6ce);
-  color: #c53030;
+  background: linear-gradient(135deg, #fbd38d, #f6ad55);
+  color: white;
 }
 
 .status-badge.approved {
@@ -2032,8 +2032,8 @@ defineExpose({
 }
 
 .status-badge.pending {
-  background: linear-gradient(135deg, #fed7d7, #fbb6ce);
-  color: #c53030;
+  background: linear-gradient(135deg, #fbd38d, #f6ad55);
+  color: white;
 }
 
 .status-badge.approved {

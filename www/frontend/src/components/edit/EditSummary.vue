@@ -63,12 +63,16 @@
     <!-- 保存按钮区域 -->
     <div class="save-section">
       <div class="save-buttons">
-        <button @click="$emit('save')" class="save-btn primary" :disabled="saving || !canSave">
+        <button @click="$emit('save')" class="save-btn primary" :disabled="saving || savingDraft || !canSave">
           <span v-if="saving" class="loading-spinner"></span>
           {{ saving 
-              ? (isEditMode ? '保存更改...' : '发表文章...')
-              : (isEditMode ? '保存更改' : '发表文章')
+              ? (isEditMode ? '提交审核...' : '发表文章...')
+              : (isEditMode ? '提交审核' : '发表文章')
           }}
+        </button>
+        <button @click="$emit('saveDraft')" class="draft-btn" :disabled="saving || savingDraft">
+          <span v-if="savingDraft" class="loading-spinner"></span>
+          {{ savingDraft ? '保存草稿...' : '保存草稿' }}
         </button>
         <button @click="$emit('togglePreview')" class="preview-btn secondary">
           {{ showPreview ? '隐藏预览' : '显示预览' }}
@@ -77,7 +81,7 @@
       </div>
       
       <div class="save-help">
-        <p>{{ isEditMode ? '保存后您的更改将立即生效' : '发表后文章将对所有用户可见' }}。请确保内容准确无误。</p>
+        <p>「{{ isEditMode ? '提交审核' : '发表文章' }}」会提交审核，「保存草稿」仅保存不提交审核。</p>
       </div>
     </div>
   </div>
@@ -89,6 +93,7 @@ interface Props {
   category: string
   displayTags: string[]
   saving: boolean
+  savingDraft: boolean
   canSave: boolean
   isEditMode: boolean
   showPreview: boolean
@@ -102,6 +107,7 @@ const emit = defineEmits<{
   'update:editSummary': [value: string]
   'update:category': [value: string]
   save: []
+  saveDraft: []
   togglePreview: []
   cancel: []
 }>()
@@ -233,6 +239,7 @@ const updateCategory = (event: Event) => {
   align-items: center;
   gap: 1rem;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 
 .save-btn {
@@ -296,6 +303,33 @@ const updateCategory = (event: Event) => {
   color: #1f2937;
   transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.draft-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.draft-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.draft-btn:disabled {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .save-help {

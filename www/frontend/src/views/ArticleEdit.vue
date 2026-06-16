@@ -84,10 +84,12 @@
           v-model:category="articleForm.category"
           :display-tags="displayTags"
           :saving="saving"
+          :saving-draft="savingDraft"
           :can-save="canSave"
           :is-edit-mode="isEditMode"
           :show-preview="showPreview"
           @save="handleSave"
+          @save-draft="handleSaveDraft"
           @toggle-preview="togglePreview"
           @cancel="goBack"
         />
@@ -145,6 +147,7 @@ import { wikiParser } from '../utils/wikiParser'
 import toast from '../utils/toast'
 import { useAuth } from '../composables/useAuth'
 import { useEditorOperations } from '../composables/useEditorOperations'
+import { set } from '@vueuse/core'
 
 // ======================== 路由和认证 ========================
 
@@ -176,6 +179,12 @@ const loading = ref(true)
  * 控制保存操作时的loading状态和按钮禁用
  */
 const saving = ref(false)
+
+/**
+ * 保存草稿状态
+ * 控制「保存草稿」操作时的loading状态和按钮禁用
+ */
+const savingDraft = ref(false)
 
 /**
  * 预览模式开关
@@ -456,8 +465,8 @@ const handleSave = async () => {
       
       toast.success('文章修改已提交审核，请耐心等待管理员审核！')
       
-      // 跳转回文章详情页
-      await router.push(`/wiki/${encodeURIComponent(currentTitle.value)}`)
+      // 跳转回进入编辑页面前的页面
+      router.back()
       return
       
     } else {
@@ -477,10 +486,10 @@ const handleSave = async () => {
       
       toast.success('新文章已提交审核，请等待管理员审核！')
       
-      // 导航到首页或个人页面
+      // 导航到个人页面草稿列表
       setTimeout(() => {
-        router.push('/')
-      }, 100)
+        router.push('/UserProfile/Article?tab=drafts')
+      }, 1000)
     }
   } catch (error) {
     console.error('保存失败:', error)
@@ -488,6 +497,37 @@ const handleSave = async () => {
     saveSuccessful.value = false
   } finally {
     saving.value = false
+  }
+}
+
+const handleSaveDraft = async () => {
+  if (!articleForm.value.content.trim() || !currentTitle.value) {
+    toast.warning('请填写标题和内容')
+    return
+  }
+
+  // 提取分类作为标签
+  wikiParser.clearExtractedCategories()
+  wikiParser.parseToHtml(articleForm.value.content)
+  const extractedCategories = wikiParser.getExtractedCategories()
+  articleForm.value.tags = extractedCategories.join(', ')
+
+  try {
+    savingDraft.value = true
+    await draftApi.saveDraftOnly({
+      title: currentTitle.value,
+      content: articleForm.value.content.trim(),
+      category: articleForm.value.category.trim(),
+      articleId: isEditMode.value ? (originalArticle.value?.articleId ?? null) : null,
+    })
+    saveSuccessful.value = true
+    toast.success('草稿已保存！')
+    await router.push('/UserProfile/Article?tab=drafts')
+  } catch (error) {
+    console.error('保存草稿失败:', error)
+    toast.warning('保存草稿失败，请重试')
+  } finally {
+    savingDraft.value = false
   }
 }
 
@@ -518,15 +558,14 @@ const hasUnsavedChanges = computed(() => {
   
   return (
     articleForm.value.content !== (originalArticle.value.content || '') ||
-    articleForm.value.category !== (originalArticle.value.category || '') ||
-    articleForm.value.tags !== (originalArticle.value.tags || '')
+    articleForm.value.category !== (originalArticle.value.category || '')
   )
 })
 
 // 路由守卫
 onBeforeRouteLeave((to, from, next) => {
   // 如果保存成功或者正在保存，直接允许离开
-  if (saveSuccessful.value || saving.value) {
+  if (saveSuccessful.value || saving.value || savingDraft.value) {
     next()
     return
   }
@@ -616,7 +655,7 @@ onUnmounted(() => {
 // 处理浏览器 beforeunload 事件（刷新页面、关闭标签页等）
 const handleBeforeUnload = (event: BeforeUnloadEvent) => {
   // 如果保存成功或者正在保存，不阻止页面离开
-  if (saveSuccessful.value || saving.value) {
+  if (saveSuccessful.value || saving.value || savingDraft.value) {
     return
   }
   

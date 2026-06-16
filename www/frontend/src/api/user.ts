@@ -588,13 +588,15 @@ export const userApi = {
         const d = response.data.data as any
         // 后端返回扁平对象 {user_id, username, email, role_id, avatar_url, token, token_type}
         // 经过 index.ts camelCase 转换后变为 {userId, username, email, roleId, avatarUrl, token, tokenType}
+        const _rid = d.roleId ?? d.role_id ?? 2
+        const _roleMap: Record<number, string> = { 1: 'admin', 2: 'user', 3: 'moderator', 4: 'superadmin' }
         const user: UserResponse = d.user ?? {
           userId: d.userId ?? d.user_id,
           username: d.username,
           email: d.email,
           fullName: d.fullName ?? d.full_name,
           avatarUrl: d.avatarUrl ?? d.avatar_url,
-          userGroup: d.roleId === 1 || d.role_id === 1 ? 'admin' : 'user',
+          userGroup: d.roleName ?? d.role_name ?? _roleMap[_rid] ?? 'user',
           active: true,
           createdAt: d.createdAt ?? d.created_at ?? new Date().toISOString(),
           updatedAt: d.updatedAt ?? d.updated_at ?? new Date().toISOString(),
@@ -640,13 +642,15 @@ export const userApi = {
 
       if (response.data.code === 200 && response.data.data) {
         const d = response.data.data as any
+        const _rid2 = d.roleId ?? d.role_id ?? 2
+        const _roleMap2: Record<number, string> = { 1: 'admin', 2: 'user', 3: 'moderator', 4: 'superadmin' }
         const user: UserResponse = d.user ?? {
           userId: d.userId ?? d.user_id,
           username: d.username,
           email: d.email,
           fullName: d.fullName ?? d.full_name,
           avatarUrl: d.avatarUrl ?? d.avatar_url,
-          userGroup: d.roleId === 1 || d.role_id === 1 ? 'admin' : 'user',
+          userGroup: d.roleName ?? d.role_name ?? _roleMap2[_rid2] ?? 'user',
           active: true,
           createdAt: d.createdAt ?? new Date().toISOString(),
           updatedAt: d.updatedAt ?? new Date().toISOString(),
@@ -693,13 +697,15 @@ export const userApi = {
 
       if (response.data.code === 200 && response.data.data) {
         const d = response.data.data as any
+        const _rid3 = d.roleId ?? d.role_id ?? 2
+        const _roleMap3: Record<number, string> = { 1: 'admin', 2: 'user', 3: 'moderator', 4: 'superadmin' }
         const user: UserResponse = d.user ?? {
           userId: d.userId ?? d.user_id,
           username: d.username,
           email: d.email,
           fullName: d.fullName ?? d.full_name,
           avatarUrl: d.avatarUrl ?? d.avatar_url,
-          userGroup: d.roleId === 1 || d.role_id === 1 ? 'admin' : 'user',
+          userGroup: d.roleName ?? d.role_name ?? _roleMap3[_rid3] ?? 'user',
           active: true,
           createdAt: d.createdAt ?? new Date().toISOString(),
           updatedAt: d.updatedAt ?? new Date().toISOString(),

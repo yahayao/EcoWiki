@@ -79,12 +79,15 @@ class DraftOut(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     submitted_at: Optional[datetime] = None
+    # 审核追溯字段
+    reviewer_id: Optional[int] = None
+    reviewed_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
 
 
 class DraftCreateRequest(BaseModel):
-    title: str
+    title: Optional[str] = None
     content: Optional[str] = None
     category: Optional[str] = None
     article_id: Optional[int] = None

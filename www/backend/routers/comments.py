@@ -13,7 +13,7 @@ from models.article import Article
 from models.user import User
 from schemas.comment import CommentOut, CommentCreateRequest, ReplyCreateRequest
 from schemas.common import ApiResponse, PageResult
-from core.security import get_current_user, get_current_user_optional
+from core.security import get_current_user, get_current_user_optional, user_has_permission, require_permission
 
 router = APIRouter(prefix="/comments", tags=["评论"])
 
@@ -90,7 +90,7 @@ def get_comments(
 def create_comment(
     body: CommentCreateRequest,
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("发表评论")),
     db: Session = Depends(get_db),
 ):
     article = db.query(Article).filter(Article.article_id == body.article_id).first()
@@ -124,7 +124,7 @@ def reply_comment(
     comment_id: int,
     body: ReplyCreateRequest,
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("发表评论")),
     db: Session = Depends(get_db),
 ):
     parent = db.query(Comment).filter(Comment.comment_id == comment_id).first()
@@ -159,7 +159,9 @@ def delete_comment(
     comment = db.query(Comment).filter(Comment.comment_id == comment_id).first()
     if not comment:
         raise HTTPException(status_code=404, detail="评论不存在")
-    if comment.author_id != current_user.user_id and current_user.role_id != 1:
+    is_author = comment.author_id == current_user.user_id
+    can_delete = user_has_permission(current_user, db, "删除评论")
+    if not is_author and not can_delete:
         raise HTTPException(status_code=403, detail="无权删除此评论")
 
     comment.is_deleted = True

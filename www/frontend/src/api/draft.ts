@@ -124,7 +124,7 @@ function wrapListAsPage<T>(list: T[], page: number, size: number): PageResponse<
 }
 
 /** 规范化草稿字段，补充向下兼容别名 */
-function normalizeDraft(d: ArticleDraft): ArticleDraft {
+function normalizeDraft(d: any): ArticleDraft {
   const normalizedStatus = (d.status || '').toString().toUpperCase()
   return {
     ...d,
@@ -132,6 +132,9 @@ function normalizeDraft(d: ArticleDraft): ArticleDraft {
     editorUserName: d.author,
     reviewStatus: normalizedStatus,
     reviewNotes: d.rejectReason,
+    // 后端 reviewer_id → camelCase → reviewerId，映射到向下兼容字段 reviewerUserId
+    reviewerUserId: d.reviewerUserId ?? d.reviewerId ?? undefined,
+    reviewedAt: d.reviewedAt ?? undefined,
   }
 }
 
@@ -142,8 +145,9 @@ function normalizeDraft(d: ArticleDraft): ArticleDraft {
  */
 export const draftApi = {
   /**
-   * 提交新文章草稿（新建文章，等待审核）
-   * POST /api/articles/drafts
+   * 提交新文章草稿并立即提交审核（新建文章）
+   * 步骤1: POST /api/articles/drafts → 保存草稿（status: draft）
+   * 步骤2: POST /api/articles/drafts/{draftId}/submit → 提交审核队列（status: pending）
    */
   async submitNewArticle(request: {
     title: string
@@ -153,7 +157,8 @@ export const draftApi = {
     tags?: string
     articleId?: number | null
   }): Promise<ArticleDraft> {
-    const response = await api.post<ApiResponse<ArticleDraft>>(
+    // 步骤1：保存草稿
+    const createResp = await api.post<ApiResponse<ArticleDraft>>(
       '/api/articles/drafts',
       {
         title: request.title,
@@ -162,15 +167,25 @@ export const draftApi = {
         article_id: request.articleId ?? null,
       }
     )
-    if (response.data.code !== 200) {
-      throw new Error(response.data.message || '提交新文章草稿失败')
+    if (createResp.data.code !== 200) {
+      throw new Error(createResp.data.message || '保存草稿失败')
     }
-    return normalizeDraft(response.data.data)
+    const draft = normalizeDraft(createResp.data.data)
+
+    // 步骤2：提交审核队列
+    const submitResp = await api.post<ApiResponse<ArticleDraft>>(
+      `/api/articles/drafts/${draft.draftId}/submit`
+    )
+    if (submitResp.data.code !== 200) {
+      throw new Error(submitResp.data.message || '提交审核失败')
+    }
+    return normalizeDraft(submitResp.data.data)
   },
 
   /**
-   * 提交文章编辑草稿（修改现有文章，等待审核）
-   * POST /api/articles/{articleId}/drafts
+   * 提交文章编辑草稿并立即提交审核（修改现有文章）
+   * 步骤1: POST /api/articles/{articleId}/drafts → 保存草稿（status: draft）
+   * 步骤2: POST /api/articles/drafts/{draftId}/submit → 提交审核队列（status: pending）
    */
   async submitArticleEdit(articleId: number, request: {
     title: string
@@ -178,7 +193,8 @@ export const draftApi = {
     category: string
     tags?: string
   }): Promise<ArticleDraft> {
-    const response = await api.post<ApiResponse<ArticleDraft>>(
+    // 步骤1：保存草稿
+    const createResp = await api.post<ApiResponse<ArticleDraft>>(
       `/api/articles/${articleId}/drafts`,
       {
         title: request.title,
@@ -186,8 +202,31 @@ export const draftApi = {
         category: request.category,
       }
     )
+    if (createResp.data.code !== 200) {
+      throw new Error(createResp.data.message || '保存草稿失败')
+    }
+    const draft = normalizeDraft(createResp.data.data)
+
+    // 步骤2：提交审核队列
+    const submitResp = await api.post<ApiResponse<ArticleDraft>>(
+      `/api/articles/drafts/${draft.draftId}/submit`
+    )
+    if (submitResp.data.code !== 200) {
+      throw new Error(submitResp.data.message || '提交审核失败')
+    }
+    return normalizeDraft(submitResp.data.data)
+  },
+
+  /**
+   * 仅将草稿提交到审核队列（不含创建草稿，单独调用）
+   * POST /api/articles/drafts/{draftId}/submit
+   */
+  async submitDraftForReview(draftId: number): Promise<ArticleDraft> {
+    const response = await api.post<ApiResponse<ArticleDraft>>(
+      `/api/articles/drafts/${draftId}/submit`
+    )
     if (response.data.code !== 200) {
-      throw new Error(response.data.message || '提交文章编辑草稿失败')
+      throw new Error(response.data.message || '提交审核失败')
     }
     return normalizeDraft(response.data.data)
   },
@@ -281,6 +320,30 @@ export const draftApi = {
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '删除草稿失败')
     }
+  },
+
+  /**
+   * 仅保存草稿（不提交审核）
+   * 新建文章： POST /api/articles/drafts  （status=draft）
+   * 编辑文章： POST /api/articles/{articleId}/drafts  （status=draft）
+   */
+  async saveDraftOnly(request: {
+    title: string
+    content: string
+    category: string
+    articleId?: number | null
+  }): Promise<ArticleDraft> {
+    const url = request.articleId
+      ? `/api/articles/${request.articleId}/drafts`
+      : '/api/articles/drafts'
+    const body = request.articleId
+      ? { content: request.content, category: request.category }
+      : { title: request.title, content: request.content, category: request.category }
+    const response = await api.post<ApiResponse<ArticleDraft>>(url, body)
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message || '保存草稿失败')
+    }
+    return normalizeDraft(response.data.data)
   },
 
   /**

@@ -43,6 +43,10 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
 
+    from models.user import Role
+    role = db.query(Role).filter(Role.role_id == user.role_id).first()
+    role_name = role.role_name if role else "user"
+
     token = create_access_token(user.username)
     refresh = create_refresh_token(user.username)
     return ApiResponse.ok(
@@ -51,6 +55,7 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
             "username":      user.username,
             "email":         user.email,
             "role_id":       user.role_id,
+            "role_name":     role_name,
             "token":         token,
             "token_type":    "Bearer",
             "refresh_token": refresh,
@@ -75,6 +80,10 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
     user.last_login = datetime.now()
     db.commit()
 
+    from models.user import Role
+    role = db.query(Role).filter(Role.role_id == user.role_id).first()
+    role_name = role.role_name if role else "user"
+
     token = create_access_token(user.username)
     refresh = create_refresh_token(user.username)
     return ApiResponse.ok(
@@ -83,6 +92,7 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
             "username":      user.username,
             "email":         user.email,
             "role_id":       user.role_id,
+            "role_name":     role_name,
             "avatar_url":    user.avatar_url,
             "token":         token,
             "token_type":    "Bearer",
